@@ -246,6 +246,7 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
         minY: effectiveMinY,
         maxY: effectiveMaxY,
         lineBarsData: [lineStyle],
+        clipData: FlClipData.all(),
         gridData: FlGridData(
            show: true,
            drawVerticalLine: false, // Hide vertical grid lines
@@ -272,7 +273,7 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
               ),
            ),
            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(showTitles: true, reservedSize: 30, interval: _calculateDateInterval(spots), getTitlesWidget: bottomTitleWidgets),
+              sideTitles: SideTitles(showTitles: true, reservedSize: 45, interval: _calculateDateInterval(spots), getTitlesWidget: bottomTitleWidgets),
            ),
            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -312,8 +313,9 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
   Widget bottomTitleWidgets(double value, TitleMeta meta) {
     final style = TextStyle(color: Colors.grey[700], fontSize: 10);
     final DateTime date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
-    final String text = _chartAxisFormatter.format(date);
-    return SideTitleWidget(meta: meta, space: 6, child: Text(text, style: style));
+    final String text = DateFormat("MMM\\n''yy").format(date);
+
+    return SideTitleWidget(meta: meta, space: 6, child: Text(text, style: style, textAlign: TextAlign.center));
   }
 
   // Calculate appropriate interval for date axis labels
