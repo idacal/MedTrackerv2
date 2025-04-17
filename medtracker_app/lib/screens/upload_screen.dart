@@ -113,40 +113,60 @@ class _UploadScreenState extends State<UploadScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final Color primaryColor = Theme.of(context).colorScheme.primary;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Cargar Nuevo Examen'),
         leading: IconButton(
-          // Provide a back button since this screen is pushed
           icon: const Icon(Icons.arrow_back),
-          onPressed: _isLoading ? null : () => Navigator.of(context).pop(), // Disable back while loading
+          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
         ),
       ),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch, // Make button wider
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              // TODO: Implement the dashed border drop zone UI from description
-              // For now, use a prominent button.
-              ElevatedButton.icon(
-                icon: const Icon(Icons.upload_file_outlined),
-                label: const Text('Toca para seleccionar archivo JSON'),
-                onPressed: _isLoading ? null : _pickAndProcessFile, // Disable while loading
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-                  textStyle: Theme.of(context).textTheme.titleMedium,
-                   // Use theme's primary color for the button
-                  backgroundColor: Theme.of(context).colorScheme.primary, 
-                  foregroundColor: Colors.white,
-                ),
+              InkWell(
+                 onTap: _isLoading ? null : _pickAndProcessFile,
+                 borderRadius: BorderRadius.circular(12.0),
+                 child: Container(
+                   padding: const EdgeInsets.symmetric(vertical: 50.0, horizontal: 20.0),
+                   decoration: BoxDecoration(
+                     color: Colors.blueGrey[50],
+                     borderRadius: BorderRadius.circular(12.0),
+                     border: Border.all(
+                       color: primaryColor.withOpacity(0.6), 
+                       width: 1.5,
+                     ),
+                   ),
+                   child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                           Icons.add_circle_outline_rounded, 
+                           size: 50, 
+                           color: primaryColor.withOpacity(0.8),
+                         ),
+                         const SizedBox(height: 16),
+                         Text(
+                            'Toca para seleccionar archivo JSON',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: Colors.grey[700]
+                            ),
+                          ),
+                      ],
+                   ),
+                 ),
               ),
+              
               const SizedBox(height: 24),
-              // Loading indicator and feedback message area
               SizedBox(
-                height: 60, // Reserve space for indicator or text
+                height: 60,
                 child: Center(
                   child: _isLoading
                       ? const CircularProgressIndicator()
@@ -158,7 +178,7 @@ class _UploadScreenState extends State<UploadScreen> {
                                   fontWeight: FontWeight.bold),
                               textAlign: TextAlign.center,
                             )
-                          : const SizedBox.shrink(), // Empty space if no message/loading
+                          : const SizedBox.shrink(),
                 ),
               ),
             ],

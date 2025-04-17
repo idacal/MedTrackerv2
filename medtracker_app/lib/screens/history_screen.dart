@@ -70,7 +70,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   child: Text(
                     'Error al cargar el historial: ${snapshot.error}',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.red),
+                    style: TextStyle(color: Theme.of(context).colorScheme.error),
                   ),
                 ),
               );
@@ -83,12 +83,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                      physics: const AlwaysScrollableScrollPhysics(),
                      child: ConstrainedBox(
                        constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                       child: const Center(
+                       child: Center(
                           child: Padding(
-                            padding: EdgeInsets.all(16.0),
+                            padding: const EdgeInsets.all(24.0),
                             child: Text(
                               'No hay exámenes cargados todavía.\nUsa el botón (+) para añadir uno.',
                               textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
                             ),
                           ),
                         ),
@@ -103,24 +104,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
             return ListView.builder(
               // Add physics to allow scrolling even if list fits screen (for refresh)
               physics: const AlwaysScrollableScrollPhysics(), 
+              padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0), // Add padding
               itemCount: exams.length,
               itemBuilder: (context, index) {
                 final exam = exams[index];
                 return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5.0),
+                  elevation: 1.0,
+                  margin: const EdgeInsets.symmetric(vertical: 4.0),
                   child: ListTile(
-                    leading: const Icon(Icons.file_present_rounded, size: 30), 
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                     title: Text(
                       exam.fileName,
                       maxLines: 2, 
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                     ),
                     subtitle: Text(
                       'Cargado: ${_formatter.format(exam.importDate)}',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
-                    trailing: const Icon(Icons.chevron_right),
+                    trailing: Icon(Icons.chevron_right, color: Colors.grey[400]),
                     onTap: () {
                       if (exam.id != null) {
                          _navigateToExamDetail(exam.id!, exam.fileName);

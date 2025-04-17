@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../services/database_service.dart';
 import '../models/parameter_record.dart';
+import '../main.dart'; // Import main to access StatusColors
 // import '../models/exam_record.dart'; // Might not be needed directly
 
 // Import screen for category parameters (will create next)
@@ -84,78 +85,83 @@ class _ExamCategoriesScreenState extends State<ExamCategoriesScreen> {
      );
   }
 
-  // Get color for the badge based on counts
-  Color? _getBadgeColor(Map<String, int> counts) {
-     if (counts['attention']! > 0) return Theme.of(context).colorScheme.error; // Red
-     if (counts['watch']! > 0) return Colors.orange.shade800; // Amber
-     return null; // No badge needed if all normal/unknown
+  Color _getBadgeColor(Map<String, int> counts) {
+     final statusColors = StatusColors.of(context); // Use theme colors
+     if (counts['attention']! > 0) return statusColors.attention;
+     if (counts['watch']! > 0) return statusColors.watch;
+     return statusColors.normal; // Return normal color if no issues
   }
 
-  // Get text for the badge
+  IconData _getBadgeIcon(Map<String, int> counts) {
+     if (counts['attention']! > 0) return Icons.error_outline;
+     if (counts['watch']! > 0) return Icons.warning_amber_rounded; 
+     return Icons.check_circle; 
+  }
+  
   String? _getBadgeText(Map<String, int> counts) {
+     // Only show text for counts > 0
      if (counts['attention']! > 0) return counts['attention'].toString();
      if (counts['watch']! > 0) return counts['watch'].toString();
-     return null;
+     return null; // No text for green check
   }
 
   @override
   Widget build(BuildContext context) {
+    final statusColors = StatusColors.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Categorías: ${widget.examName}', overflow: TextOverflow.ellipsis), 
+        // Use theme style, ensure title fits
+        title: Text('Categorías: ${widget.examName}', overflow: TextOverflow.ellipsis),
       ),
       body: FutureBuilder<List<ParameterRecord>>(
-        future: _parametersFuture, // FutureBuilder now directly uses the future
+        future: _parametersFuture, 
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Padding(padding: const EdgeInsets.all(16.0), child: Text('Error al cargar categorías: ${snapshot.error}', style: TextStyle(color: Theme.of(context).colorScheme.error))));
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Padding(padding: EdgeInsets.all(16.0), child: Text('No se encontraron parámetros para este examen.')));
-          }
-          
-          // Use the grouped data (available after future completion)
-          if (_groupedParameters.isEmpty) {
-             // Handle case where future completed but grouping hasn't updated state yet
-             // This might happen briefly or if there was an error during grouping
-              _groupParameters(snapshot.data!); // Ensure grouping happens
-              if (_groupedParameters.isEmpty) { // If still empty after trying again
-                   return const Center(child: Padding(padding: EdgeInsets.all(16.0), child: Text('Error al agrupar parámetros.')));
-              }
-          }
+           // ... (Handle loading, error, empty states as before) ...
+           if (snapshot.connectionState == ConnectionState.waiting) {
+             return const Center(child: CircularProgressIndicator());
+           }
+           if (snapshot.hasError) {
+             return Center(child: Padding(padding: const EdgeInsets.all(16.0), child: Text('Error al cargar categorías: ${snapshot.error}', style: TextStyle(color: Theme.of(context).colorScheme.error))));
+           }
+           if (!snapshot.hasData || snapshot.data!.isEmpty) {
+             return const Center(child: Padding(padding: const EdgeInsets.all(16.0), child: Text('No se encontraron parámetros para este examen.')));
+           }
+           if (_groupedParameters.isEmpty) {
+               _groupParameters(snapshot.data!); 
+               if (_groupedParameters.isEmpty) { 
+                    return const Center(child: Padding(padding: EdgeInsets.all(16.0), child: Text('Error al agrupar parámetros.')));
+               }
+           }
 
           final categories = _groupedParameters.keys.toList()..sort();
 
           return ListView.builder(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0), // Consistent padding
             itemCount: categories.length,
             itemBuilder: (context, index) {
               final category = categories[index];
               final parametersInCategory = _groupedParameters[category]!;
               final statusCounts = _getCategoryStatusCounts(parametersInCategory);
               final badgeColor = _getBadgeColor(statusCounts);
+              final badgeIcon = _getBadgeIcon(statusCounts);
               final badgeText = _getBadgeText(statusCounts);
-              final bool allNormal = badgeColor == null; // If no badge color, assume all are normal/ok
               
               return Card(
-                elevation: 2,
-                margin: const EdgeInsets.symmetric(vertical: 8.0),
+                // Use theme defaults
+                margin: const EdgeInsets.symmetric(vertical: 6.0),
                 child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
                   title: Text(category, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w500)),
-                  trailing: badgeColor != null
-                    ? CircleAvatar(
-                        backgroundColor: badgeColor,
-                        radius: 14,
-                        child: Text(
-                          badgeText!, 
-                          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)
-                        ),
-                      )
-                    : Icon(Icons.check_circle, color: Colors.green.shade700, size: 28), // Green check if no issues
+                  trailing: CircleAvatar( // Always show CircleAvatar for consistency
+                      backgroundColor: badgeColor.withOpacity(0.15), // Lighter background
+                      radius: 15,
+                      child: badgeText != null 
+                        ? Text( // Show number if available
+                            badgeText,
+                            style: TextStyle(color: badgeColor, fontSize: 12, fontWeight: FontWeight.bold)
+                          )
+                        : Icon(badgeIcon, color: badgeColor, size: 18), // Show icon otherwise
+                    ),
                   onTap: () => _navigateToCategoryParameters(category, parametersInCategory),
                 ),
               );

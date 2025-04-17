@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../models/parameter_record.dart';
+import '../main.dart'; // Import main to access StatusColors
 
 // Import parameter detail screen (will create later)
 // import 'parameter_detail_screen.dart';
@@ -18,15 +19,16 @@ class CategoryParametersScreen extends StatelessWidget {
     required this.parameters
   });
 
-  // Re-use helper methods from ExamCategoriesScreen (or move to a common utility file)
+  // Use StatusColors from theme
   Color _getStatusColor(BuildContext context, ParameterStatus status) {
+    final statusColors = StatusColors.of(context);
     switch (status) {
       case ParameterStatus.normal:
-        return Colors.green.shade700;
+        return statusColors.normal;
       case ParameterStatus.watch:
-        return Colors.orange.shade800;
+        return statusColors.watch;
       case ParameterStatus.attention:
-        return Theme.of(context).colorScheme.error;
+        return statusColors.attention;
       case ParameterStatus.unknown:
         return Colors.grey.shade600;
     }
@@ -35,64 +37,66 @@ class CategoryParametersScreen extends StatelessWidget {
   IconData _getStatusIcon(ParameterStatus status) {
      switch (status) {
       case ParameterStatus.normal:
-        return Icons.check_circle_outline;
+        return Icons.check_circle_outline; // Consistent icon
       case ParameterStatus.watch:
-        return Icons.watch_later_outlined;
+        return Icons.watch_later_outlined; // Consistent icon
       case ParameterStatus.attention:
-        return Icons.error_outline;
+        return Icons.error_outline; // Consistent icon
       case ParameterStatus.unknown:
-        return Icons.help_outline;
+        return Icons.help_outline; // Consistent icon
     }
   }
 
   void _navigateToParameterDetail(BuildContext context, ParameterRecord parameter) {
-     // TODO: Implement navigation to ParameterDetailScreen (for graph)
+     // TODO: Implement navigation to ParameterDetailScreen
      print("Navigate to history/graph for: ${parameter.category} - ${parameter.parameterName}");
      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Gráfico para ${parameter.parameterName} (No implementado)')),
      );
-     // Example navigation (uncomment when ParameterDetailScreen exists):
+     // Example navigation:
      // Navigator.push(
      //   context,
-     //   MaterialPageRoute(builder: (context) => ParameterDetailScreen(parameter: parameter)),
+     //   MaterialPageRoute(builder: (context) => ParameterDetailScreen(
+     //      categoryName: parameter.category,
+     //      parameterName: parameter.parameterName,
+     //   )),
      // );
   }
 
   @override
   Widget build(BuildContext context) {
-     final NumberFormat valueFormatter = NumberFormat("#,##0.##"); // Local formatter
+     final NumberFormat valueFormatter = NumberFormat("#,##0.##"); 
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(categoryName, style: Theme.of(context).textTheme.titleMedium), 
-        // Optional: Add subtitle with exam name?
-        // title: Column(
-        //   crossAxisAlignment: CrossAxisAlignment.start,
-        //   children: [
-        //     Text(categoryName, style: Theme.of(context).textTheme.titleMedium),
-        //     Text(examName, style: Theme.of(context).textTheme.bodySmall), 
-        //   ],
-        // ),
+        // Use theme style
+        title: Text(categoryName), 
       ),
       body: ListView.builder(
-         padding: const EdgeInsets.all(8.0),
+         padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0), // Consistent padding
          itemCount: parameters.length,
          itemBuilder: (context, index) {
             final param = parameters[index];
             final statusColor = _getStatusColor(context, param.status);
             final statusIcon = _getStatusIcon(param.status);
             final valueString = param.value != null ? valueFormatter.format(param.value) : '--';
-            final rangeString = param.refOriginal ?? 'No disponible';
+            // Use a more descriptive placeholder if range is null
+            final rangeString = param.refOriginal?.isNotEmpty == true ? param.refOriginal! : 'No Ref.';
 
             return Card(
-              margin: const EdgeInsets.symmetric(vertical: 4.0),
+              // Use theme defaults
+              margin: const EdgeInsets.symmetric(vertical: 5.0),
               child: ListTile(
-                 leading: Icon(statusIcon, color: statusColor, size: 28),
-                 title: Text(param.parameterName),
-                 subtitle: Text('Ref: $rangeString'),
+                 contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                 leading: Tooltip( // Add tooltip to icon
+                     message: param.status.toString().split('.').last, // Show status name
+                     child: Icon(statusIcon, color: statusColor, size: 30),
+                 ),
+                 title: Text(param.parameterName, style: Theme.of(context).textTheme.titleMedium),
+                 subtitle: Text(rangeString, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
                  trailing: Text(
                     valueString, 
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: statusColor)
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: statusColor)
                  ),
                  onTap: () => _navigateToParameterDetail(context, param),
               ),

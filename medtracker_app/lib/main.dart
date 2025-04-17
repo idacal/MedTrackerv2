@@ -23,81 +23,143 @@ class MedTrackerApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Remove MultiProvider wrapper for now
-    // return MultiProvider(
-    //   providers: [
-    //   ],
-    //   child: MaterialApp(
-    //     ...
-    //   ),
-    // );
-    
-    // Return MaterialApp directly
+    // Define custom colors from the mockup
+    const Color primaryBlue = Color(0xFF4285F4);
+    const Color statusGreen = Color(0xFF4CAF50);
+    const Color statusAmber = Color(0xFFFFA726);
+    const Color statusRed = Color(0xFFF44336);
+
     return MaterialApp(
       title: 'MedTracker',
       theme: ThemeData(
-        // Define the primary color swatch
-        primarySwatch: Colors.blue, 
-        // Use ColorScheme for more modern color definitions
+        // Use ColorScheme for more flexible theming
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF4285F4), // Use the specific blue as seed
-          primary: const Color(0xFF4285F4),    // Override primary if needed
-          secondary: const Color(0xFFFFA726),  // Amber for accent/FAB (example)
-          // Define status colors
-          error: const Color(0xFFF44336),      // Red for Attention
-          // Add custom colors if needed:
-          // Example: Green color for Normal status
-          // onSurface: Colors.green, // Placeholder example
+          seedColor: primaryBlue, // Base color for generating scheme
+          primary: primaryBlue,    // Ensure primary is exactly this blue
+          secondary: statusAmber,  // Use Amber as secondary/accent
+          error: statusRed,        // Use Red for error states
+          // Define brightness or other scheme colors if needed
+          // brightness: Brightness.light,
         ),
         visualDensity: VisualDensity.adaptivePlatformDensity,
-        useMaterial3: true, // Enable Material 3 features
+        useMaterial3: true, // Enable Material 3 styling
 
-        // Define card themes consistent with Material 3 elevation
+        scaffoldBackgroundColor: Colors.grey[100], // Light grey background
+
+        // Define card themes 
         cardTheme: CardTheme(
-          elevation: 1.0, // M3 default elevation for cards
-           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0), // M3 uses larger radius
+          elevation: 1.5, // Subtle elevation
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0), 
           ),
-          margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+          margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+          color: Colors.white, // Explicitly white cards
         ),
         
         // Define button themes
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF4285F4), // CTA blue
-            foregroundColor: Colors.white, // Text color on button
+            backgroundColor: primaryBlue, 
+            foregroundColor: Colors.white, 
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: BorderRadius.circular(10.0), // Slightly more rounded
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 14.0),
+            textStyle: const TextStyle(fontWeight: FontWeight.bold)
           ),
         ),
         floatingActionButtonTheme: FloatingActionButtonThemeData(
-           backgroundColor: const Color(0xFFFFA726), // Amber color for FAB (example)
-           foregroundColor: Colors.black, // Text/icon color on FAB
-           // shape: ..., // Default circular shape is usually fine
+           backgroundColor: primaryBlue, // Use primary blue for FAB
+           foregroundColor: Colors.white,
+           elevation: 4.0,
         ),
 
-        // Define AppBar theme
+        // Define AppBar theme matching mockup (Blue background, white text)
         appBarTheme: const AppBarTheme(
-           backgroundColor: Colors.white, // Or match primary color?
-           foregroundColor: Colors.black, // Title/icon color
-           elevation: 0.5, // Subtle elevation
-           centerTitle: true, // Center title if desired
+           backgroundColor: primaryBlue,
+           foregroundColor: Colors.white, // Title/icon color
+           elevation: 1.0, 
+           centerTitle: false, // Align title left usually
+           titleTextStyle: TextStyle(
+             fontSize: 18, // Adjust as needed
+             fontWeight: FontWeight.bold,
+             color: Colors.white
+           )
         ),
         
         // Define BottomAppBar theme
         bottomAppBarTheme: const BottomAppBarTheme(
-          color: Colors.white, // Background color of the bar
-          elevation: 1.0,
-          // padding: EdgeInsets.symmetric(horizontal: 10.0), // Adjust padding if needed
+          color: Colors.white, 
+          elevation: 2.0,
+          shape: CircularNotchedRectangle(),
+          padding: EdgeInsets.zero, // Remove default padding if needed
+        ),
+        
+        // Define ListTile theme adjustments
+        listTileTheme: ListTileThemeData(
+          iconColor: Colors.grey[700], // Default icon color for ListTiles
+          // tileColor: Colors.transparent, // Ensure it takes card color
+          // shape: ..., // Add shape if desired
         ),
 
-        // Define text themes (optional, customize further if needed)
-        // textTheme: TextTheme(...),
+        // Define text themes (optional, customize further)
+        textTheme: const TextTheme(
+           // Example: Make bodyLarge slightly bolder
+           // bodyLarge: TextStyle(fontWeight: FontWeight.w500),
+        ),
+        
+        // Store status colors for easy access elsewhere (optional)
+        extensions: <ThemeExtension<dynamic>>[
+           const StatusColors(
+             normal: statusGreen,
+             watch: statusAmber,
+             attention: statusRed,
+           ),
+        ],
+
       ),
-      debugShowCheckedModeBanner: false, // Remove debug banner
-      home: const MainScaffold(), // Start with the main scaffold widget
+      debugShowCheckedModeBanner: false, 
+      home: const MainScaffold(), 
     );
+  }
+}
+
+// Custom Theme Extension to hold status colors
+@immutable
+class StatusColors extends ThemeExtension<StatusColors> {
+  const StatusColors({
+    required this.normal,
+    required this.watch,
+    required this.attention,
+  });
+
+  final Color normal;
+  final Color watch;
+  final Color attention;
+
+  @override
+  StatusColors copyWith({Color? normal, Color? watch, Color? attention}) {
+    return StatusColors(
+      normal: normal ?? this.normal,
+      watch: watch ?? this.watch,
+      attention: attention ?? this.attention,
+    );
+  }
+
+  @override
+  StatusColors lerp(ThemeExtension<StatusColors>? other, double t) {
+    if (other is! StatusColors) {
+      return this;
+    }
+    return StatusColors(
+      normal: Color.lerp(normal, other.normal, t)!,
+      watch: Color.lerp(watch, other.watch, t)!,
+      attention: Color.lerp(attention, other.attention, t)!,
+    );
+  }
+
+  // Optional: Helper method to access from context
+  static StatusColors of(BuildContext context) {
+    return Theme.of(context).extension<StatusColors>()!;
   }
 }
