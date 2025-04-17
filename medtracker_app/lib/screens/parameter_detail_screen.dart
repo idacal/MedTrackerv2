@@ -273,14 +273,17 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
               ),
            ),
            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(showTitles: true, reservedSize: 45, interval: _calculateDateInterval(spots), getTitlesWidget: bottomTitleWidgets),
+              sideTitles: SideTitles(
+                showTitles: true, 
+                reservedSize: 45, 
+                interval: _calculateDateInterval(spots), 
+                getTitlesWidget: (value, meta) => bottomTitleWidgets(value, meta, spots)
+              ),
            ),
            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
-         // Reference range lines
          extraLinesData: ExtraLinesData(horizontalLines: horizontalLines),
-         // Tooltip customization
          lineTouchData: LineTouchData(
             touchTooltipData: LineTouchTooltipData(
               getTooltipItems: (touchedSpots) {
@@ -305,17 +308,25 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
    Widget leftTitleWidgets(double value, TitleMeta meta) {
     final style = TextStyle(color: Colors.grey[700], fontSize: 10);
     String text = _valueFormatter.format(value);
-    if (value == meta.min || value == meta.max) return Container(); 
+    if (value == meta.min || value == meta.max || (value == 0 && meta.min < 0) ) return Container(); 
     return SideTitleWidget(meta: meta, space: 6, child: Text(text, style: style));
   }
 
-  // Helper for X Axis labels
-  Widget bottomTitleWidgets(double value, TitleMeta meta) {
+  // Helper for X Axis labels - NOW FILTERS BASED ON ACTUAL SPOT DATA
+  Widget bottomTitleWidgets(double value, TitleMeta meta, List<FlSpot> spots) {
     final style = TextStyle(color: Colors.grey[700], fontSize: 10);
-    final DateTime date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
-    final String text = DateFormat("MMM\\n''yy").format(date);
+    
+    // Check if the current value corresponds to an actual data point
+    final bool isDataPoint = spots.any((spot) => spot.x.toInt() == value.toInt());
 
-    return SideTitleWidget(meta: meta, space: 6, child: Text(text, style: style, textAlign: TextAlign.center));
+    if (isDataPoint) {
+       final DateTime date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
+       final String text = DateFormat("MMM ''yy").format(date);
+       return SideTitleWidget(meta: meta, space: 6, child: Text(text, style: style, textAlign: TextAlign.center));
+    } else {
+        // Don't show a label if it doesn't correspond to a data point
+        return Container();
+    }
   }
 
   // Calculate appropriate interval for date axis labels
@@ -325,16 +336,22 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
     final double maxDateMillis = spots.last.x;
     final double durationDays = (maxDateMillis - minDateMillis) / (1000 * 60 * 60 * 24);
     
-    // Adjust interval based on duration (example logic)
+    // Adjust interval based on duration (example logic) - Doubled intervals
+    double intervalMillis;
     if (durationDays <= 14) { // 2 weeks
-      return 2 * 24 * 60 * 60 * 1000; // ~2 days interval
+      intervalMillis = 4 * 24 * 60 * 60 * 1000; // ~4 days interval
     } else if (durationDays <= 90) { // 3 months
-       return 15 * 24 * 60 * 60 * 1000; // ~15 days interval
+       intervalMillis = 30 * 24 * 60 * 60 * 1000; // ~1 month interval
     } else if (durationDays <= 365) { // 1 year
-       return 60 * 24 * 60 * 60 * 1000; // ~2 months interval
+       intervalMillis = 90 * 24 * 60 * 60 * 1000; // ~3 months interval
     } else { // More than a year
-       return 180 * 24 * 60 * 60 * 1000; // ~6 months interval
+       intervalMillis = 365 * 24 * 60 * 60 * 1000; // ~1 year interval
     }
+    
+    // Ensure a minimum sensible interval if calculated is too small, 
+    // e.g., at least one day even for very short durations.
+    const double minIntervalMillis = 24 * 60 * 60 * 1000; // One day
+    return max(intervalMillis, minIntervalMillis);
   }
   
    // --- Math helpers for min/max --- 
