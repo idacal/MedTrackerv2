@@ -9,6 +9,7 @@ class ParameterRecord {
   final double? refRangeHigh;
   final String? refOriginal;
   final DateTime date; // Date specific to the parameter
+  final ParameterStatus status; // Added status field
 
   ParameterRecord({
     this.id,
@@ -20,31 +21,8 @@ class ParameterRecord {
     this.refRangeHigh,
     this.refOriginal,
     required this.date,
+    required this.status, // Require status in constructor
   });
-
-  // Helper to determine status based on value and range
-  ParameterStatus get status {
-    // Handle cases where range has only one bound (low or high)
-    if (value != null) {
-      if (refRangeLow != null && refRangeHigh == null) { // Lower bound only (e.g., > 30)
-        return value! >= refRangeLow! ? ParameterStatus.normal : ParameterStatus.attention;
-      } else if (refRangeLow == null && refRangeHigh != null) { // Upper bound only (e.g., < 10)
-        return value! <= refRangeHigh! ? ParameterStatus.normal : ParameterStatus.attention;
-      } else if (refRangeLow != null && refRangeHigh != null) { // Both bounds exist
-        if (value! < refRangeLow!) {
-          return ParameterStatus.attention;
-        }
-        if (value! > refRangeHigh!) {
-          return ParameterStatus.attention;
-        }
-        // Consider adding a 'watch' zone here if desired
-        return ParameterStatus.normal;
-      }
-    }
-    // If value is null or range is completely undefined, status is unknown
-    return ParameterStatus.unknown;
-    // TODO: Handle non-numeric values if they represent status (e.g., 'Negativo')
-  }
 
   // Method to convert ParameterRecord to a Map for DB insertion
   Map<String, dynamic> toMap() {
@@ -58,11 +36,22 @@ class ParameterRecord {
       'refRangeHigh': refRangeHigh,
       'refOriginal': refOriginal,
       'date': date.toIso8601String(),
+      'status': status.name, // Store enum name as string
     };
   }
 
   // Method to create ParameterRecord from a Map
   factory ParameterRecord.fromMap(Map<String, dynamic> map) {
+    // Helper to safely get enum by name, defaulting to unknown
+    ParameterStatus getStatusByName(String? name) {
+      if (name == null) return ParameterStatus.unknown;
+      try {
+        return ParameterStatus.values.byName(name);
+      } catch (_) {
+        return ParameterStatus.unknown; // Handle if name doesn't match enum
+      }
+    }
+
     return ParameterRecord(
       id: map['id'],
       examRecordId: map['examRecordId'],
@@ -73,6 +62,7 @@ class ParameterRecord {
       refRangeHigh: map['refRangeHigh'],
       refOriginal: map['refOriginal'],
       date: DateTime.parse(map['date']),
+      status: getStatusByName(map['status']), // Parse status from string
     );
   }
 }

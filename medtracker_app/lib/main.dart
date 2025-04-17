@@ -3,6 +3,8 @@ import 'package:provider/provider.dart'; // Keep provider import
 
 // Import the main scaffold
 import 'screens/main_scaffold.dart'; 
+// Import the model defining ParameterStatus
+import 'models/parameter_record.dart'; 
 
 // Import the database service if needed for early initialization (optional)
 // import 'services/database_service.dart';
@@ -169,6 +171,22 @@ class StatusColors extends ThemeExtension<StatusColors> {
   // Optional: Helper method to access from context
   static StatusColors of(BuildContext context) {
     return Theme.of(context).extension<StatusColors>()!;
+  }
+}
+
+// ADD HELPER EXTENSION HERE
+// Helper extension on StatusColors to get color based on ParameterStatus enum
+extension StatusColorGetter on StatusColors {
+  Color getColor(ParameterStatus status) {
+    switch (status) {
+      case ParameterStatus.normal: return normal;
+      case ParameterStatus.watch: return watch;
+      case ParameterStatus.attention: return attention;
+      case ParameterStatus.unknown: 
+      // Use a neutral color for unknown, maybe from the theme?
+      // Returning grey for now, consistent with previous logic.
+      return Colors.grey.shade600; 
+    }
   }
 }
 

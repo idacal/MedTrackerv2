@@ -29,13 +29,19 @@ class DatabaseService {
     final documentsDirectory = await getApplicationDocumentsDirectory();
     final path = join(documentsDirectory.path, 'medtracker.db');
 
-    // Delete the database file on startup for testing purposes (optional)
-    // Remove this line for production to keep data persistent
-    // await deleteDatabase(path);
+    // --- TEMPORARY FOR DEVELOPMENT: Force delete DB on init ---
+    // Ensures schema changes in _onCreate are applied.
+    // REMOVE THIS LINE FOR PRODUCTION to keep data persistent!
+    if (kDebugMode) { // Only delete in debug mode for safety
+        print("DEVELOPMENT: Deleting existing database at $path to ensure schema update...");
+        await deleteDatabase(path);
+        print("DEVELOPMENT: Database deleted.");
+    }
+    // -----------------------------------------------------------
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 1, // Keep version 1 for now, onCreate handles schema
       onCreate: _onCreate,
     );
   }
@@ -64,13 +70,14 @@ class DatabaseService {
         refRangeHigh REAL,
         refOriginal TEXT,
         date TEXT NOT NULL,
+        status TEXT NOT NULL,
         FOREIGN KEY (examRecordId) REFERENCES exam_records (id) ON DELETE CASCADE
       )
     ''');
      // Add index for faster history lookups
     await db.execute('''
       CREATE INDEX idx_parameter_history
-      ON parameter_records (category, parameterName, date)
+      ON parameter_records (category, parameterName, date, status)
     ''');
       if (kDebugMode) {
         print("Database tables created.");
@@ -140,7 +147,32 @@ class DatabaseService {
             final String? refOriginal = data['referencia_original'] as String?;
             final List<dynamic>? refList = data['rango_referencia'] as List<dynamic>?;
             final Map<String, double?> parsedRange = _parseRange(refOriginal, refList);
+            final double? refLow = parsedRange['low'];
+            final double? refHigh = parsedRange['high'];
 
+            // --- Calculate status BEFORE creating the record ---
+            ParameterStatus calculatedStatus = ParameterStatus.unknown;
+            if (value != null) {
+                if (refLow != null && refHigh == null) { // Lower bound only (e.g., > 30)
+                  calculatedStatus = value >= refLow ? ParameterStatus.normal : ParameterStatus.attention;
+                } else if (refLow == null && refHigh != null) { // Upper bound only (e.g., < 10)
+                  calculatedStatus = value <= refHigh ? ParameterStatus.normal : ParameterStatus.attention;
+                } else if (refLow != null && refHigh != null) { // Both bounds exist
+                  if (value < refLow) {
+                    calculatedStatus = ParameterStatus.attention;
+                  } else if (value > refHigh) {
+                    calculatedStatus = ParameterStatus.attention;
+                  } else {
+                    // TODO: Implement 'watch' logic if needed, e.g., near boundaries
+                    calculatedStatus = ParameterStatus.normal;
+                  }
+                } else {
+                  // Value exists but no range defined - treat as normal or unknown?
+                  // Let's default to normal if value exists but range doesn't
+                  calculatedStatus = ParameterStatus.normal; 
+                }
+            } // else: value is null, status remains unknown
+            // ----------------------------------------------------
 
             // 4. Create ParameterRecord
             final parameterRecord = ParameterRecord(
@@ -148,10 +180,11 @@ class DatabaseService {
               category: categoryName,
               parameterName: parameterName,
               value: value,
-              refRangeLow: parsedRange['low'],
-              refRangeHigh: parsedRange['high'],
+              refRangeLow: refLow,
+              refRangeHigh: refHigh,
               refOriginal: refOriginal,
               date: date,
+              status: calculatedStatus,
             );
 
             // 5. Insert ParameterRecord
@@ -243,33 +276,57 @@ class DatabaseService {
     });
   }
 
- /// Fetches the most recent record for each unique parameter (category + name).
+ /// Fetches the most recent record for each unique parameter, now includes stored status.
   Future<List<ParameterRecord>> getLatestParameterValues() async {
     final db = await database;
-    // This query finds the maximum date for each parameter and then joins back
-    // to get the full record associated with that maximum date.
-    // It correctly handles cases where multiple imports might have the same parameter.
     final List<Map<String, dynamic>> maps = await db.rawQuery('''
-      SELECT p1.*
-      FROM parameter_records p1
+      SELECT p.* 
+      FROM parameter_records p
       INNER JOIN (
           SELECT category, parameterName, MAX(date) as max_date
           FROM parameter_records
           GROUP BY category, parameterName
-      ) p2 ON p1.category = p2.category
-           AND p1.parameterName = p2.parameterName
-           AND p1.date = p2.max_date
-      ORDER BY p1.category, p1.parameterName
+      ) AS latest ON p.category = latest.category AND p.parameterName = latest.parameterName AND p.date = latest.max_date
+      ORDER BY p.category, p.parameterName
     ''');
-    // Note: If multiple records for the *same* parameter have the exact same *latest* date
-    // (e.g., two files imported simultaneously with identical data), this might return multiple rows
-    // for that parameter from the latest timestamp. Consider adding MAX(id) or another tie-breaker if needed.
-    if (maps.isEmpty) {
-        return [];
-    }
+    if (maps.isEmpty) return [];
     return List.generate(maps.length, (i) {
       return ParameterRecord.fromMap(maps[i]);
     });
+  }
+
+  // --- NEW FUNCTION --- 
+  /// Fetches recent exams along with the count of parameters in 'attention' state.
+  Future<List<Map<String, dynamic>>> getRecentExamsWithAttentionCount({int limit = 3}) async {
+    final db = await database;
+    final String attentionStatusName = ParameterStatus.attention.name; // 'attention'
+
+    final List<Map<String, dynamic>> results = await db.rawQuery('''
+      SELECT
+          e.id,
+          e.fileName,
+          e.importDate,
+          COALESCE(att_count.count, 0) as attentionCount
+      FROM
+          exam_records e
+      LEFT JOIN (
+          SELECT
+              examRecordId,
+              COUNT(*) as count
+          FROM
+              parameter_records
+          WHERE
+              status = ? 
+          GROUP BY
+              examRecordId
+      ) att_count ON e.id = att_count.examRecordId
+      ORDER BY
+          e.importDate DESC
+      LIMIT ?;
+    ''', [attentionStatusName, limit]);
+
+    // The result is already List<Map<String, dynamic>> with the required fields
+    return results;
   }
 
   // --- Utility / Parsing ---

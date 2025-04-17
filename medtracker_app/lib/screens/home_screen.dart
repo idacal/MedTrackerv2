@@ -17,9 +17,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final dbService = DatabaseService();
-  // Hold the summary counts
   Future<Map<ParameterStatus, int>>? _summaryFuture;
-  Future<List<ExamRecord>>? _recentExamsFuture; // Future for recent exams
+  Future<List<Map<String, dynamic>>>? _recentExamsFuture;
 
   @override
   void initState() {
@@ -30,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _loadData() {
     setState(() {
       _summaryFuture = _calculateSummary();
-      _recentExamsFuture = dbService.getAllExamRecords();
+      _recentExamsFuture = dbService.getRecentExamsWithAttentionCount(limit: 3);
     });
   }
 
@@ -61,12 +60,31 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _navigateToParameterList(ParameterStatus status) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ParameterListScreen(targetStatus: status),
-      ),
-    );
+    // Calculate total count from the summary map before navigating
+    _summaryFuture?.then((summary) { // Access the future result
+      if (summary.isNotEmpty) {
+        int totalCount = summary.values.reduce((sum, element) => sum + element);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ParameterListScreen(
+              targetStatus: status,
+              totalParameterCount: totalCount, // Pass the calculated total
+            ),
+          ),
+        );
+      } else {
+         // Handle case where summary is empty or still loading (optional)
+          ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Resumen no disponible aún.')),
+           );
+      }
+    }).catchError((error) {
+        // Handle error loading summary (optional)
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error al cargar resumen: $error')),
+        );
+    });
   }
 
   @override
@@ -276,23 +294,49 @@ class _HomeScreenState extends State<HomeScreen> {
   // --- Recent Exams Section Widget ---
   Widget _buildRecentExams(BuildContext context) {
     final DateFormat dateFormatter = DateFormat('dd/MM/yyyy');
+    final statusColors = StatusColors.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Exámenes Recientes',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        // Add Filter Button (placeholder)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+             Text(
+               'Exámenes Recientes',
+               style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+             ),
+             TextButton.icon(
+                // Style to match mockup roughly
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).primaryColor,
+                  backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  textStyle: Theme.of(context).textTheme.labelMedium
+                ),
+                icon: const Icon(Icons.filter_list, size: 16),
+                label: const Text('Filtrar'),
+                onPressed: () {
+                  // TODO: Implement filtering logic
+                   ScaffoldMessenger.of(context).showSnackBar(
+                     const SnackBar(content: Text('Filtrar exámenes (No implementado)')),
+                   );
+                },
+             )
+          ],
         ),
         const SizedBox(height: 12),
-        FutureBuilder<List<ExamRecord>>(
+        // Update FutureBuilder type
+        FutureBuilder<List<Map<String, dynamic>>>(
           future: _recentExamsFuture,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasError) {
-              return Center(child: Text('Error al cargar exámenes: ${snapshot.error}', style: TextStyle(color: StatusColors.of(context).attention)));
+              return Center(child: Text('Error al cargar exámenes: ${snapshot.error}', style: TextStyle(color: statusColors.attention)));
             }
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
               return const Card( 
@@ -303,26 +347,58 @@ class _HomeScreenState extends State<HomeScreen> {
                );
             }
 
-            // --- Show up to 3 most recent exams ---
-            final recentExams = snapshot.data!.take(3).toList();
+            // Data is List<Map<String, dynamic>>
+            final recentExamsData = snapshot.data!;
 
-            // Use ListView.builder to display the list
             return ListView.builder(
-               shrinkWrap: true, // Important inside a scrolling parent (ListView)
-               physics: const NeverScrollableScrollPhysics(), // Disable nested scrolling
-               itemCount: recentExams.length,
+               shrinkWrap: true, 
+               physics: const NeverScrollableScrollPhysics(), 
+               itemCount: recentExamsData.length,
                itemBuilder: (context, index) {
-                 final exam = recentExams[index];
+                 final examData = recentExamsData[index];
+                 // Extract data from the map
+                 final int examId = examData['id'];
+                 final String fileName = examData['fileName'];
+                 final DateTime importDate = DateTime.parse(examData['importDate']);
+                 final int attentionCount = examData['attentionCount'];
+
                  return Card(
                    elevation: 1.0,
                    margin: const EdgeInsets.symmetric(vertical: 4.0), 
                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
                    child: ListTile(
                      contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                     title: Text(exam.fileName, style: Theme.of(context).textTheme.titleMedium),
-                     subtitle: Text(dateFormatter.format(exam.importDate)),
-                     trailing: const Icon(Icons.chevron_right),
-                     onTap: () => _navigateToExamCategories(exam.id!, exam.fileName), 
+                     title: Text(fileName, style: Theme.of(context).textTheme.titleMedium),
+                     subtitle: Text(dateFormatter.format(importDate)),
+                     // Modify trailing to include the alert tag
+                     trailing: Column(
+                       mainAxisAlignment: MainAxisAlignment.center,
+                       crossAxisAlignment: CrossAxisAlignment.end,
+                       mainAxisSize: MainAxisSize.min, // Important for Column in ListTile
+                       children: [
+                         const Icon(Icons.chevron_right, color: Colors.grey), // Keep the chevron
+                         // Show alert tag only if count > 0
+                         if (attentionCount > 0)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 4.0), // Add space above tag
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: statusColors.attention.withOpacity(0.15), // Light background
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  '$attentionCount alertas',
+                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    color: statusColors.attention, // Use attention color
+                                    fontWeight: FontWeight.bold
+                                  ),
+                                ),
+                              ),
+                            ),
+                       ],
+                     ),
+                     onTap: () => _navigateToExamCategories(examId, fileName), 
                    ),
                  );
                }, 

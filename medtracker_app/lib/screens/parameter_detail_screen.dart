@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'dart:math'; // For max/min
+import 'package:intl/intl.dart'; // For number formatting
 import 'package:fl_chart/fl_chart.dart'; // Import the chart package
 import 'package:collection/collection.dart'; // For firstWhereOrNull
 
@@ -25,8 +26,11 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
   late Future<List<ParameterRecord>> _historyFuture;
   final dbService = DatabaseService();
   final NumberFormat _valueFormatter = NumberFormat("#,##0.##");
+   // Format for difference, showing sign explicitly
+  final NumberFormat _diffFormatter = NumberFormat("+#,##0.##;-#,##0.##;0");
   final DateFormat _chartTooltipFormatter = DateFormat('dd MMM yy');
-  final DateFormat _chartAxisFormatter = DateFormat('MMM'); // Short month for axis
+  // Simpler format for axis labels
+  final DateFormat _chartAxisFormatter = DateFormat("MMM ''yy");
 
   @override
   void initState() {
@@ -42,28 +46,36 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
     });
   }
 
-  // Helper to get status color (can be moved to utils)
+  // Helper to get status color (uses extension method now)
   Color _getStatusColor(BuildContext context, ParameterStatus status) {
-    final statusColors = StatusColors.of(context);
-    switch (status) {
+    return StatusColors.of(context).getColor(status);
+  }
+
+  // Helper to get appropriate icon for status
+  IconData _getStatusIcon(ParameterStatus status) {
+     switch (status) {
       case ParameterStatus.normal:
-        return statusColors.normal;
+        return Icons.check_circle; // Filled check
       case ParameterStatus.watch:
-        return statusColors.watch;
+        return Icons.watch_later; // Or warning icon
       case ParameterStatus.attention:
-        return statusColors.attention;
+        return Icons.warning_amber_rounded; // Filled warning icon
       case ParameterStatus.unknown:
-        return Colors.grey.shade600;
+      default:
+        return Icons.help_outline; // Help icon
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
-     final statusColors = StatusColors.of(context);
+     final statusColors = StatusColors.of(context); // Still useful for direct access if needed
 
     return Scaffold(
+      // --- Custom Header (AppBar) ---
       appBar: AppBar(
         title: Text(widget.parameterName), // Parameter name in title
+        backgroundColor: Theme.of(context).primaryColor, // Match mockup style
+        foregroundColor: Colors.white,
       ),
       body: FutureBuilder<List<ParameterRecord>>(
         future: _historyFuture,
@@ -72,74 +84,46 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(child: Padding(padding: const EdgeInsets.all(16.0), child: Text('Error al cargar historial: ${snapshot.error}', style: TextStyle(color: statusColors.attention))));
+            // Use the correct status color for error message
+            Color errorColor = statusColors.attention; 
+            return Center(child: Padding(padding: const EdgeInsets.all(16.0), child: Text('Error al cargar historial: ${snapshot.error}', style: TextStyle(color: errorColor))));
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(child: Padding(padding: EdgeInsets.all(16.0), child: Text('No hay historial disponible para este parámetro.')));
           }
 
           final history = snapshot.data!;
-          // Data is ordered DESC by date, so first is latest
           final latestRecord = history.first;
           final latestValueString = latestRecord.value != null ? _valueFormatter.format(latestRecord.value) : 'N/A';
           final latestStatusColor = _getStatusColor(context, latestRecord.status);
-          // TODO: Get unit (mg/dl etc.) - needs to be stored or inferred
-          const String unit = ""; // Placeholder for unit
+          const String unit = ""; // TODO: Placeholder for unit
           final String rangeString = latestRecord.refOriginal ?? 'No Ref.';
 
-          // Prepare data for the chart (reverse history for chronological order)
+          // Prepare chart data
            final chartData = history.reversed
-             .where((record) => record.value != null) // Only plot points with values
+             .where((record) => record.value != null)
              .map((record) => FlSpot(
-                  record.date.millisecondsSinceEpoch.toDouble(), // X axis: time
-                  record.value!, // Y axis: value
+                  record.date.millisecondsSinceEpoch.toDouble(),
+                  record.value!,
              ))
              .toList();
 
+          // --- Main Content ---
           return ListView(
             padding: const EdgeInsets.all(16.0),
             children: [
-              // --- Card Valor Actual --- 
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
-                  child: Column(
-                     crossAxisAlignment: CrossAxisAlignment.center,
-                     children: [
-                        const Text('Valor Actual', style: TextStyle(color: Colors.grey)),
-                        const SizedBox(height: 8),
-                        Row(
-                           mainAxisAlignment: MainAxisAlignment.center,
-                           crossAxisAlignment: CrossAxisAlignment.baseline, // Align baseline of value and unit
-                           textBaseline: TextBaseline.alphabetic,
-                           children: [
-                              Text(
-                                latestValueString,
-                                style: Theme.of(context).textTheme.displayMedium?.copyWith(fontWeight: FontWeight.bold, color: latestStatusColor),
-                              ),
-                              if (unit.isNotEmpty) const SizedBox(width: 4),
-                              if (unit.isNotEmpty)
-                                Padding(
-                                   padding: const EdgeInsets.only(bottom: 4.0), // Adjust alignment
-                                   child: Text(
-                                    unit, 
-                                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.grey[700]),
-                                  ),
-                                ),
-                           ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Valores normales: $rangeString', 
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
-                          textAlign: TextAlign.center,
-                         ),
-                     ]
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              // --- Card Evolución (Gráfico) --- 
+              // --- Card Valor Actual ---
+              _buildCurrentValueCard(context, latestRecord, latestValueString, unit, rangeString, latestStatusColor),
+              const SizedBox(height: 16), // Spacing
+
+              // --- NEW: Status Message Card ---
+              // Show only if status is not normal or unknown
+              if (latestRecord.status != ParameterStatus.normal && latestRecord.status != ParameterStatus.unknown)
+                  _buildStatusMessageCard(context, latestRecord, latestStatusColor),
+              if (latestRecord.status != ParameterStatus.normal && latestRecord.status != ParameterStatus.unknown)
+                  const SizedBox(height: 16), // Spacing only if message card shown
+
+              // --- Card Evolución (Gráfico) ---
               Card(
                  child: Padding(
                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
@@ -150,15 +134,20 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
                        const SizedBox(height: 20),
                        if (chartData.length < 2)
                          const Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 30), child: Text('No hay suficientes datos para graficar.')))
-                       else 
+                       else
                          SizedBox(
-                            height: 200, // Fixed height for the chart
+                            height: 200,
                             child: _buildLineChart(context, chartData, latestRecord),
                          ),
                      ],
                    ),
                  ),
               ),
+              const SizedBox(height: 16), // Spacing
+
+              // --- NEW: Recommendation Card ---
+              _buildRecommendationCard(context, latestRecord, latestStatusColor),
+
             ],
           );
         },
@@ -166,10 +155,174 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
     );
   }
 
-  // --- Line Chart Builder --- 
+ // --- Widget Builder Methods ---
+
+ Widget _buildCurrentValueCard(BuildContext context, ParameterRecord latestRecord, String latestValueString, String unit, String rangeString, Color latestStatusColor) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text('Valor Actual', style: TextStyle(color: Colors.grey[700])), // Adjusted style
+                const SizedBox(height: 8),
+                Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        latestValueString,
+                        style: Theme.of(context).textTheme.displayMedium?.copyWith(fontWeight: FontWeight.bold, color: latestStatusColor),
+                      ),
+                      if (unit.isNotEmpty) const SizedBox(width: 4),
+                      if (unit.isNotEmpty)
+                        Padding(
+                            padding: const EdgeInsets.only(bottom: 4.0),
+                            child: Text(
+                              unit,
+                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.grey[700]),
+                            ),
+                        ),
+                    ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Valores normales: $rangeString',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+                  textAlign: TextAlign.center,
+                  ),
+              ]
+          ),
+        ),
+      );
+ }
+
+ // --- NEW: Status Message Card Builder ---
+ Widget _buildStatusMessageCard(BuildContext context, ParameterRecord record, Color statusColor) {
+    String message = "";
+    IconData icon = _getStatusIcon(record.status); // Get appropriate icon
+    // Use the darker foreground colors from the fixed version
+    Color backgroundColor; 
+    Color foregroundColor; 
+
+    // Determine message, icon, and colors based on status
+    switch (record.status) {
+       case ParameterStatus.watch:
+          backgroundColor = Colors.orange.shade50; // Very light orange background
+          foregroundColor = Colors.orange.shade800; // Darker orange for text/icon
+          if (record.value != null && record.refRangeLow != null && record.value! < record.refRangeLow!) {
+             message = "Ligeramente por debajo del valor normal";
+          } else if (record.value != null && record.refRangeHigh != null && record.value! > record.refRangeHigh!) {
+             message = "Ligeramente por encima del valor normal";
+          } else {
+             message = "Valor en rango de vigilancia"; // Fallback
+          }
+          break;
+       case ParameterStatus.attention:
+          backgroundColor = Colors.amber.shade50; // Very light amber background
+          foregroundColor = Colors.amber.shade900; // Darker amber for text/icon
+           if (record.value != null && record.refRangeLow != null && record.value! < record.refRangeLow!) {
+             message = "Valor por debajo del rango normal";
+          } else if (record.value != null && record.refRangeHigh != null && record.value! > record.refRangeHigh!) {
+             message = "Valor por encima del rango normal";
+          } else {
+             message = "Requiere atención"; // Fallback
+          }
+          break;
+       // Add cases for normal/unknown if you want messages for them too
+       default:
+          return Container(); // Don't show for normal/unknown by default
+    }
+
+    return Card(
+       color: backgroundColor,
+       elevation: 1.0,
+       shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          // Use the darker foregroundColor for the border for consistency
+          side: BorderSide(color: foregroundColor.withOpacity(0.3), width: 1) 
+       ),
+       child: Padding(
+         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+         child: Row(
+           children: [
+             // Use the determined darker foregroundColor
+             Icon(icon, color: foregroundColor, size: 24),
+             const SizedBox(width: 12),
+             Expanded(
+               child: Text(
+                 message, 
+                 // Use the determined darker foregroundColor
+                 style: Theme.of(context).textTheme.titleSmall?.copyWith(color: foregroundColor, fontWeight: FontWeight.w500),
+               ),
+             ),
+           ],
+         ),
+       ),
+    );
+ }
+
+ // --- NEW: Recommendation Card Builder ---
+ Widget _buildRecommendationCard(BuildContext context, ParameterRecord record, Color statusColor) {
+    String recommendation = "";
+
+    // TODO: Implement actual recommendation logic based on parameter/history/rules
+    // This is placeholder text based ONLY on the current status
+    switch (record.status) {
+       case ParameterStatus.normal:
+          recommendation = "Mantener hábitos saludables y controles regulares.";
+          break;
+       case ParameterStatus.watch:
+          recommendation = "Monitorizar evolución. Considerar ajustes en dieta o estilo de vida si persiste.";
+          break;
+       case ParameterStatus.attention:
+          // Specific example from mockup for Hemoglobin
+          if (record.parameterName.toLowerCase().contains("hemoglobina")) {
+             recommendation = "Considerar suplementos de hierro o consultar con especialista si continúa descendiendo.";
+          } else {
+             recommendation = "Consultar con especialista para evaluación y posible tratamiento. Es importante seguir indicaciones médicas.";
+          }
+          break;
+       case ParameterStatus.unknown:
+          recommendation = "Resultado no concluyente o dato faltante. Repetir prueba si es necesario.";
+          break;
+    }
+
+    // Use a distinct but soft background color
+    Color recommendationBgColor = Colors.lightBlue.shade50;
+
+    return Card(
+       color: recommendationBgColor,
+       elevation: 1.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          side: BorderSide(color: Colors.lightBlue.shade100, width: 1) // Optional border
+       ),
+       child: Padding(
+         padding: const EdgeInsets.all(16.0),
+         child: Column(
+           crossAxisAlignment: CrossAxisAlignment.start,
+           children: [
+             Text(
+               'Recomendación',
+               style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.blue.shade800)
+             ),
+             const SizedBox(height: 8),
+             Text(
+               recommendation,
+               style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black87),
+             ),
+           ],
+         ),
+       ),
+    );
+ }
+
+  // --- Line Chart Builder ---
   Widget _buildLineChart(BuildContext context, List<FlSpot> spots, ParameterRecord latestRecord) {
     final statusColors = StatusColors.of(context);
-    final lineStyle = LineChartBarData(
+     final lineStyle = LineChartBarData(
             spots: spots,
             isCurved: true,
             color: Theme.of(context).colorScheme.primary, // Chart line color
@@ -177,7 +330,7 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
             isStrokeCapRound: true,
             dotData: FlDotData(
               show: true, // Show dots on data points
-              getDotPainter: (spot, percent, barData, index) => 
+              getDotPainter: (spot, percent, barData, index) =>
                   FlDotCirclePainter(radius: 4, color: Theme.of(context).colorScheme.primary, strokeWidth: 1, strokeColor: Colors.white),
             ),
             belowBarData: BarAreaData(
@@ -196,45 +349,46 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
       // Determine min/max Y based on data and reference range
       double minY = spots.map((s) => s.y).reduce((a, b) => a < b ? a : b);
       double maxY = spots.map((s) => s.y).reduce((a, b) => a > b ? a : b);
-      if(latestRecord.refRangeLow != null) minY = min(minY, latestRecord.refRangeLow!); 
-      if(latestRecord.refRangeHigh != null) maxY = max(maxY, latestRecord.refRangeHigh!); 
-      
+      if(latestRecord.refRangeLow != null) minY = min(minY, latestRecord.refRangeLow!);
+      if(latestRecord.refRangeHigh != null) maxY = max(maxY, latestRecord.refRangeHigh!);
+
       // Add padding and handle case where min == max
       double effectiveMinY = minY;
       double effectiveMaxY = maxY;
       if (effectiveMinY == effectiveMaxY) {
-        // If all values are the same, add a small range for display
-        effectiveMinY -= 1.0; 
+        effectiveMinY -= 1.0;
         effectiveMaxY += 1.0;
       }
       double yPadding = (effectiveMaxY - effectiveMinY) * 0.15; // 15% padding
       effectiveMinY -= yPadding;
       effectiveMaxY += yPadding;
-      // Ensure min Y is not excessively low 
+      // Ensure min Y is not excessively low
       if (effectiveMinY < 0 && spots.every((s) => s.y >= 0) && latestRecord.refRangeLow == null) effectiveMinY = 0;
-      
+
       // Calculate interval AFTER adjusting min/max Y
-      double horizontalInterval = (effectiveMaxY - effectiveMinY) / 4; 
+      double horizontalInterval = (effectiveMaxY - effectiveMinY) / 4;
       // Ensure interval is valid
       if (horizontalInterval <= 0) {
         horizontalInterval = 1; // Default interval if calculation fails
       }
 
-      // Horizontal lines for reference range (if available)
+      // Horizontal lines for reference range
        List<HorizontalLine> horizontalLines = [];
+       // Use the color for 'watch' status for the reference lines
+       Color refLineColor = statusColors.watch; 
        if (latestRecord.refRangeLow != null) {
          horizontalLines.add(HorizontalLine(
-            y: latestRecord.refRangeLow!, 
-            color: statusColors.watch.withOpacity(0.8), 
+            y: latestRecord.refRangeLow!,
+            color: refLineColor.withOpacity(0.8),
             strokeWidth: 1,
-            dashArray: [5, 5], // Dashed line
+            dashArray: [5, 5],
             label: HorizontalLineLabel(show: false)
           ));
        }
         if (latestRecord.refRangeHigh != null) {
          horizontalLines.add(HorizontalLine(
-            y: latestRecord.refRangeHigh!, 
-            color: statusColors.watch.withOpacity(0.8), 
+            y: latestRecord.refRangeHigh!,
+            color: refLineColor.withOpacity(0.8),
             strokeWidth: 1,
             dashArray: [5, 5],
             label: HorizontalLineLabel(show: false)
@@ -246,14 +400,14 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
         minY: effectiveMinY,
         maxY: effectiveMaxY,
         lineBarsData: [lineStyle],
-        clipData: FlClipData.all(),
+        clipData: FlClipData.all(), // Clip line to border
         gridData: FlGridData(
            show: true,
-           drawVerticalLine: false, // Hide vertical grid lines
-           horizontalInterval: horizontalInterval, // Use calculated, validated horizontalInterval
+           drawVerticalLine: false,
+           horizontalInterval: horizontalInterval,
            getDrawingHorizontalLine: (value) {
              return FlLine(
-               color: Colors.grey[300], // Light grey grid lines
+               color: Colors.grey[300],
                strokeWidth: 0.5,
              );
            },
@@ -267,16 +421,17 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
         ),
         titlesData: FlTitlesData(
            leftTitles: AxisTitles(
-              sideTitles: SideTitles(showTitles: true, reservedSize: 40, 
-                interval: horizontalInterval, 
+              sideTitles: SideTitles(showTitles: true, reservedSize: 40,
+                interval: horizontalInterval,
                 getTitlesWidget: leftTitleWidgets
               ),
            ),
            bottomTitles: AxisTitles(
               sideTitles: SideTitles(
-                showTitles: true, 
-                reservedSize: 45, 
-                interval: _calculateDateInterval(spots), 
+                showTitles: true,
+                reservedSize: 45,
+                interval: _calculateDateInterval(spots),
+                // Pass spots to the title widget function
                 getTitlesWidget: (value, meta) => bottomTitleWidgets(value, meta, spots)
               ),
            ),
@@ -292,7 +447,7 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
                     final String dateStr = _chartTooltipFormatter.format(date);
                     final String valueStr = _valueFormatter.format(touchedSpot.y);
                     return LineTooltipItem(
-                      '$valueStr\n', 
+                      '$valueStr\n',
                       const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                       children: [TextSpan(text: dateStr, style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.normal, fontSize: 12))]
                     );
@@ -308,20 +463,22 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
    Widget leftTitleWidgets(double value, TitleMeta meta) {
     final style = TextStyle(color: Colors.grey[700], fontSize: 10);
     String text = _valueFormatter.format(value);
-    if (value == meta.min || value == meta.max || (value == 0 && meta.min < 0) ) return Container(); 
+    // Avoid showing min/max labels if they are too close to the edges or zero
+    if (value == meta.min || value == meta.max || (value == 0 && meta.min < 0) ) return Container();
     return SideTitleWidget(meta: meta, space: 6, child: Text(text, style: style));
   }
 
-  // Helper for X Axis labels - NOW FILTERS BASED ON ACTUAL SPOT DATA
+  // Helper for X Axis labels - FILTERS BASED ON ACTUAL SPOT DATA
   Widget bottomTitleWidgets(double value, TitleMeta meta, List<FlSpot> spots) {
     final style = TextStyle(color: Colors.grey[700], fontSize: 10);
-    
+
     // Check if the current value corresponds to an actual data point
     final bool isDataPoint = spots.any((spot) => spot.x.toInt() == value.toInt());
 
     if (isDataPoint) {
        final DateTime date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
-       final String text = DateFormat("MMM ''yy").format(date);
+       // Use the simpler axis formatter
+       final String text = _chartAxisFormatter.format(date);
        return SideTitleWidget(meta: meta, space: 6, child: Text(text, style: style, textAlign: TextAlign.center));
     } else {
         // Don't show a label if it doesn't correspond to a data point
@@ -331,30 +488,29 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
 
   // Calculate appropriate interval for date axis labels
   double _calculateDateInterval(List<FlSpot> spots) {
-    if (spots.length < 2) return 1; // Default if not enough data
+    if (spots.length < 2) return 1;
     final double minDateMillis = spots.first.x;
     final double maxDateMillis = spots.last.x;
     final double durationDays = (maxDateMillis - minDateMillis) / (1000 * 60 * 60 * 24);
-    
-    // Adjust interval based on duration (example logic) - Doubled intervals
+
     double intervalMillis;
-    if (durationDays <= 14) { // 2 weeks
+    if (durationDays <= 14) {
       intervalMillis = 4 * 24 * 60 * 60 * 1000; // ~4 days interval
-    } else if (durationDays <= 90) { // 3 months
+    } else if (durationDays <= 90) {
        intervalMillis = 30 * 24 * 60 * 60 * 1000; // ~1 month interval
-    } else if (durationDays <= 365) { // 1 year
+    } else if (durationDays <= 365) {
        intervalMillis = 90 * 24 * 60 * 60 * 1000; // ~3 months interval
-    } else { // More than a year
+    } else {
        intervalMillis = 365 * 24 * 60 * 60 * 1000; // ~1 year interval
     }
-    
-    // Ensure a minimum sensible interval if calculated is too small, 
-    // e.g., at least one day even for very short durations.
-    const double minIntervalMillis = 24 * 60 * 60 * 1000; // One day
+
+    const double minIntervalMillis = 24 * 60 * 60 * 1000; // One day minimum
     return max(intervalMillis, minIntervalMillis);
   }
-  
-   // --- Math helpers for min/max --- 
+
+   // --- Math helpers for min/max ---
   double min(double a, double b) => a < b ? a : b;
   double max(double a, double b) => a > b ? a : b;
-} 
+}
+
+// Extension is now defined in main.dart 
