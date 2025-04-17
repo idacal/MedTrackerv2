@@ -25,9 +25,12 @@ class MedTrackerApp extends StatelessWidget {
   Widget build(BuildContext context) {
     // Define custom colors from the mockup
     const Color primaryBlue = Color(0xFF4285F4);
-    const Color statusGreen = Color(0xFF4CAF50);
-    const Color statusAmber = Color(0xFFFFA726);
-    const Color statusRed = Color(0xFFF44336);
+    const Color statusGreen = Color(0xFF4CAF50); // Green
+    const Color statusAmber = Color(0xFFFFA726); // Amber/Orange for Watch
+    // CHANGE: Use the Amber color for Attention now
+    const Color statusAttention = Color(0xFFFFA726); // Amber/Orange for Attention
+    // Keep Red for general errors in the theme's colorScheme
+    const Color errorRed = Color(0xFFF44336); 
 
     return MaterialApp(
       title: 'MedTracker',
@@ -37,7 +40,7 @@ class MedTrackerApp extends StatelessWidget {
           seedColor: primaryBlue, // Base color for generating scheme
           primary: primaryBlue,    // Ensure primary is exactly this blue
           secondary: statusAmber,  // Use Amber as secondary/accent
-          error: statusRed,        // Use Red for error states
+          error: errorRed,        // Use Red for error states
           // Define brightness or other scheme colors if needed
           // brightness: Brightness.light,
         ),
@@ -108,23 +111,28 @@ class MedTrackerApp extends StatelessWidget {
            // bodyLarge: TextStyle(fontWeight: FontWeight.w500),
         ),
         
-        // Store status colors for easy access elsewhere (optional)
+        // Store status colors for easy access elsewhere
+        // Use the const colors defined above - this is valid
         extensions: <ThemeExtension<dynamic>>[
            const StatusColors(
              normal: statusGreen,
              watch: statusAmber,
-             attention: statusRed,
+             attention: statusAttention, // Use the new amber const for attention
            ),
         ],
 
       ),
+       // --- NO DARK THEME DEFINED FOR SIMPLICITY NOW ---
+      // darkTheme: ..., 
+      // themeMode: ThemeMode.system, 
       debugShowCheckedModeBanner: false, 
+      // Ensure home points to MainScaffold
       home: const MainScaffold(), 
     );
   }
 }
 
-// Custom Theme Extension to hold status colors
+// KEEP THIS StatusColors CLASS DEFINITION
 @immutable
 class StatusColors extends ThemeExtension<StatusColors> {
   const StatusColors({
@@ -163,3 +171,35 @@ class StatusColors extends ThemeExtension<StatusColors> {
     return Theme.of(context).extension<StatusColors>()!;
   }
 }
+
+// --- REMOVE DUPLICATED DEFINITIONS BELOW THIS LINE --- 
+
+// REMOVE: Duplicated statusColorsLight
+// const statusColorsLight = StatusColors(
+//   normal: Colors.green,         
+//   watch: Colors.orange,         
+//   attention: Colors.amber.shade700, 
+// );
+
+// REMOVE: Duplicated statusColorsDark
+// const statusColorsDark = StatusColors(
+//   normal: Colors.greenAccent,   
+//   watch: Colors.orangeAccent,   
+//   attention: Colors.amberAccent, 
+// );
+
+// REMOVE: Duplicated MyApp
+// class MyApp extends StatelessWidget {
+//   // ... 
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       // ...
+//       home: const MainScreen(), // Incorrect home
+//       // ...
+//     );
+//   }
+// }
+
+// REMOVE: Duplicated MainScreen reference (if any)
+// class MainScreen extends StatelessWidget { ... }

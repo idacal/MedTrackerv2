@@ -76,39 +76,42 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       // Remove the default AppBar
       // appBar: AppBar(title: const Text('Pantalla Principal')),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          _loadData(); // Reload data on pull-to-refresh
-        },
-        child: ListView(
-          padding: const EdgeInsets.all(16.0),
-          children: [
-            // --- Custom Header ---
-            _buildCustomHeader(context),
-            const SizedBox(height: 20),
+      body: SafeArea( // <-- Wrap body content with SafeArea
+        child: RefreshIndicator(
+          onRefresh: () async {
+            _loadData(); // Reload data on pull-to-refresh
+          },
+          child: ListView(
+            padding: const EdgeInsets.all(16.0),
+            children: [
+              // --- Custom Header ---
+              _buildCustomHeader(context),
+              // Increase spacing below header
+              const SizedBox(height: 30), 
 
-            // --- Health Summary Card ---
-            FutureBuilder<Map<ParameterStatus, int>>(
-              future: _summaryFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error al cargar resumen: ${snapshot.error}', style: TextStyle(color: statusColors.attention)));
-                }
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('No hay datos de resumen.'));
-                }
-                // Use actual data
-                return _buildSummaryCard(context, snapshot.data ?? {});
-              },
-            ),
-            const SizedBox(height: 24),
+              // --- Health Summary Card ---
+              FutureBuilder<Map<ParameterStatus, int>>(
+                future: _summaryFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error al cargar resumen: ${snapshot.error}', style: TextStyle(color: statusColors.attention)));
+                  }
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Center(child: Text('No hay datos de resumen.'));
+                  }
+                  // Use actual data
+                  return _buildSummaryCard(context, snapshot.data ?? {});
+                },
+              ),
+              const SizedBox(height: 24),
 
-            // --- Recent Exams Section ---
-            _buildRecentExams(context),
-          ],
+              // --- Recent Exams Section ---
+              _buildRecentExams(context),
+            ],
+          ),
         ),
       ),
     );
@@ -292,7 +295,7 @@ class _HomeScreenState extends State<HomeScreen> {
               return Center(child: Text('Error al cargar exámenes: ${snapshot.error}', style: TextStyle(color: StatusColors.of(context).attention)));
             }
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Card( // Wrap message in a card for consistency
+              return const Card( 
                  child: Padding(
                    padding: EdgeInsets.all(16.0),
                    child: Center(child: Text('No hay exámenes recientes.')),
@@ -300,20 +303,29 @@ class _HomeScreenState extends State<HomeScreen> {
                );
             }
 
-            // --- Show ONLY the most recent exam ---
-            final mostRecentExam = snapshot.data!.first;
+            // --- Show up to 3 most recent exams ---
+            final recentExams = snapshot.data!.take(3).toList();
 
-            return Card(
-              elevation: 1.0,
-              margin: const EdgeInsets.symmetric(vertical: 4.0), // Add some vertical margin
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-              child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                title: Text(mostRecentExam.fileName, style: Theme.of(context).textTheme.titleMedium),
-                subtitle: Text(dateFormatter.format(mostRecentExam.importDate)),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => _navigateToExamCategories(mostRecentExam.id!, mostRecentExam.fileName),
-              ),
+            // Use ListView.builder to display the list
+            return ListView.builder(
+               shrinkWrap: true, // Important inside a scrolling parent (ListView)
+               physics: const NeverScrollableScrollPhysics(), // Disable nested scrolling
+               itemCount: recentExams.length,
+               itemBuilder: (context, index) {
+                 final exam = recentExams[index];
+                 return Card(
+                   elevation: 1.0,
+                   margin: const EdgeInsets.symmetric(vertical: 4.0), 
+                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+                   child: ListTile(
+                     contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                     title: Text(exam.fileName, style: Theme.of(context).textTheme.titleMedium),
+                     subtitle: Text(dateFormatter.format(exam.importDate)),
+                     trailing: const Icon(Icons.chevron_right),
+                     onTap: () => _navigateToExamCategories(exam.id!, exam.fileName), 
+                   ),
+                 );
+               }, 
             );
           },
         ),

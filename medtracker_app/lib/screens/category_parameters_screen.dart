@@ -44,7 +44,7 @@ class CategoryParametersScreen extends StatelessWidget {
       case ParameterStatus.watch:
         return Icons.watch_later_outlined; // Consistent icon
       case ParameterStatus.attention:
-        return Icons.error_outline; // Consistent icon
+        return Icons.warning; // Use a filled, more prominent icon for attention
       case ParameterStatus.unknown:
         return Icons.help_outline; // Consistent icon
     }
@@ -78,22 +78,33 @@ class CategoryParametersScreen extends StatelessWidget {
             final statusColor = _getStatusColor(context, param.status);
             final statusIcon = _getStatusIcon(param.status);
             final valueString = param.value != null ? valueFormatter.format(param.value) : '--';
-            // Use a more descriptive placeholder if range is null
             final rangeString = param.refOriginal?.isNotEmpty == true ? param.refOriginal! : 'No Ref.';
 
+            // Determine card background color based on status
+            Color? cardBackgroundColor;
+            if (param.status == ParameterStatus.attention) {
+              cardBackgroundColor = Colors.amber.shade50; // Very light amber for attention
+            }
+            // Add cases for watch or normal if needed
+            // else if (param.status == ParameterStatus.watch) {
+            //   cardBackgroundColor = Colors.orange.shade50; 
+            // }
+
             return Card(
-              // Use theme defaults
+              color: cardBackgroundColor, // Set background color conditionally
               margin: const EdgeInsets.symmetric(vertical: 5.0),
               child: ListTile(
                  contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                 leading: Tooltip( // Add tooltip to icon
-                     message: param.status.toString().split('.').last, // Show status name
-                     child: Icon(statusIcon, color: statusColor, size: 30),
+                 leading: Tooltip( 
+                     message: param.status.toString().split('.').last, 
+                     // Ensure icon uses the (now potentially yellow) statusColor
+                     child: Icon(statusIcon, color: statusColor, size: 30), 
                  ),
                  title: Text(param.parameterName, style: Theme.of(context).textTheme.titleMedium),
                  subtitle: Text(rangeString, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
                  trailing: Text(
                     valueString, 
+                    // Ensure value text uses the (now potentially yellow) statusColor
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: statusColor)
                  ),
                  onTap: () => _navigateToParameterDetail(context, param),
