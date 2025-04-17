@@ -4,6 +4,9 @@ import 'package:intl/intl.dart';
 import '../models/parameter_record.dart';
 import '../main.dart'; // Import main to access StatusColors
 
+// Import parameter detail screen 
+import 'parameter_detail_screen.dart'; // Import the new screen
+
 // Import parameter detail screen (will create later)
 // import 'parameter_detail_screen.dart';
 
@@ -48,19 +51,14 @@ class CategoryParametersScreen extends StatelessWidget {
   }
 
   void _navigateToParameterDetail(BuildContext context, ParameterRecord parameter) {
-     // TODO: Implement navigation to ParameterDetailScreen
-     print("Navigate to history/graph for: ${parameter.category} - ${parameter.parameterName}");
-     ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gráfico para ${parameter.parameterName} (No implementado)')),
+     // Implement actual navigation
+     Navigator.push(
+       context,
+       MaterialPageRoute(builder: (context) => ParameterDetailScreen(
+          categoryName: parameter.category,
+          parameterName: parameter.parameterName,
+       )),
      );
-     // Example navigation:
-     // Navigator.push(
-     //   context,
-     //   MaterialPageRoute(builder: (context) => ParameterDetailScreen(
-     //      categoryName: parameter.category,
-     //      parameterName: parameter.parameterName,
-     //   )),
-     // );
   }
 
   @override
