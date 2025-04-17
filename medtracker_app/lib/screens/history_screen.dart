@@ -34,17 +34,30 @@ class _HistoryScreenState extends State<HistoryScreen> {
     });
   }
 
-  void _navigateToExamDetail(int examId, String fileName) {
-     Navigator.push(
-       context,
-       MaterialPageRoute(
-         // Navigate to ExamCategoriesScreen
-         builder: (context) => ExamCategoriesScreen(examId: examId, examName: fileName)
-       ),
-     ).then((_) {
-        // Optional: Reload list if returning might have caused changes
-        // _loadExamRecords();
-     });
+  void _navigateToExamDetail(int examId, String fileName) async {
+      // Fetch grouped parameters before navigating
+      final dbService = DatabaseService(); 
+      try {
+          // Consider showing a loading indicator here
+          final groupedParameters = await dbService.getGroupedParametersForExam(examId);
+          if (mounted) { // Check if the widget is still mounted
+             Navigator.push(
+                 context,
+                 MaterialPageRoute(
+                     builder: (context) => ExamCategoriesScreen(
+                         examName: fileName,
+                         groupedParameters: groupedParameters, // Pass the map
+                     )
+                 ),
+             );
+          }
+      } catch (e) {
+          if (mounted) {
+             ScaffoldMessenger.of(context).showSnackBar(
+                 SnackBar(content: Text('Error al cargar detalles del examen: $e')),
+             );
+          }
+      }
   }
 
   @override

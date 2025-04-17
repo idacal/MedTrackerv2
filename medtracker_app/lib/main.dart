@@ -28,10 +28,9 @@ class MedTrackerApp extends StatelessWidget {
     // Define custom colors from the mockup
     const Color primaryBlue = Color(0xFF4285F4);
     const Color statusGreen = Color(0xFF4CAF50); // Green
-    const Color statusAmber = Color(0xFFFFA726); // Amber/Orange for Watch
-    // CHANGE: Use the Amber color for Attention now
-    const Color statusAttention = Color(0xFFFFA726); // Amber/Orange for Attention
-    // Keep Red for general errors in the theme's colorScheme
+    const Color statusWatch = Color(0xFFFFA726); // Amber/Orange for Watch
+    // Use a distinct Yellow/Amber for Attention
+    const Color statusAttention = Color(0xFFFFC107); // Material Amber 500
     const Color errorRed = Color(0xFFF44336); 
 
     return MaterialApp(
@@ -41,7 +40,7 @@ class MedTrackerApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(
           seedColor: primaryBlue, // Base color for generating scheme
           primary: primaryBlue,    // Ensure primary is exactly this blue
-          secondary: statusAmber,  // Use Amber as secondary/accent
+          secondary: statusWatch,   // Keep Amber700 as secondary, distinct from attention yellow
           error: errorRed,        // Use Red for error states
           // Define brightness or other scheme colors if needed
           // brightness: Brightness.light,
@@ -114,12 +113,11 @@ class MedTrackerApp extends StatelessWidget {
         ),
         
         // Store status colors for easy access elsewhere
-        // Use the const colors defined above - this is valid
         extensions: <ThemeExtension<dynamic>>[
            const StatusColors(
              normal: statusGreen,
-             watch: statusAmber,
-             attention: statusAttention, // Use the new amber const for attention
+             watch: statusWatch, // Use the specific watch color
+             attention: statusAttention, // Use the specific attention color
            ),
         ],
 

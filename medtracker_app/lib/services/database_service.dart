@@ -30,9 +30,8 @@ class DatabaseService {
     final path = join(documentsDirectory.path, 'medtracker.db');
 
     // --- TEMPORARY FOR DEVELOPMENT: Force delete DB on init ---
-    // Ensures schema changes in _onCreate are applied.
-    // REMOVE THIS LINE FOR PRODUCTION to keep data persistent!
-    if (kDebugMode) { // Only delete in debug mode for safety
+    // We can keep this for debug if needed, but onUpgrade will now handle schema changes
+    if (kDebugMode) { 
         print("DEVELOPMENT: Deleting existing database at $path to ensure schema update...");
         await deleteDatabase(path);
         print("DEVELOPMENT: Database deleted.");
@@ -41,16 +40,18 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 1, // Keep version 1 for now, onCreate handles schema
-      onCreate: _onCreate,
+      version: 2, // <-- Increment version number
+      onCreate: _onCreate, // Called only if DB doesn't exist at all
+      onUpgrade: _onUpgrade, // Called if DB exists but version < 2
     );
   }
 
-  // Create tables
+  // Create tables (Only called if DB file doesn't exist)
   Future<void> _onCreate(Database db, int version) async {
      if (kDebugMode) {
-        print("Creating database tables...");
+        print("Database onCreate: Creating tables for version $version...");
      }
+    // Schema includes the status column from the start for fresh installs
     await db.execute('''
       CREATE TABLE exam_records (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -70,17 +71,50 @@ class DatabaseService {
         refRangeHigh REAL,
         refOriginal TEXT,
         date TEXT NOT NULL,
-        status TEXT NOT NULL,
+        status TEXT NOT NULL, 
         FOREIGN KEY (examRecordId) REFERENCES exam_records (id) ON DELETE CASCADE
       )
     ''');
-     // Add index for faster history lookups
+     
     await db.execute('''
       CREATE INDEX idx_parameter_history
       ON parameter_records (category, parameterName, date, status)
     ''');
       if (kDebugMode) {
-        print("Database tables created.");
+        print("Database onCreate: Tables created.");
+     }
+  }
+
+  // --- Database Upgrade Logic ---
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+     if (kDebugMode) {
+       print("Database onUpgrade: Upgrading from version $oldVersion to $newVersion...");
+     }
+     // Apply schema changes sequentially
+     if (oldVersion < 2) {
+        if (kDebugMode) {
+           print("Applying upgrade V1 -> V2: Adding status column to parameter_records...");
+        }
+        try {
+          // Add the status column with a default value for existing rows
+          await db.execute("ALTER TABLE parameter_records ADD COLUMN status TEXT NOT NULL DEFAULT 'unknown'");
+          // Add status to the index as well
+          await db.execute("DROP INDEX IF EXISTS idx_parameter_history"); // Drop old index first
+          await db.execute("CREATE INDEX idx_parameter_history ON parameter_records (category, parameterName, date, status)");
+           if (kDebugMode) {
+              print("Upgrade V1 -> V2 successful.");
+           }
+        } catch (e) {
+             if (kDebugMode) {
+                print("Error applying upgrade V1 -> V2: $e");
+             } 
+             // Re-throw or handle error appropriately
+             rethrow; 
+        }
+     }
+     // Add more 'if (oldVersion < X)' blocks here for future upgrades
+      if (kDebugMode) {
+       print("Database onUpgrade: Finished.");
      }
   }
 
@@ -240,6 +274,16 @@ class DatabaseService {
     return List.generate(maps.length, (i) {
       return ParameterRecord.fromMap(maps[i]);
     });
+  }
+
+  // --- NEW: Get parameters grouped by category for an exam ---
+  Future<Map<String, List<ParameterRecord>>> getGroupedParametersForExam(int examRecordId) async {
+    final List<ParameterRecord> allParams = await getParametersForExam(examRecordId);
+    final Map<String, List<ParameterRecord>> grouped = {};
+    for (var param in allParams) {
+      (grouped[param.category] ??= []).add(param);
+    }
+    return grouped;
   }
 
   /// Fetches the history for a specific parameter (category + name), ordered by date descending.

@@ -10,166 +10,232 @@ import '../main.dart'; // Import main to access StatusColors
 // Import screen for category parameters (will create next)
 import 'category_parameters_screen.dart';
 
-// Renamed from ExamDetailScreen
+// Convert to StatefulWidget to handle search
 class ExamCategoriesScreen extends StatefulWidget {
-  final int examId;
-  final String examName; 
+  final String examName;
+  // Accept grouped parameters instead of examId
+  final Map<String, List<ParameterRecord>> groupedParameters;
 
-  const ExamCategoriesScreen({super.key, required this.examId, required this.examName});
+  const ExamCategoriesScreen({
+    super.key,
+    required this.examName,
+    required this.groupedParameters,
+  });
 
   @override
   State<ExamCategoriesScreen> createState() => _ExamCategoriesScreenState();
 }
 
-// Renamed from _ExamDetailScreenState
 class _ExamCategoriesScreenState extends State<ExamCategoriesScreen> {
-  late Future<List<ParameterRecord>> _parametersFuture;
-  Map<String, List<ParameterRecord>> _groupedParameters = {};
-  final dbService = DatabaseService();
+  String _searchQuery = '';
 
-  @override
-  void initState() {
-    super.initState();
-    _loadParameters();
-  }
-
-  Future<void> _loadParameters() async {
-    // Don't need setState here as FutureBuilder handles the future directly
-    _parametersFuture = dbService.getParametersForExam(widget.examId);
-    // Pre-process grouping when future completes, for badge calculation
-    _parametersFuture.then((parameters) {
-       _groupParameters(parameters);
-    }).catchError((error) {
-       if (kDebugMode) {
-         print("Error loading parameters for grouping: $error");
-       }
-    });
-  }
-
-  void _groupParameters(List<ParameterRecord> parameters) {
-    final grouped = <String, List<ParameterRecord>>{};
-    for (var param in parameters) {
-      (grouped[param.category] ??= []).add(param);
+  // Filter category names based on search query
+  List<String> get _filteredCategoryNames {
+    final allNames = widget.groupedParameters.keys.toList()..sort(); // Sort alphabetically
+    if (_searchQuery.isEmpty) {
+      return allNames;
     }
-    if (mounted && !mapEquals(_groupedParameters, grouped)) { 
-       setState(() { // Update state only if grouping changed
-          _groupedParameters = grouped;
-       });
+    return allNames
+        .where((name) => name.toLowerCase().contains(_searchQuery.toLowerCase()))
+        .toList();
+  }
+
+  // Determine overall status for a category based on its parameters
+  ParameterStatus _getOverallCategoryStatus(List<ParameterRecord> params) {
+    if (params.any((p) => p.status == ParameterStatus.attention)) {
+      return ParameterStatus.attention;
     }
-  }
-
-  // Calculate status counts for badges
-  Map<String, int> _getCategoryStatusCounts(List<ParameterRecord> parameters) {
-    int attentionCount = 0;
-    int watchCount = 0;
-    for (var param in parameters) {
-      if (param.status == ParameterStatus.attention) {
-        attentionCount++;
-      } else if (param.status == ParameterStatus.watch) {
-        watchCount++; // Assuming watch status exists and is distinct
-      }
+    if (params.any((p) => p.status == ParameterStatus.watch)) {
+      return ParameterStatus.watch;
     }
-    return {'attention': attentionCount, 'watch': watchCount};
-  }
-
-  void _navigateToCategoryParameters(String category, List<ParameterRecord> parameters) {
-     Navigator.push(
-       context,
-       MaterialPageRoute(
-         builder: (context) => CategoryParametersScreen(
-           examName: widget.examName, 
-           categoryName: category, 
-           parameters: parameters, 
-          )
-       ),
-     );
-  }
-
-  Color _getBadgeColor(Map<String, int> counts) {
-     final statusColors = StatusColors.of(context); // Use theme colors
-     if (counts['attention']! > 0) return statusColors.attention;
-     if (counts['watch']! > 0) return statusColors.watch;
-     return statusColors.normal; // Return normal color if no issues
-  }
-
-  IconData _getBadgeIcon(Map<String, int> counts) {
-     if (counts['attention']! > 0) return Icons.error_outline;
-     if (counts['watch']! > 0) return Icons.warning_amber_rounded; 
-     return Icons.check_circle; 
+     if (params.any((p) => p.status == ParameterStatus.unknown)) {
+      // If any parameter is unknown, maybe mark category for review (watch)
+      return ParameterStatus.watch; 
+    }
+    return ParameterStatus.normal;
   }
   
-  String? _getBadgeText(Map<String, int> counts) {
-     // Only show text for counts > 0
-     if (counts['attention']! > 0) return counts['attention'].toString();
-     if (counts['watch']! > 0) return counts['watch'].toString();
-     return null; // No text for green check
+   // Helper to get status icon (use filled icons)
+  IconData _getStatusIcon(ParameterStatus status) {
+     switch (status) {
+      case ParameterStatus.normal:
+        return Icons.check_circle;
+      case ParameterStatus.watch:
+         // Use info or watch icon for watch/unknown combined status
+        return Icons.info_outline; 
+      case ParameterStatus.attention:
+        return Icons.warning; // Filled warning
+      case ParameterStatus.unknown:
+      default:
+        return Icons.help; // Should ideally not be reached if unknown maps to watch
+    }
+  }
+  
+  // Helper to get status color
+  Color _getStatusColor(BuildContext context, ParameterStatus status) {
+     return StatusColors.of(context).getColor(status);
+  }
+
+  // Navigate to the detailed parameter list for the selected category
+  void _navigateToCategoryParameters(String categoryName, List<ParameterRecord> parameters) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CategoryParametersScreen(
+          examName: widget.examName,
+          categoryName: categoryName,
+          parameters: parameters, // Pass the already available list
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final statusColors = StatusColors.of(context);
     return Scaffold(
-      appBar: AppBar(
-        // Use theme style, ensure title fits
-        title: Text('Categorías: ${widget.examName}', overflow: TextOverflow.ellipsis),
-      ),
-      body: FutureBuilder<List<ParameterRecord>>(
-        future: _parametersFuture, 
-        builder: (context, snapshot) {
-           // ... (Handle loading, error, empty states as before) ...
-           if (snapshot.connectionState == ConnectionState.waiting) {
-             return const Center(child: CircularProgressIndicator());
-           }
-           if (snapshot.hasError) {
-             return Center(child: Padding(padding: const EdgeInsets.all(16.0), child: Text('Error al cargar categorías: ${snapshot.error}', style: TextStyle(color: Theme.of(context).colorScheme.error))));
-           }
-           if (!snapshot.hasData || snapshot.data!.isEmpty) {
-             return const Center(child: Padding(padding: const EdgeInsets.all(16.0), child: Text('No se encontraron parámetros para este examen.')));
-           }
-           if (_groupedParameters.isEmpty) {
-               _groupParameters(snapshot.data!); 
-               if (_groupedParameters.isEmpty) { 
-                    return const Center(child: Padding(padding: EdgeInsets.all(16.0), child: Text('Error al agrupar parámetros.')));
-               }
-           }
+      // No AppBar, using custom header
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // --- Custom Header ---
+          _buildHeader(context, widget.examName),
+          const SizedBox(height: 10),
 
-          final categories = _groupedParameters.keys.toList()..sort();
+          // --- Main Content with Padding ---
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Optional Title
+                  // Padding(
+                  //   padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
+                  //   child: Text('Categorías Mejoradas', style: Theme.of(context).textTheme.headlineSmall)
+                  // ),
+                  
+                  // --- Search Bar ---
+                  _buildSearchBar(context),
+                  const SizedBox(height: 10),
 
-          return ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0), // Consistent padding
-            itemCount: categories.length,
-            itemBuilder: (context, index) {
-              final category = categories[index];
-              final parametersInCategory = _groupedParameters[category]!;
-              final statusCounts = _getCategoryStatusCounts(parametersInCategory);
-              final badgeColor = _getBadgeColor(statusCounts);
-              final badgeIcon = _getBadgeIcon(statusCounts);
-              final badgeText = _getBadgeText(statusCounts);
-              
-              return Card(
-                // Use theme defaults
-                margin: const EdgeInsets.symmetric(vertical: 6.0),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
-                  title: Text(category, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w500)),
-                  trailing: CircleAvatar( // Always show CircleAvatar for consistency
-                      backgroundColor: badgeColor.withOpacity(0.15), // Lighter background
-                      radius: 15,
-                      child: badgeText != null 
-                        ? Text( // Show number if available
-                            badgeText,
-                            style: TextStyle(color: badgeColor, fontSize: 12, fontWeight: FontWeight.bold)
-                          )
-                        : Icon(badgeIcon, color: badgeColor, size: 18), // Show icon otherwise
-                    ),
-                  onTap: () => _navigateToCategoryParameters(category, parametersInCategory),
-                ),
-              );
-            },
-          );
-        },
+                  // --- Category List ---
+                  Expanded(
+                    child: _filteredCategoryNames.isEmpty
+                      ? Center(child: Text(_searchQuery.isEmpty ? 'No hay categorías en este examen.' : 'No se encontraron categorías.'))
+                      : ListView.builder(
+                          padding: EdgeInsets.zero, // Padding handled by outer column
+                          itemCount: _filteredCategoryNames.length,
+                          itemBuilder: (context, index) {
+                            final categoryName = _filteredCategoryNames[index];
+                            final parametersForCategory = widget.groupedParameters[categoryName] ?? [];
+                            return _buildCategoryCard(context, categoryName, parametersForCategory);
+                          },
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  // --- Header Builder ---
+  Widget _buildHeader(BuildContext context, String examName) {
+     // Shorten exam name if too long for the title
+     String displayExamName = examName;
+     const maxLength = 25; // Adjust as needed
+     if (examName.length > maxLength) {
+        displayExamName = '${examName.substring(0, maxLength)}...';
+     }
+     
+     return Material(
+        elevation: 2.0,
+        child: Container(
+           color: Theme.of(context).primaryColor, 
+           padding: EdgeInsets.only(
+             top: MediaQuery.of(context).padding.top + 10, 
+             bottom: 15,
+             left: 15,
+             right: 15,
+           ),
+           child: Row(
+             children: [
+               IconButton(
+                 icon: const Icon(Icons.arrow_back, color: Colors.white),
+                 onPressed: () => Navigator.of(context).pop(),
+                 tooltip: 'Volver',
+                 padding: EdgeInsets.zero, 
+                 constraints: const BoxConstraints(), 
+               ),
+               const SizedBox(width: 16),
+               Expanded(
+                 child: Text(
+                   'Categorías: $displayExamName', // Dynamic title
+                   style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                   overflow: TextOverflow.ellipsis,
+                 ),
+               ),
+             ],
+           ),
+        ),
+     );
+   }
+   
+  // --- Search Bar Builder ---
+  Widget _buildSearchBar(BuildContext context) {
+     return Padding(
+       padding: const EdgeInsets.symmetric(vertical: 8.0),
+       child: TextField(
+          onChanged: (value) {
+              setState(() {
+                _searchQuery = value;
+              });
+          },
+          decoration: InputDecoration(
+              hintText: "Buscar categoría...",
+              prefixIcon: Icon(Icons.search, size: 20, color: Colors.grey[600]),
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20.0),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20.0),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20.0),
+                borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 1.5),
+              ),
+              filled: true,
+              fillColor: Colors.white,
+          ),
+       ),
+     );
+  }
+
+  // --- Category Card Builder ---
+  Widget _buildCategoryCard(BuildContext context, String categoryName, List<ParameterRecord> parameters) {
+     final overallStatus = _getOverallCategoryStatus(parameters);
+     final statusIcon = _getStatusIcon(overallStatus);
+     final statusColor = _getStatusColor(context, overallStatus);
+
+     return Card(
+       margin: const EdgeInsets.symmetric(vertical: 5.0),
+       child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+          title: Text(
+             categoryName.toUpperCase(), // Match mockup
+             style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500)
+          ),
+          // Trailing shows the status icon
+          trailing: Icon(statusIcon, color: statusColor, size: 28),
+          onTap: () => _navigateToCategoryParameters(categoryName, parameters),
+       ),
+     );
   }
 }
 

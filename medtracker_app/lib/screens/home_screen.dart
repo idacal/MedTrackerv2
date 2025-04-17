@@ -50,13 +50,28 @@ class _HomeScreenState extends State<HomeScreen> {
     return summary;
   }
 
-  void _navigateToExamCategories(int examId, String examName) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ExamCategoriesScreen(examId: examId, examName: examName),
-      ),
-    );
+  void _navigateToExamCategories(int examId, String examName) async {
+    try {
+      // Show loading indicator maybe?
+      final groupedParams = await dbService.getGroupedParametersForExam(examId);
+      if (mounted) { // Check if the widget is still in the tree
+         Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ExamCategoriesScreen(
+                 examName: examName,
+                 groupedParameters: groupedParams,
+              ),
+            ),
+         );
+      }
+    } catch (e) {
+       if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(content: Text('Error al cargar categorías: $e')),
+          );
+       }
+    }
   }
 
   void _navigateToParameterList(ParameterStatus status) {
