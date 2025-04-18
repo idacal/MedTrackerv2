@@ -30,7 +30,6 @@ class DatabaseService {
     final path = join(documentsDirectory.path, 'medtracker.db');
 
     // --- TEMPORARY FOR DEVELOPMENT: Force delete DB on init ---
-    // We can keep this for debug if needed, but onUpgrade will now handle schema changes
     if (kDebugMode) { 
         print("DEVELOPMENT: Deleting existing database at $path to ensure schema update...");
         await deleteDatabase(path);
@@ -40,18 +39,17 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 2, // <-- Increment version number
-      onCreate: _onCreate, // Called only if DB doesn't exist at all
-      onUpgrade: _onUpgrade, // Called if DB exists but version < 2
+      version: 4, // <-- Increment version number to 4
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade, 
     );
   }
 
-  // Create tables (Only called if DB file doesn't exist)
+  // Create tables (Includes resultString column from start)
   Future<void> _onCreate(Database db, int version) async {
      if (kDebugMode) {
         print("Database onCreate: Creating tables for version $version...");
      }
-    // Schema includes the status column from the start for fresh installs
     await db.execute('''
       CREATE TABLE exam_records (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -66,12 +64,16 @@ class DatabaseService {
         examRecordId INTEGER NOT NULL,
         category TEXT NOT NULL,
         parameterName TEXT NOT NULL,
-        value REAL,
+        value REAL,              -- For numeric values
+        resultString TEXT,       -- For text values (NEW)
         refRangeLow REAL,
         refRangeHigh REAL,
         refOriginal TEXT,
         date TEXT NOT NULL,
         status TEXT NOT NULL, 
+        unit TEXT,              -- Added V4
+        description TEXT,       -- Added V4
+        recommendation TEXT,    -- Added V4
         FOREIGN KEY (examRecordId) REFERENCES exam_records (id) ON DELETE CASCADE
       )
     ''');
@@ -81,7 +83,7 @@ class DatabaseService {
       ON parameter_records (category, parameterName, date, status)
     ''');
       if (kDebugMode) {
-        print("Database onCreate: Tables created.");
+        print("Database onCreate: Tables created for V4.");
      }
   }
 
@@ -90,29 +92,50 @@ class DatabaseService {
      if (kDebugMode) {
        print("Database onUpgrade: Upgrading from version $oldVersion to $newVersion...");
      }
-     // Apply schema changes sequentially
+     
+     // Upgrade from V1 to V2 (Add status column)
      if (oldVersion < 2) {
-        if (kDebugMode) {
-           print("Applying upgrade V1 -> V2: Adding status column to parameter_records...");
-        }
+        if (kDebugMode) { print("Applying upgrade V1 -> V2..."); }
         try {
-          // Add the status column with a default value for existing rows
           await db.execute("ALTER TABLE parameter_records ADD COLUMN status TEXT NOT NULL DEFAULT 'unknown'");
-          // Add status to the index as well
-          await db.execute("DROP INDEX IF EXISTS idx_parameter_history"); // Drop old index first
+          await db.execute("DROP INDEX IF EXISTS idx_parameter_history"); 
           await db.execute("CREATE INDEX idx_parameter_history ON parameter_records (category, parameterName, date, status)");
-           if (kDebugMode) {
-              print("Upgrade V1 -> V2 successful.");
-           }
+          if (kDebugMode) { print("Upgrade V1 -> V2 successful."); }
         } catch (e) {
-             if (kDebugMode) {
-                print("Error applying upgrade V1 -> V2: $e");
-             } 
-             // Re-throw or handle error appropriately
+             if (kDebugMode) { print("Error applying upgrade V1 -> V2: $e"); }
              rethrow; 
         }
      }
-     // Add more 'if (oldVersion < X)' blocks here for future upgrades
+
+     // Upgrade from V2 to V3 (Add resultString column)
+     if (oldVersion < 3) {
+         if (kDebugMode) { print("Applying upgrade V2 -> V3: Adding resultString column..."); }
+         try {
+           await db.execute("ALTER TABLE parameter_records ADD COLUMN resultString TEXT");
+           // No index change needed for this column typically
+           if (kDebugMode) { print("Upgrade V2 -> V3 successful."); }
+         } catch (e) {
+            if (kDebugMode) { print("Error applying upgrade V2 -> V3: $e"); } 
+            rethrow;
+         }
+     }
+     
+     // --- Upgrade from V3 to V4 (Add unit, description, recommendation) --- 
+     if (oldVersion < 4) {
+         if (kDebugMode) { print("Applying upgrade V3 -> V4: Adding unit, description, recommendation columns..."); }
+         try {
+           // Use separate executes for robustness
+           await db.execute("ALTER TABLE parameter_records ADD COLUMN unit TEXT");
+           await db.execute("ALTER TABLE parameter_records ADD COLUMN description TEXT");
+           await db.execute("ALTER TABLE parameter_records ADD COLUMN recommendation TEXT");
+           if (kDebugMode) { print("Upgrade V3 -> V4 successful."); }
+         } catch (e) {
+            if (kDebugMode) { print("Error applying upgrade V3 -> V4: $e"); } 
+            rethrow;
+         }
+     }
+     // ----------------------------------------------------------------------
+     
       if (kDebugMode) {
        print("Database onUpgrade: Finished.");
      }
@@ -177,48 +200,91 @@ class DatabaseService {
               continue; // Skip this parameter if date is invalid/missing
             }
 
-            final double? value = (data['valor'] as num?)?.toDouble();
+            // --- Value parsing considering valor_absoluto ---
+            double? parsedValue; // This will hold the value used for status check (absolute if available)
+            String? parsedResultString; // This holds secondary info (percentage or text result)
+            final dynamic rawAbsoluteValue = data['valor_absoluto'];
+            final dynamic rawValue = data['valor'];
+
+            if (rawAbsoluteValue is num) { // Prioritize valor_absoluto if numeric
+                parsedValue = rawAbsoluteValue.toDouble();
+                // Store original valor (percentage) in resultString if available
+                if (rawValue != null) { 
+                    parsedResultString = rawValue.toString(); 
+                }
+            } else { // No numeric valor_absoluto, fallback to parsing original valor
+                if (rawValue is num) { 
+                    parsedValue = rawValue.toDouble();
+                    // No secondary string needed here unless you want to duplicate
+                } else if (rawValue is String) {
+                    // Try parsing as double first
+                    parsedValue = double.tryParse(rawValue.replaceAll(',', '.'));
+                    if (parsedValue == null && rawValue.trim().isNotEmpty) {
+                        // If parsing failed, store as string result
+                        parsedResultString = rawValue.trim();
+                    }
+                } 
+                 // else: rawValue is null or other type, both remain null
+            }
+            // -----------------------------------------------
+
             final String? refOriginal = data['referencia_original'] as String?;
             final List<dynamic>? refList = data['rango_referencia'] as List<dynamic>?;
             final Map<String, double?> parsedRange = _parseRange(refOriginal, refList);
             final double? refLow = parsedRange['low'];
             final double? refHigh = parsedRange['high'];
 
-            // --- Calculate status BEFORE creating the record ---
-            ParameterStatus calculatedStatus = ParameterStatus.unknown;
-            if (value != null) {
-                if (refLow != null && refHigh == null) { // Lower bound only (e.g., > 30)
-                  calculatedStatus = value >= refLow ? ParameterStatus.normal : ParameterStatus.attention;
-                } else if (refLow == null && refHigh != null) { // Upper bound only (e.g., < 10)
-                  calculatedStatus = value <= refHigh ? ParameterStatus.normal : ParameterStatus.attention;
-                } else if (refLow != null && refHigh != null) { // Both bounds exist
-                  if (value < refLow) {
-                    calculatedStatus = ParameterStatus.attention;
-                  } else if (value > refHigh) {
+            // --- Calculate status (using parsedValue, which is the absolute value if exists) ---
+            ParameterStatus calculatedStatus = ParameterStatus.unknown; 
+            // 1. Check for exact string match (only if parsedValue is null and resultString exists)
+            if (parsedValue == null && 
+                parsedResultString != null &&
+                refOriginal != null &&
+                parsedResultString.trim().toLowerCase() == refOriginal.trim().toLowerCase()) 
+            {
+              calculatedStatus = ParameterStatus.normal;
+            } 
+            // 2. If no string match OR if we have a numeric value, check numeric comparison
+            else if (parsedValue != null) { 
+                if (refLow != null && refHigh == null) { 
+                  calculatedStatus = parsedValue >= refLow ? ParameterStatus.normal : ParameterStatus.attention;
+                } else if (refLow == null && refHigh != null) { 
+                  calculatedStatus = parsedValue <= refHigh ? ParameterStatus.normal : ParameterStatus.attention;
+                } else if (refLow != null && refHigh != null) { 
+                  if (parsedValue < refLow || parsedValue > refHigh) { 
                     calculatedStatus = ParameterStatus.attention;
                   } else {
-                    // TODO: Implement 'watch' logic if needed, e.g., near boundaries
                     calculatedStatus = ParameterStatus.normal;
                   }
                 } else {
-                  // Value exists but no range defined - treat as normal or unknown?
-                  // Let's default to normal if value exists but range doesn't
                   calculatedStatus = ParameterStatus.normal; 
                 }
-            } // else: value is null, status remains unknown
+            } 
+            // 3. Otherwise, status remains unknown.
             // ----------------------------------------------------
+            
+            // --- Read description and recommendation from JSON data ---
+            final String? description = data['descripcion'] as String?;
+            final String? recommendation = data['recomendacion'] as String?;
+            // TODO: Read unit if/when available in JSON
+            // final String? unit = data['unidad'] as String?; 
+            // --------------------------------------------------------
 
-            // 4. Create ParameterRecord
+            // 4. Create ParameterRecord (Ensure all fields are passed)
             final parameterRecord = ParameterRecord(
               examRecordId: examRecordId!,
               category: categoryName,
               parameterName: parameterName,
-              value: value,
+              value: parsedValue, 
+              resultString: parsedResultString,
               refRangeLow: refLow,
               refRangeHigh: refHigh,
               refOriginal: refOriginal,
               date: date,
               status: calculatedStatus,
+              description: description, // <-- Added description
+              recommendation: recommendation, // <-- Added recommendation
+              // unit: unit, // <-- Add unit when available
             );
 
             // 5. Insert ParameterRecord

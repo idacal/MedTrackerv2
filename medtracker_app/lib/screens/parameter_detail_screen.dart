@@ -117,7 +117,6 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
               const SizedBox(height: 16), // Spacing
 
               // --- NEW: Status Message Card ---
-              // Show only if status is not normal or unknown
               if (latestRecord.status != ParameterStatus.normal && latestRecord.status != ParameterStatus.unknown)
                   _buildStatusMessageCard(context, latestRecord, latestStatusColor),
               if (latestRecord.status != ParameterStatus.normal && latestRecord.status != ParameterStatus.unknown)
@@ -144,9 +143,17 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
                  ),
               ),
               const SizedBox(height: 16), // Spacing
+              
+              // --- NEW: Description Card (if description exists) ---
+              if (latestRecord.description != null && latestRecord.description!.isNotEmpty)
+                  _buildDescriptionCard(context, latestRecord.description!),
+              if (latestRecord.description != null && latestRecord.description!.isNotEmpty)
+                   const SizedBox(height: 16), // Spacing only if description shown
 
-              // --- NEW: Recommendation Card ---
-              _buildRecommendationCard(context, latestRecord, latestStatusColor),
+              // --- Recommendation Card (using new field) ---
+              // Show recommendation only if it exists
+              if (latestRecord.recommendation != null && latestRecord.recommendation!.isNotEmpty)
+                  _buildRecommendationCard(context, latestRecord.recommendation!), // Pass only the recommendation string
 
             ],
           );
@@ -158,37 +165,81 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
  // --- Widget Builder Methods ---
 
  Widget _buildCurrentValueCard(BuildContext context, ParameterRecord latestRecord, String latestValueString, String unit, String rangeString, Color latestStatusColor) {
+      // Get both potential values
+      final numericValue = latestRecord.value;
+      final secondaryString = latestRecord.resultString;
+      final primaryDisplay = latestRecord.displayValue; // Numeric or text
+      final valueColor = numericValue != null ? latestStatusColor : Theme.of(context).textTheme.bodyLarge?.color;
+      // Check if we have the percentage case
+      final bool showPercentage = numericValue != null && secondaryString != null && secondaryString.isNotEmpty;
+      
+      // --- Improved Range String Logic (same as CategoryParametersScreen) ---
+      String displayRangeString;
+      if (latestRecord.refOriginal != null && latestRecord.refOriginal!.isNotEmpty) {
+         displayRangeString = latestRecord.refOriginal!;
+      } else if (latestRecord.refRangeLow != null || latestRecord.refRangeHigh != null) {
+         // Format numeric range if original is missing
+         final formatter = _valueFormatter; // Use existing formatter
+         final low = latestRecord.refRangeLow != null ? formatter.format(latestRecord.refRangeLow) : null;
+         final high = latestRecord.refRangeHigh != null ? formatter.format(latestRecord.refRangeHigh) : null;
+         if (low != null && high != null) {
+           displayRangeString = '$low - $high';
+         } else if (low != null) {
+           displayRangeString = '> $low'; 
+         } else if (high != null) {
+           displayRangeString = '< $high'; 
+         } else {
+           displayRangeString = 'No Ref.';
+         }
+      } else {
+         displayRangeString = 'No Ref.';
+      }
+      // -------------------------------------------------------------------
+
       return Card(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
           child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text('Valor Actual', style: TextStyle(color: Colors.grey[700])), // Adjusted style
+                Text('Valor Actual', style: TextStyle(color: Colors.grey[700])), 
                 const SizedBox(height: 8),
                 Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    crossAxisAlignment: CrossAxisAlignment.baseline, 
                     textBaseline: TextBaseline.alphabetic,
                     children: [
                       Text(
-                        latestValueString,
-                        style: Theme.of(context).textTheme.displayMedium?.copyWith(fontWeight: FontWeight.bold, color: latestStatusColor),
+                        primaryDisplay, // Show absolute value or text
+                        style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                          fontWeight: FontWeight.bold, 
+                          color: valueColor // Apply status color only if numeric
+                        ),
                       ),
-                      if (unit.isNotEmpty) const SizedBox(width: 4),
-                      if (unit.isNotEmpty)
+                      // Show unit only if value is numeric 
+                      if (unit.isNotEmpty && numericValue != null) ...[
+                        const SizedBox(width: 4),
                         Padding(
-                            padding: const EdgeInsets.only(bottom: 4.0),
+                            padding: const EdgeInsets.only(bottom: 4.0), 
                             child: Text(
-                              unit,
+                              unit, 
                               style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.grey[700]),
                             ),
                         ),
+                      ]
                     ],
                 ),
+                 // Show percentage below if applicable
+                if (showPercentage) ...[
+                   const SizedBox(height: 4),
+                   Text(
+                     '($secondaryString %)', // Show percentage
+                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[700])
+                   ),
+                ],
                 const SizedBox(height: 8),
                 Text(
-                  'Valores normales: $rangeString',
+                  'Valores normales: $displayRangeString', // Use the updated displayRangeString
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                   textAlign: TextAlign.center,
                   ),
@@ -263,32 +314,43 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
     );
  }
 
- // --- NEW: Recommendation Card Builder ---
- Widget _buildRecommendationCard(BuildContext context, ParameterRecord record, Color statusColor) {
-    String recommendation = "";
+ // --- NEW: Description Card Builder ---
+ Widget _buildDescriptionCard(BuildContext context, String description) {
+    return Card(
+       color: Colors.blueGrey.shade50, // A neutral, soft background
+       elevation: 1.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          side: BorderSide(color: Colors.blueGrey.shade100, width: 1) // Optional border
+       ),
+       child: Padding(
+         padding: const EdgeInsets.all(16.0),
+         child: Column(
+           crossAxisAlignment: CrossAxisAlignment.start,
+           children: [
+             Row(
+               children: [
+                 Icon(Icons.info_outline, color: Colors.blueGrey.shade700, size: 20),
+                 const SizedBox(width: 8),
+                 Text(
+                   'Descripción del Parámetro',
+                   style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.blueGrey.shade800)
+                 ),
+               ],
+             ),
+             const SizedBox(height: 10),
+             Text(
+               description,
+               style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black87),
+             ),
+           ],
+         ),
+       ),
+    );
+ }
 
-    // TODO: Implement actual recommendation logic based on parameter/history/rules
-    // This is placeholder text based ONLY on the current status
-    switch (record.status) {
-       case ParameterStatus.normal:
-          recommendation = "Mantener hábitos saludables y controles regulares.";
-          break;
-       case ParameterStatus.watch:
-          recommendation = "Monitorizar evolución. Considerar ajustes en dieta o estilo de vida si persiste.";
-          break;
-       case ParameterStatus.attention:
-          // Specific example from mockup for Hemoglobin
-          if (record.parameterName.toLowerCase().contains("hemoglobina")) {
-             recommendation = "Considerar suplementos de hierro o consultar con especialista si continúa descendiendo.";
-          } else {
-             recommendation = "Consultar con especialista para evaluación y posible tratamiento. Es importante seguir indicaciones médicas.";
-          }
-          break;
-       case ParameterStatus.unknown:
-          recommendation = "Resultado no concluyente o dato faltante. Repetir prueba si es necesario.";
-          break;
-    }
-
+ // --- Updated Recommendation Card Builder (uses direct recommendation text) ---
+ Widget _buildRecommendationCard(BuildContext context, String recommendation) {
     // Use a distinct but soft background color
     Color recommendationBgColor = Colors.lightBlue.shade50;
 
@@ -304,13 +366,19 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
          child: Column(
            crossAxisAlignment: CrossAxisAlignment.start,
            children: [
-             Text(
-               'Recomendación',
-               style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.blue.shade800)
+             Row(
+               children: [
+                 Icon(Icons.lightbulb_outline, color: Colors.blue.shade700, size: 20), // Changed Icon
+                 const SizedBox(width: 8),
+                 Text(
+                   'Recomendación General',
+                   style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.blue.shade800)
+                 ),
+               ],
              ),
-             const SizedBox(height: 8),
+             const SizedBox(height: 10),
              Text(
-               recommendation,
+               recommendation, // Display the recommendation passed from the record
                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.black87),
              ),
            ],

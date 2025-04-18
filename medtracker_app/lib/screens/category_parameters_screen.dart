@@ -27,14 +27,45 @@ class _CategoryParametersScreenState extends State<CategoryParametersScreen> {
   String _searchQuery = '';
   // TODO: Define sort order enum/state
   
-  // Filtered list based on search
-  List<ParameterRecord> get _filteredParameters {
-    if (_searchQuery.isEmpty) {
-      return widget.parameters;
+  // Helper function to assign a score based on status for sorting
+  int _getStatusScore(ParameterStatus status) {
+    switch (status) {
+      case ParameterStatus.attention:
+        return 0; // Highest priority
+      case ParameterStatus.watch:
+      case ParameterStatus.unknown: // Group watch and unknown together
+        return 1;
+      case ParameterStatus.normal:
+        return 2; // Lowest priority
+      default:
+        return 3;
     }
-    return widget.parameters
-        .where((p) => p.parameterName.toLowerCase().contains(_searchQuery.toLowerCase()))
-        .toList();
+  }
+
+  // Comparison function for sorting ParameterRecords
+  int _compareParameters(ParameterRecord a, ParameterRecord b) {
+    final scoreA = _getStatusScore(a.status);
+    final scoreB = _getStatusScore(b.status);
+    if (scoreA != scoreB) {
+      return scoreA.compareTo(scoreB); // Sort by status score first
+    }
+    // If statuses are the same, sort alphabetically by name
+    return a.parameterName.compareTo(b.parameterName);
+  }
+
+  // Filtered and sorted list based on search and status
+  List<ParameterRecord> get _filteredParameters {
+    List<ParameterRecord> filtered;
+    if (_searchQuery.isEmpty) {
+      filtered = List.from(widget.parameters); // Create a mutable copy
+    } else {
+      filtered = widget.parameters
+          .where((p) => p.parameterName.toLowerCase().contains(_searchQuery.toLowerCase()))
+          .toList();
+    }
+    // Apply sorting
+    filtered.sort(_compareParameters);
+    return filtered;
   }
 
   // Calculate overall status for the summary card
@@ -286,30 +317,73 @@ class _CategoryParametersScreenState extends State<CategoryParametersScreen> {
   Widget _buildSimpleParameterCard(BuildContext context, ParameterRecord param, NumberFormat formatter) {
       final statusColor = _getStatusColor(context, param.status);
       final statusIcon = _getStatusIcon(param.status);
-      final valueString = param.value != null ? formatter.format(param.value) : '--';
-      final rangeString = param.refOriginal?.isNotEmpty == true ? param.refOriginal! : 'No Ref.';
+      final primaryDisplay = param.displayValue; 
       
-      // Determine background color ONLY for attention status
+      // --- Improved Range String Logic ---
+      String rangeString;
+      if (param.refOriginal != null && param.refOriginal!.isNotEmpty) {
+         rangeString = param.refOriginal!;
+      } else if (param.refRangeLow != null || param.refRangeHigh != null) {
+         // Format numeric range if original is missing
+         final low = param.refRangeLow != null ? formatter.format(param.refRangeLow) : null;
+         final high = param.refRangeHigh != null ? formatter.format(param.refRangeHigh) : null;
+         if (low != null && high != null) {
+           rangeString = '$low - $high';
+         } else if (low != null) {
+           rangeString = '> $low'; // Assumes lower bound only means greater than
+         } else if (high != null) {
+           rangeString = '< $high'; // Assumes upper bound only means less than
+         } else {
+           rangeString = 'No Ref.'; // Should not happen if one was not null
+         }
+      } else {
+         rangeString = 'No Ref.'; // Fallback if no reference info at all
+      }
+      // ----------------------------------
+      
       Color? cardBackgroundColor;
       if (param.status == ParameterStatus.attention) {
-          cardBackgroundColor = Colors.amber.shade50; // Very light yellow/amber
+          cardBackgroundColor = Colors.amber.shade50;
       }
+      
+      final bool showPercentage = param.value != null && 
+                                  param.resultString != null && 
+                                  param.resultString!.isNotEmpty; 
 
       return Card(
          margin: const EdgeInsets.symmetric(vertical: 5.0),
-         // Apply the conditional background color
          color: cardBackgroundColor, 
          child: ListTile(
             contentPadding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 12.0),
             leading: Icon(statusIcon, color: statusColor, size: 28), 
-            title: Text(param.parameterName, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500)),
+            title: Row( 
+              children: [
+                Flexible( 
+                   child: Text(
+                      param.parameterName, 
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500)
+                   ),
+                ),
+                if (showPercentage) ...[
+                   const SizedBox(width: 6),
+                   Text(
+                     '(${param.resultString}%)', 
+                     style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[700])
+                   ),
+                ]
+              ],
+            ),
+            // Use the calculated rangeString
             subtitle: Text(rangeString, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                    valueString, 
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: statusColor)
+                    primaryDisplay, 
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                       fontWeight: FontWeight.bold, 
+                       color: param.value != null ? statusColor : null,
+                    )
                  ),
                  const SizedBox(width: 8),
                  Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),

@@ -219,23 +219,52 @@ class _ExamCategoriesScreenState extends State<ExamCategoriesScreen> {
 
   // --- Category Card Builder ---
   Widget _buildCategoryCard(BuildContext context, String categoryName, List<ParameterRecord> parameters) {
-     final overallStatus = _getOverallCategoryStatus(parameters);
-     final statusIcon = _getStatusIcon(overallStatus);
-     final statusColor = _getStatusColor(context, overallStatus);
+    final overallStatus = _getOverallCategoryStatus(parameters);
+    final theme = Theme.of(context);
+    final statusColor = _getStatusColor(context, overallStatus);
+    final statusIcon = _getStatusIcon(overallStatus);
 
-     return Card(
-       margin: const EdgeInsets.symmetric(vertical: 5.0),
-       child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-          title: Text(
-             categoryName.toUpperCase(), // Match mockup
-             style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500)
-          ),
-          // Trailing shows the status icon
-          trailing: Icon(statusIcon, color: statusColor, size: 28),
-          onTap: () => _navigateToCategoryParameters(categoryName, parameters),
-       ),
-     );
+    // --- Calculate Attention Count --- 
+    final attentionCount = parameters.where((p) => p.status == ParameterStatus.attention).length;
+    // ----------------------------------
+
+    return Card(
+      elevation: 1.0,
+      margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+        title: Text(
+          categoryName,
+          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // --- Display Attention Count Badge --- 
+            if (attentionCount > 0) ...[
+               Chip(
+                 label: Text(
+                   attentionCount.toString(),
+                   style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                 backgroundColor: _getStatusColor(context, ParameterStatus.attention),
+                 padding: const EdgeInsets.all(0), // Minimize padding
+                 labelPadding: const EdgeInsets.symmetric(horizontal: 6.0), // Adjust horizontal padding
+                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap, // Reduce tap area
+                 visualDensity: VisualDensity.compact, // Make it visually smaller
+               ),
+            ] else ...[
+              // --- Display Overall Status Icon ONLY if no attention count --- 
+              Icon(statusIcon, color: statusColor, size: 28),
+            ],
+            // -------------------------------------
+          ],
+        ),
+        onTap: () {
+          _navigateToCategoryParameters(categoryName, parameters);
+        },
+      ),
+    );
   }
 }
 
