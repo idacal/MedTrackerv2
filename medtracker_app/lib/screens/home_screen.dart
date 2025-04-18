@@ -16,6 +16,7 @@ import 'parameter_detail_screen.dart';
 // Import History Screen for navigation
 import 'history_screen.dart';
 import 'profile_screen.dart'; // Import the ProfileScreen
+import 'tracked_parameters_screen.dart'; // Import the new screen
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final dbService = DatabaseService();
   Future<Map<String, dynamic>>? _summaryDataFuture;
   Future<List<Map<String, dynamic>>>? _recentExamsFuture;
-  Future<List<Map<String, dynamic>>>? _keyTrendsFuture;
+  Future<List<Map<String, dynamic>>>? _trackedParametersFuture;
   final NumberFormat _percentFormatter = NumberFormat("+0.0%;-0.0%;0.0%");
 
   // --- State for Bottom Navigation Bar --- 
@@ -38,6 +39,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    // Set default tracked parameters if list is empty (fire and forget)
+    dbService.setDefaultTrackedParametersIfEmpty(); 
     _loadData();
   }
 
@@ -45,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _summaryDataFuture = _calculateSummaryAndTotal();
       _recentExamsFuture = dbService.getRecentExamsWithAttentionCount(limit: 3);
-      _keyTrendsFuture = _loadKeyTrendsData();
+      _trackedParametersFuture = _loadTrackedParametersData(); 
     });
   }
 
@@ -70,74 +73,9 @@ class _HomeScreenState extends State<HomeScreen> {
       };
   }
 
-  Future<List<Map<String, dynamic>>> _loadKeyTrendsData() async {
-    final keyTrendsCriteria = [
-      {'name': 'Hemoglobina', 'category': 'HEMATOLOGIA'},
-      {'name': 'Colesterol', 'category': 'PERFIL BIOQUIMICO'},
-      {'name': 'Glucosa', 'category': 'PERFIL BIOQUIMICO'}, 
-      {'name': 'Vitamina B12', 'category': 'VITAMINAS'}, 
-    ];
-
-    final List<Map<String, dynamic>> keyTrendsResult = [];
-
-    for (var criteria in keyTrendsCriteria) {
-      final String paramName = criteria['name']!;
-      final String categoryName = criteria['category']!;
-
-      // Fetch history for the specific parameter
-      final history = await dbService.getParameterHistory(categoryName, paramName);
-
-      // Find the latest record (history is already sorted DESC)
-      final latestRecord = history.firstOrNull;
-
-      if (latestRecord != null) {
-        String changeString = '--'; // Default change string
-
-        // --- Find the previous record with a numeric value (Safer way) ---
-        ParameterRecord? previousRecord;
-        for (var record in history.skip(1)) {
-           if (record.value != null) {
-              previousRecord = record;
-              break; // Found the first one, stop searching
-           }
-        }
-        // ----------------------------------------------------------------
-
-        // Calculate change% if possible
-        if (latestRecord.value != null && previousRecord != null) { // Check if previousRecord was found
-          final currentValue = latestRecord.value!;
-          final previousValue = previousRecord.value!; // Now definitely not null here
-
-          if (previousValue != 0) { // Avoid division by zero
-             final double changePercent = ((currentValue - previousValue) / previousValue); // Calculate ratio
-             changeString = _percentFormatter.format(changePercent); // Format as percentage
-          } else if (currentValue == 0) {
-             changeString = _percentFormatter.format(0); // Both 0, change is 0%
-          }
-          // else: previous was 0, current is non-zero -> infinite change, keep '--'
-        }
-        
-        // Add the latest record and its change string to the result list
-        keyTrendsResult.add({
-          'record': latestRecord, 
-          'changeString': changeString
-        });
-      } else {
-         // Optional: Handle case where even the latest record wasn't found
-         // You could add a placeholder map here if needed
-         print("Trend parameter not found: $paramName in $categoryName");
-      }
-    }
-
-    // Ensure the list maintains the desired order (though iteration order should already match)
-     keyTrendsResult.sort((a, b) {
-       final order = keyTrendsCriteria.map((c) => c['name']).toList();
-       final paramNameA = (a['record'] as ParameterRecord).parameterName;
-       final paramNameB = (b['record'] as ParameterRecord).parameterName;
-       return order.indexOf(paramNameA).compareTo(order.indexOf(paramNameB));
-     });
-
-    return keyTrendsResult;
+  Future<List<Map<String, dynamic>>> _loadTrackedParametersData() async {
+    final trackedParamsData = await dbService.getLatestTrackedParameterValues();
+    return trackedParamsData; 
   }
 
   void _navigateToExamCategories(int examId, String examName) async {
@@ -152,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
                  groupedParameters: groupedParams,
               ),
             ),
-         );
+         ).then((_) => _loadData());
       }
     } catch (e) {
        if (mounted) {
@@ -309,8 +247,8 @@ class _HomeScreenState extends State<HomeScreen> {
       }
   }
 
-  // --- Navigation to Parameter Detail (from Trend Card) ---
-  void _navigateToParameterDetailFromTrend(String categoryName, String parameterName) {
+  // --- Navigation to Parameter Detail (from Tracked Indicator Card) ---
+  void _navigateToParameterDetailFromIndicator(String categoryName, String parameterName) {
      // Similar to navigation from CategoryParametersScreen
      Navigator.push(
       context,
@@ -320,7 +258,7 @@ class _HomeScreenState extends State<HomeScreen> {
           parameterName: parameterName
         ),
       ),
-    );
+     ).then((_) => _loadData()); 
   }
 
   @override
@@ -424,7 +362,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 30),
 
-              _buildKeyTrendsSection(context),
+              _buildTrackedIndicatorsSection(context),
               const SizedBox(height: 30),
 
               _buildRecentExams(context),
@@ -646,30 +584,18 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildKeyTrendsSection(BuildContext context) {
+  Widget _buildTrackedIndicatorsSection(BuildContext context) {
     final statusColors = StatusColors.of(context);
 
-    final trendVisuals = {
-      'Hemoglobina': {
-        'icon': Icons.water_drop_outlined,
-        'iconColor': Colors.red.shade300,
-        'bgColor': Colors.red.shade50
-      },
-      'Colesterol': {
-        'icon': Icons.favorite_border,
-        'iconColor': Colors.pink.shade300,
-        'bgColor': Colors.pink.shade50
-      },
-      'Glucosa': {
-        'icon': Icons.coffee_outlined, 
-        'iconColor': Colors.brown.shade400,
-        'bgColor': Colors.brown.shade50
-      },
-      'Vitamina B12': {
-        'icon': Icons.apple_outlined, 
-        'iconColor': Colors.green.shade400,
-        'bgColor': Colors.green.shade50
-      },
+    // Define visuals based on CATEGORY
+    final categoryVisuals = {
+      // Use category names as keys (ensure they match your JSON exactly)
+      'HEMATOLOGIA': { 'icon': Icons.water_drop_outlined, 'iconColor': Colors.red.shade300, 'bgColor': Colors.red.shade50 },
+      'PERFIL BIOQUIMICO': { 'icon': Icons.science_outlined, 'iconColor': Colors.blue.shade300, 'bgColor': Colors.blue.shade50 }, // Example: science icon
+      'VITAMINAS': { 'icon': Icons.spa_outlined, 'iconColor': Colors.green.shade400, 'bgColor': Colors.green.shade50 }, // Example: spa icon
+      'ENDOCRINOLOGIA': { 'icon': Icons.bubble_chart_outlined, 'iconColor': Colors.purple.shade200, 'bgColor': Colors.purple.shade50 }, // Example
+      // Add more categories as needed
+      'default': { 'icon': Icons.monitor_heart, 'iconColor': Colors.grey.shade500, 'bgColor': Colors.grey.shade100 } // Default fallback
     };
 
     return Column(
@@ -680,64 +606,79 @@ class _HomeScreenState extends State<HomeScreen> {
            child: Row(
              mainAxisAlignment: MainAxisAlignment.spaceBetween,
              children: [
+                // Updated Title
                 Text(
-                 'Tendencias Clave',
+                 'Indicadores Seguidos',
                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                ),
                 TextButton(
-                 onPressed: () { /* TODO: Navigate to trends screen */ },
+                 onPressed: () { 
+                    // Navigate to TrackedParametersScreen
+                     Navigator.push(
+                       context,
+                       MaterialPageRoute(builder: (context) => const TrackedParametersScreen()),
+                     ).then((_) => _loadData()); 
+                  },
                  child: Text('Ver todos', style: TextStyle(color: Theme.of(context).primaryColor)),
                ),
              ],
            ),
          ),
+          // Update FutureBuilder to use the new future type
           FutureBuilder<List<Map<String, dynamic>>>(
-             future: _keyTrendsFuture,
+             future: _trackedParametersFuture,
              builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                    return const Center(child: Padding(padding: EdgeInsets.all(20.0), child: CircularProgressIndicator(strokeWidth: 2)));
                 }
                 if (snapshot.hasError) {
-                   return Center(child: Text('Error al cargar tendencias: ${snapshot.error}'));
+                   return Center(child: Text('Error al cargar indicadores: ${snapshot.error}'));
                 }
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                   return const Center(child: Padding(padding: EdgeInsets.all(20.0), child: Text('No hay datos de tendencias disponibles.')));
+                   return const Center(child: Padding(padding: EdgeInsets.all(20.0), child: Text('No hay indicadores seguidos aún.')));
                 }
 
-                final keyTrendsData = snapshot.data!;
+                final trackedData = snapshot.data!;
+                // Limit to 6 items for display on home screen
+                final displayedData = trackedData.take(6).toList();
 
                 return SizedBox(
-                   height: 160,
+                   height: 160, // Adjust height if needed
                    child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 4.0),
                       child: Row(
-                         children: keyTrendsData.map((data) {
-                           final paramRecord = data['record'] as ParameterRecord;
-                           final changeString = data['changeString'] as String;
-                           final visuals = trendVisuals[paramRecord.parameterName] ?? 
-                                           { 
-                                             'icon': Icons.help_outline,
-                                             'iconColor': Colors.grey,
-                                             'bgColor': Colors.grey.shade100
-                                           };
+                         // Use displayedData here
+                         children: displayedData.map((dataMap) {
+                           // Extract data from the map
+                           final paramRecord = dataMap['record'] as ParameterRecord;
+                           final changeString = dataMap['changeString'] as String; 
+                           // Get visuals based on category, fallback to default
+                           final visuals = categoryVisuals[paramRecord.category.toUpperCase()] ?? categoryVisuals['default']!;
                            
                            return Container(
-                              width: MediaQuery.of(context).size.width * 0.4,
+                              width: MediaQuery.of(context).size.width * 0.4, // Adjust width if needed
                               margin: const EdgeInsets.only(right: 10),
                               child: GestureDetector(
-                                 onTap: () => _navigateToParameterDetailFromTrend(paramRecord.category, paramRecord.parameterName),
-                                 child: _buildTrendCard(
+                                 // Update navigation call
+                                 onTap: () => _navigateToParameterDetailFromIndicator(paramRecord.category, paramRecord.parameterName),
+                                 // Add Long Press handler
+                                 onLongPress: () => _showUntrackDialogFromHome(paramRecord, dataMap['changeString'] ?? '--'), // Pass record for untracking
+                                 // Update card builder call
+                                 child: _buildIndicatorCard(
                                   context,
                                   title: paramRecord.parameterName,
                                   value: paramRecord.displayValue, 
                                   unit: paramRecord.unit ?? '', 
+                                  // Pass change string
                                   change: changeString, 
                                   icon: visuals['icon'] as IconData,
                                   iconColor: visuals['iconColor'] as Color,
                                   status: paramRecord.status, 
                                   bgColor: visuals['bgColor'] as Color, 
                                   statusColors: statusColors,
+                                  // Pass isTracking (always true here, but needed for consistency later)
+                                  isTracking: true, 
                                 ),
                               ),
                             );
@@ -751,7 +692,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildTrendCard(BuildContext context, {
+  Widget _buildIndicatorCard(BuildContext context, {
     required String title,
     required String value,
     required String unit,
@@ -761,6 +702,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required ParameterStatus status,
     required Color bgColor,
     required StatusColors statusColors,
+    required bool isTracking,
   }) {
     final bool isAttention = status == ParameterStatus.attention;
     final Color statusIconColor = statusColors.attention;
@@ -776,8 +718,13 @@ class _HomeScreenState extends State<HomeScreen> {
            mainAxisAlignment: MainAxisAlignment.spaceBetween,
            children: [
              Row(
-               mainAxisAlignment: MainAxisAlignment.end,
+               mainAxisAlignment: MainAxisAlignment.spaceBetween, // Allow space for star
                children: [
+                 // Show star if tracking
+                 if (isTracking) 
+                    Icon(Icons.star, color: Colors.amber.shade600, size: 16)
+                 else 
+                    const SizedBox(width: 16), // Placeholder if not tracking
                   Icon(icon, color: iconColor, size: 18),
                ],
              ),
@@ -803,6 +750,7 @@ class _HomeScreenState extends State<HomeScreen> {
              Row(
                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                children: [
+                 // Re-introduce change display
                  Row(
                    mainAxisSize: MainAxisSize.min,
                    children: [
@@ -818,8 +766,8 @@ class _HomeScreenState extends State<HomeScreen> {
                    ],
                  ),
                  isAttention 
-                    ? Icon(Icons.warning_amber_rounded, size: 14, color: statusIconColor)
-                    : const SizedBox(width: 14),
+                     ? Icon(Icons.warning_amber_rounded, size: 14, color: statusIconColor)
+                     : const SizedBox(width: 14),
                ],
              )
            ],
@@ -982,5 +930,45 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ],
     );
+  }
+
+  // --- Dialog to confirm untracking from Home screen --- 
+  Future<void> _showUntrackDialogFromHome(ParameterRecord parameter, String changeString) async {
+     // Note: We might not strictly need changeString here, but kept for consistency if needed later
+     final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Dejar de Seguir Indicador'),
+          content: Text('¿Quieres dejar de seguir el parámetro "${parameter.parameterName}"?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () => Navigator.of(context).pop(false),
+            ),
+            TextButton(
+              style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
+              child: const Text('Dejar de Seguir'),
+              onPressed: () => Navigator.of(context).pop(true),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      try {
+        await dbService.removeTrackedParameter(parameter.category, parameter.parameterName);
+        // Update local state and refresh UI
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('"${parameter.parameterName}" quitado de seguimiento.')),
+        );
+        _loadData(); // Reload all data for HomeScreen, including tracked parameters
+      } catch (e) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text('Error al quitar seguimiento: $e')),
+         );
+      }
+    }
   }
 }

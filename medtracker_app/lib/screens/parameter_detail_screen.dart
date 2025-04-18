@@ -39,11 +39,15 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
   TimeRange _selectedTimeRange = TimeRange.allTime;
   // Holds the full history
   List<ParameterRecord> _fullHistory = [];
+  // State for tracking status
+  bool _isTracking = false;
+  bool _isLoadingTracking = true; // Loading indicator for tracking status
 
   @override
   void initState() {
     super.initState();
     _loadHistory();
+    _loadTrackingStatus();
   }
 
   void _loadHistory() {
@@ -56,6 +60,62 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
          return history; // Return it for the FutureBuilder
       });
     });
+  }
+
+  // --- Load Tracking Status --- 
+  Future<void> _loadTrackingStatus() async {
+     if (!mounted) return; // Check if widget is still mounted
+     setState(() { _isLoadingTracking = true; });
+     try {
+        final isTracked = await dbService.isParameterTracked(widget.categoryName, widget.parameterName);
+         if (mounted) { // Check again before setting state
+            setState(() {
+               _isTracking = isTracked;
+               _isLoadingTracking = false;
+            });
+         }
+     } catch (e) {
+        print("Error loading tracking status for detail screen: $e");
+         if (mounted) {
+           setState(() { _isLoadingTracking = false; }); // Stop loading on error
+           // Optionally show a snackbar
+         }
+     }
+  }
+
+  // --- Toggle Tracking Status --- 
+  Future<void> _toggleTracking() async {
+    if (_isLoadingTracking) return; // Prevent multiple taps while loading
+
+    final bool currentlyTracked = _isTracking;
+    final String actionVerb = currentlyTracked ? 'quitado de' : 'agregado a';
+    
+    // Optimistically update UI
+    if (mounted) {
+       setState(() { _isTracking = !currentlyTracked; });
+    }
+
+    try {
+       if (currentlyTracked) {
+         await dbService.removeTrackedParameter(widget.categoryName, widget.parameterName);
+       } else {
+         await dbService.addTrackedParameter(widget.categoryName, widget.parameterName);
+       }
+        if (mounted) { // Show confirmation
+          ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(content: Text('"${widget.parameterName}" $actionVerb seguimiento.', style: const TextStyle(color: Colors.white)), backgroundColor: Colors.green[700]),
+          );
+          // Optionally force reload tracking status to be absolutely sure
+          // _loadTrackingStatus(); 
+        }
+    } catch (e) {
+       if (mounted) { // Revert UI on error and show message
+          setState(() { _isTracking = currentlyTracked; });
+          ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(content: Text('Error al actualizar seguimiento: $e', style: const TextStyle(color: Colors.white)), backgroundColor: Theme.of(context).colorScheme.error),
+          );
+       }
+    }
   }
 
   // Helper to get status color (uses extension method now)
@@ -88,6 +148,19 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
         title: Text(widget.parameterName), // Parameter name in title
         backgroundColor: Theme.of(context).primaryColor, // Match mockup style
         foregroundColor: Colors.white,
+        actions: [
+           // Show loading indicator or star button
+           _isLoadingTracking 
+             ? const Padding(padding: EdgeInsets.only(right: 16.0), child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))) 
+             : IconButton(
+                 icon: Icon(
+                   _isTracking ? Icons.star : Icons.star_border, 
+                   color: _isTracking ? Colors.amber.shade400 : Colors.white70,
+                 ),
+                 tooltip: _isTracking ? 'Dejar de Seguir' : 'Seguir Indicador',
+                 onPressed: _toggleTracking,
+               ),
+        ],
       ),
       body: FutureBuilder<List<ParameterRecord>>(
         future: _historyFuture,

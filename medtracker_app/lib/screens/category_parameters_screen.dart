@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../models/parameter_record.dart';
 import '../main.dart'; // Import main to access StatusColors
 import 'parameter_detail_screen.dart'; // Import the detail screen
+import '../services/database_service.dart'; // Import DatabaseService
 
 // Convert to StatefulWidget
 class CategoryParametersScreen extends StatefulWidget {
@@ -25,8 +26,46 @@ class CategoryParametersScreen extends StatefulWidget {
 class _CategoryParametersScreenState extends State<CategoryParametersScreen> {
   // State for search and sort (initially empty/default)
   String _searchQuery = '';
-  // TODO: Define sort order enum/state
+  final dbService = DatabaseService(); // Add DatabaseService instance
+  Map<String, bool> _trackedStatusMap = {}; // Map to store tracking status
+  bool _isLoadingTrackingStatus = true; // Loading state for tracking status
   
+  @override
+  void initState() {
+    super.initState();
+    _loadTrackingStatus(); // Load tracking status on init
+  }
+
+  // Load tracking status for all parameters in this category
+  Future<void> _loadTrackingStatus() async {
+    if (!mounted) return; // Prevent state update if widget is disposed
+    setState(() {
+      _isLoadingTrackingStatus = true; // Start loading
+      _trackedStatusMap = {}; // Clear previous status
+    });
+    Map<String, bool> statusMap = {};
+    try {
+      for (var param in widget.parameters) {
+        final isTracked = await dbService.isParameterTracked(param.category, param.parameterName);
+        statusMap[param.parameterName] = isTracked;
+      }
+    } catch (e) {
+      if (mounted) {
+        print("Error loading tracking status: $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text('Error al cargar estado de seguimiento: $e')),
+         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _trackedStatusMap = statusMap;
+          _isLoadingTrackingStatus = false; // Finish loading
+        });
+      }
+    }
+  }
+
   // Helper function to assign a score based on status for sorting
   int _getStatusScore(ParameterStatus status) {
     switch (status) {
@@ -113,6 +152,63 @@ class _CategoryParametersScreenState extends State<CategoryParametersScreen> {
      );
   }
 
+  // --- Handle Long Press for Tracking ---
+  Future<void> _showTrackingDialog(ParameterRecord parameter) async {
+    // Ensure we have the latest status before showing the dialog
+    // This guards against potential race conditions if status changes quickly
+    // although less likely in this specific scenario.
+    final bool currentlyTracked = _trackedStatusMap[parameter.parameterName] ?? false;
+    
+    final String actionText = currentlyTracked ? 'Dejar de Seguir' : 'Agregar a Seguimiento';
+    final String titleText = currentlyTracked ? 'Quitar de Indicadores Seguidos' : 'Seguir Indicador';
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(titleText),
+          content: Text('¿Quieres ${actionText.toLowerCase()} el parámetro "${parameter.parameterName}"?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () => Navigator.of(context).pop(false),
+            ),
+            TextButton(
+              child: Text(actionText),
+              onPressed: () => Navigator.of(context).pop(true),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true && mounted) { // Check mounted again before async gap
+      try {
+        if (currentlyTracked) {
+          await dbService.removeTrackedParameter(parameter.category, parameter.parameterName);
+        } else {
+          await dbService.addTrackedParameter(parameter.category, parameter.parameterName);
+        }
+        // Update local state and refresh UI AFTER successful DB operation
+        setState(() {
+          _trackedStatusMap[parameter.parameterName] = !currentlyTracked;
+        });
+        if (mounted) { // Check mounted before showing SnackBar
+           ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(content: Text('"${parameter.parameterName}" ${currentlyTracked ? 'quitado de' : 'agregado a'} seguimiento.')),
+           );
+        }
+      } catch (e) {
+         if (mounted) { // Check mounted before showing SnackBar
+            ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(content: Text('Error al actualizar seguimiento: $e')),
+           );
+         }
+      }
+    }
+  }
+  // ------------------------------------
+
   @override
   Widget build(BuildContext context) {
      final NumberFormat valueFormatter = NumberFormat("#,##0.##"); 
@@ -148,17 +244,27 @@ class _CategoryParametersScreenState extends State<CategoryParametersScreen> {
                       const SizedBox(height: 10),
                      
                      // --- Parameter List ---
-                     Expanded(
-                       child: ListView.builder(
-                          padding: EdgeInsets.zero, // Padding is handled by the outer Column
-                          itemCount: _filteredParameters.length,
-                          itemBuilder: (context, index) {
-                             final param = _filteredParameters[index];
-                             // Use the new simpler card builder
-                             return _buildSimpleParameterCard(context, param, valueFormatter);
-                          }
-                       ),
-                     ),
+                      _isLoadingTrackingStatus
+                         ? const Expanded(child: Center(child: CircularProgressIndicator()))
+                         : Expanded(
+                             child: ListView.builder(
+                                padding: EdgeInsets.zero, // Padding is handled by the outer Column
+                                itemCount: _filteredParameters.length,
+                                itemBuilder: (context, index) {
+                                  final param = _filteredParameters[index];
+                                  // Get tracking status from the map
+                                  final bool isTracked = _trackedStatusMap[param.parameterName] ?? false;
+                                  // Pass tracking status and handler
+                                  return _buildSimpleParameterCard(
+                                     context,
+                                     param, 
+                                     valueFormatter, 
+                                     isTracked, // Pass status
+                                     () => _showTrackingDialog(param) // Pass handler
+                                  );
+                                }
+                             ),
+                         ),
                    ],
                 ),
               ),
@@ -314,7 +420,13 @@ class _CategoryParametersScreenState extends State<CategoryParametersScreen> {
   }
   
   // --- Simple Parameter Card Builder ---
-  Widget _buildSimpleParameterCard(BuildContext context, ParameterRecord param, NumberFormat formatter) {
+  Widget _buildSimpleParameterCard(
+      BuildContext context, 
+      ParameterRecord param, 
+      NumberFormat formatter,
+      bool isTracked, // Added
+      VoidCallback onLongPress // Added
+      ) {
       final statusColor = _getStatusColor(context, param.status);
       final statusIcon = _getStatusIcon(param.status);
       final primaryDisplay = param.displayValue; 
@@ -355,55 +467,86 @@ class _CategoryParametersScreenState extends State<CategoryParametersScreen> {
       return Card(
          margin: const EdgeInsets.symmetric(vertical: 5.0),
          color: cardBackgroundColor, 
-         child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 12.0),
-            leading: Icon(statusIcon, color: statusColor, size: 28), 
-            title: Row( 
-              children: [
-                Flexible( 
-                   child: Text(
-                      param.parameterName, 
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500)
-                   ),
-                ),
-                if (showPercentage) ...[
-                   const SizedBox(width: 6),
-                   Text(
-                     '(${param.resultString}%)', 
-                     style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[700])
-                   ),
-                ]
-              ],
-            ),
-            // Use the calculated rangeString
-            subtitle: Text(rangeString, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
-            // --- Update Trailing Row --- 
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.baseline, // Align value and unit
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                Text(
-                    primaryDisplay, 
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                       fontWeight: FontWeight.bold, 
-                       color: numericValue != null ? statusColor : null, // Use numericValue here
-                    )
-                 ),
-                 // --- Show unit only if value is numeric and unit exists ---
-                 if (displayUnit.isNotEmpty && numericValue != null) ...[
-                   const SizedBox(width: 4), // Space between value and unit
-                   Text(
-                     displayUnit,
-                     style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[700]),
-                   ),
-                 ],
-                 // ---------------------------------------------------------
-                 const SizedBox(width: 8),
-                 Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
-              ],
-            ),
+         // Wrap ListTile in InkWell or GestureDetector for onLongPress
+         child: InkWell(
             onTap: () => _navigateToParameterDetail(param),
+            onLongPress: onLongPress, // Assign the handler
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+              child: Row(
+                  children: [
+                    // Status Icon on the left
+                    Icon(statusIcon, color: statusColor, size: 28),
+                    // Show star conditionally AFTER status icon
+                    if (isTracked)
+                      Padding(
+                         padding: const EdgeInsets.only(left: 8.0), // Space after status icon
+                         child: Icon(Icons.star, color: Colors.amber.shade600, size: 18),
+                       ), 
+                    const SizedBox(width: 12),
+                    // Main content (Name, Range, Value)
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Row for Name and Star
+                          Row(
+                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                             crossAxisAlignment: CrossAxisAlignment.start,
+                             children: [
+                                Flexible( // Allow name to wrap/flex
+                                  child: Text(
+                                      param.parameterName, 
+                                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
+                                      maxLines: 2, // Allow wrapping
+                                      overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                             ],
+                          ),
+                           // Show percentage below name if applicable
+                           if (showPercentage) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                 '(${param.resultString}%)', 
+                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[700])
+                              ),
+                           ],
+                          const SizedBox(height: 4),
+                          Text(rangeString, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Trailing section (Value, Unit, Chevron)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.baseline, // Align value and unit
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                            primaryDisplay, 
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold, 
+                              color: numericValue != null ? statusColor : null, // Use numericValue here
+                            )
+                        ),
+                        // --- Show unit only if value is numeric and unit exists ---
+                        if (displayUnit.isNotEmpty && numericValue != null) ...[
+                          const SizedBox(width: 4), // Space between value and unit
+                          Text(
+                            displayUnit,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[700]),
+                          ),
+                        ],
+                        // ---------------------------------------------------------
+                        const SizedBox(width: 8),
+                        Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
+                      ],
+                    ),
+                  ],
+              ),
+            ),
          ),
       );
    }

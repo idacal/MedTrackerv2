@@ -30,16 +30,18 @@ class DatabaseService {
     final path = join(documentsDirectory.path, 'medtracker.db');
 
     // --- TEMPORARY FOR DEVELOPMENT: Force delete DB on init ---
+    /* // Comment out this block
     if (kDebugMode) { 
         print("DEVELOPMENT: Deleting existing database at $path to ensure schema update...");
         await deleteDatabase(path);
         print("DEVELOPMENT: Database deleted.");
     }
+    */
     // -----------------------------------------------------------
 
     return await openDatabase(
       path,
-      version: 4, // Keep version 4
+      version: 5, // Increment DB version to 5
       // --- Add onConfigure callback --- 
       onConfigure: (db) async {
          await db.execute('PRAGMA foreign_keys = ON'); // Use single quotes for PRAGMA command
@@ -90,8 +92,19 @@ class DatabaseService {
       CREATE INDEX idx_parameter_history
       ON parameter_records (category, parameterName, date, status)
     ''');
+
+    // --- NEW: Tracked Parameters Table (V5) ---
+    await db.execute('''
+      CREATE TABLE tracked_parameters (
+        categoryName TEXT NOT NULL,
+        parameterName TEXT NOT NULL,
+        PRIMARY KEY (categoryName, parameterName)
+      )
+    ''');
+    // -----------------------------------------
+
       if (kDebugMode) {
-        print("Database onCreate: Tables created for V4.");
+        print("Database onCreate: Tables created for V5.");
      }
   }
 
@@ -139,6 +152,24 @@ class DatabaseService {
            if (kDebugMode) { print("Upgrade V3 -> V4 successful."); }
          } catch (e) {
             if (kDebugMode) { print("Error applying upgrade V3 -> V4: $e"); } 
+            rethrow;
+         }
+     }
+     
+     // --- Upgrade from V4 to V5 (Add tracked_parameters table) --- 
+     if (oldVersion < 5) {
+         if (kDebugMode) { print("Applying upgrade V4 -> V5: Adding tracked_parameters table..."); }
+         try {
+           await db.execute('''
+             CREATE TABLE tracked_parameters (
+               categoryName TEXT NOT NULL,
+               parameterName TEXT NOT NULL,
+               PRIMARY KEY (categoryName, parameterName)
+             )
+           ''');
+           if (kDebugMode) { print("Upgrade V4 -> V5 successful."); }
+         } catch (e) {
+            if (kDebugMode) { print("Error applying upgrade V4 -> V5: $e"); } 
             rethrow;
          }
      }
@@ -606,5 +637,203 @@ class DatabaseService {
       rethrow;
     }
   }
+
+  // --- NEW: Tracked Parameter Methods ---
+
+  /// Adds a parameter to the tracking list.
+  Future<void> addTrackedParameter(String categoryName, String parameterName) async {
+    final db = await database;
+    try {
+      await db.insert(
+        'tracked_parameters',
+        {'categoryName': categoryName, 'parameterName': parameterName},
+        conflictAlgorithm: ConflictAlgorithm.ignore, // Ignore if already tracked
+      );
+       if (kDebugMode) {
+        print("Tracking added for: $categoryName - $parameterName");
+      }
+    } catch (e) {
+       if (kDebugMode) {
+        print("Error adding tracking for $categoryName - $parameterName: $e");
+      }
+      rethrow;
+    }
+  }
+
+  /// Removes a parameter from the tracking list.
+  Future<void> removeTrackedParameter(String categoryName, String parameterName) async {
+    final db = await database;
+     try {
+        final count = await db.delete(
+          'tracked_parameters',
+          where: 'categoryName = ? AND parameterName = ?',
+          whereArgs: [categoryName, parameterName],
+        );
+         if (kDebugMode) {
+           if (count > 0) {
+             print("Tracking removed for: $categoryName - $parameterName");
+           } else {
+              print("Attempted to remove tracking, but not found: $categoryName - $parameterName");
+           }
+        }
+     } catch (e) {
+        if (kDebugMode) {
+          print("Error removing tracking for $categoryName - $parameterName: $e");
+        }
+        rethrow;
+     }
+  }
+
+  /// Checks if a specific parameter is being tracked.
+  Future<bool> isParameterTracked(String categoryName, String parameterName) async {
+    final db = await database;
+     try {
+        final List<Map<String, dynamic>> maps = await db.query(
+          'tracked_parameters',
+          where: 'categoryName = ? AND parameterName = ?',
+          whereArgs: [categoryName, parameterName],
+          limit: 1,
+        );
+        return maps.isNotEmpty;
+     } catch (e) {
+         if (kDebugMode) {
+          print("Error checking tracking status for $categoryName - $parameterName: $e");
+        }
+        return false; // Assume not tracked on error
+     }
+  }
+
+  /// Gets a list of all tracked parameters (category and name).
+  Future<List<Map<String, String>>> getTrackedParameterNames() async {
+     final db = await database;
+      try {
+        final List<Map<String, dynamic>> maps = await db.query('tracked_parameters');
+        return maps.map((map) => {
+          'categoryName': map['categoryName'] as String,
+          'parameterName': map['parameterName'] as String,
+        }).toList();
+      } catch (e) {
+         if (kDebugMode) {
+          print("Error getting tracked parameter names: $e");
+        }
+        return []; // Return empty list on error
+      }
+  }
+
+  /// Fetches the latest record for each tracked parameter along with its change % string.
+  Future<List<Map<String, dynamic>>> getLatestTrackedParameterValues() async {
+    final db = await database;
+    final NumberFormat percentFormatter = NumberFormat("+0.0%;-0.0%;0.0%");
+    
+    // 1. Get the category/name of all tracked parameters
+    final List<Map<String, String>> trackedNames = await getTrackedParameterNames();
+    if (trackedNames.isEmpty) return [];
+
+    final List<Map<String, dynamic>> results = [];
+
+    // 2. For each tracked parameter, get its full history and calculate change
+    for (var trackedItem in trackedNames) {
+      final String category = trackedItem['categoryName']!;
+      final String name = trackedItem['parameterName']!;
+
+      // Fetch history (already ordered DESC)
+      final history = await getParameterHistory(category, name);
+      
+      if (history.isNotEmpty) {
+        final latestRecord = history.first;
+        String changeString = '--'; // Default change string
+
+        // Find the previous record with a numeric value
+        ParameterRecord? previousRecord;
+        for (var record in history.skip(1)) {
+           if (record.value != null) {
+              previousRecord = record;
+              break; 
+           }
+        }
+
+        // Calculate change%
+        if (latestRecord.value != null && previousRecord?.value != null) {
+           final currentValue = latestRecord.value!;
+           final previousValue = previousRecord!.value!;
+           if (previousValue != 0) { 
+              final double changePercent = (currentValue - previousValue) / previousValue;
+              changeString = percentFormatter.format(changePercent);
+           } else if (currentValue == 0) {
+              changeString = percentFormatter.format(0);
+           }
+           // else: previous was 0, current non-zero -> infinite change, keep '--'
+        } else if (latestRecord.value == 0 && previousRecord?.value == 0) {
+             changeString = percentFormatter.format(0);
+        }
+
+        results.add({
+          'record': latestRecord,
+          'changeString': changeString,
+        });
+      }
+    }
+    
+    // Optionally re-sort results if needed (e.g., alphabetically)
+    results.sort((a, b) {
+       final recordA = a['record'] as ParameterRecord;
+       final recordB = b['record'] as ParameterRecord;
+       int catCompare = recordA.category.compareTo(recordB.category);
+       if (catCompare != 0) return catCompare;
+       return recordA.parameterName.compareTo(recordB.parameterName);
+    });
+
+    return results;
+    
+    /* // --- Old Query (Less efficient for getting previous value) ---
+    final List<Map<String, dynamic>> maps = await db.rawQuery('''
+      SELECT p.*
+      FROM parameter_records p
+      INNER JOIN tracked_parameters tp ON p.category = tp.categoryName AND p.parameterName = tp.parameterName
+      INNER JOIN (
+          SELECT category, parameterName, MAX(date) as max_date
+          FROM parameter_records
+          GROUP BY category, parameterName
+      ) AS latest ON p.category = latest.category AND p.parameterName = latest.parameterName AND p.date = latest.max_date
+      ORDER BY p.category, p.parameterName
+    ''');
+    if (maps.isEmpty) return [];
+    return List.generate(maps.length, (i) {
+      // PROBLEM: This only returns latest, need history to calculate change
+      return ParameterRecord.fromMap(maps[i]); 
+    });
+    */
+  }
+
+  /// Adds default parameters to tracking if the tracking list is currently empty.
+  Future<void> setDefaultTrackedParametersIfEmpty() async {
+     final db = await database;
+     try {
+        final List<Map<String, dynamic>> tracked = await db.query('tracked_parameters', limit: 1);
+        if (tracked.isEmpty) {
+          if (kDebugMode) {
+            print("Tracking list is empty. Adding default parameters...");
+          }
+          // Add default parameters (Ensure category/parameter names match your JSON exactly)
+          await addTrackedParameter('PERFIL BIOQUIMICO', 'Glucosa');
+          await addTrackedParameter('PERFIL BIOQUIMICO', 'Colesterol'); 
+          await addTrackedParameter('VITAMINAS', 'Vitamina B12');
+           if (kDebugMode) {
+            print("Default parameters added.");
+          }
+        } else {
+           if (kDebugMode) {
+            print("Tracking list is not empty. Skipping default parameters.");
+          }
+        }
+     } catch (e) {
+        if (kDebugMode) {
+          print("Error setting default tracked parameters: $e");
+        }
+        // Don't rethrow here, not critical if defaults fail
+     }
+  }
+
+  // ------------------------------------
 
 } 
