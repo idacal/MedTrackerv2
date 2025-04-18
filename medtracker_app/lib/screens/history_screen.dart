@@ -19,6 +19,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   // Store the future in the state to avoid re-fetching on every build
   late Future<List<ExamRecord>> _examRecordsFuture;
   final DateFormat _formatter = DateFormat('dd/MM/yyyy HH:mm'); // Formatter for display
+  final dbService = DatabaseService(); // Instance of DatabaseService
 
   @override
   void initState() {
@@ -30,13 +31,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Future<void> _loadExamRecords() async {
     // Assign the future to the state variable. FutureBuilder will handle awaiting it.
     setState(() {
-      _examRecordsFuture = DatabaseService().getAllExamRecords();
+      _examRecordsFuture = dbService.getAllExamRecords();
     });
   }
 
   void _navigateToExamDetail(int examId, String fileName) async {
       // Fetch grouped parameters before navigating
-      final dbService = DatabaseService(); 
       try {
           // Consider showing a loading indicator here
           final groupedParameters = await dbService.getGroupedParametersForExam(examId);
@@ -58,6 +58,61 @@ class _HistoryScreenState extends State<HistoryScreen> {
              );
           }
       }
+  }
+
+  // --- Delete Confirmation Dialog ---
+  Future<bool?> _showDeleteConfirmationDialog(String examName) {
+    return showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirmar Borrado'),
+          content: Text('¿Estás seguro de que quieres borrar el examen "$examName" y todos sus datos asociados? Esta acción no se puede deshacer.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () {
+                Navigator.of(context).pop(false); // Return false
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.error), // Use error color
+              child: const Text('Borrar'),
+              onPressed: () {
+                Navigator.of(context).pop(true); // Return true
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // --- Handle Exam Deletion ---
+  Future<void> _deleteExam(int examId, String examName) async {
+    // 1. Show confirmation dialog
+    final confirmed = await _showDeleteConfirmationDialog(examName);
+
+    // 2. If confirmed, proceed with deletion
+    if (confirmed == true) {
+      try {
+        await dbService.deleteExamRecord(examId);
+        // 3. Refresh the list after deletion
+        await _loadExamRecords(); // Re-fetch the exam list
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Examen "$examName" borrado.')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error al borrar el examen: $e')),
+          );
+        }
+      }
+    }
   }
 
   @override
@@ -121,31 +176,38 @@ class _HistoryScreenState extends State<HistoryScreen> {
               itemCount: exams.length,
               itemBuilder: (context, index) {
                 final exam = exams[index];
-                return Card(
-                  elevation: 1.0,
-                  margin: const EdgeInsets.symmetric(vertical: 4.0),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                    title: Text(
-                      exam.fileName,
-                      maxLines: 2, 
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                return GestureDetector( // Wrap Card in GestureDetector
+                   onLongPress: () {
+                     if (exam.id != null) {
+                       _deleteExam(exam.id!, exam.fileName); // Call delete handler
+                     } 
+                   },
+                   child: Card(
+                    elevation: 1.0,
+                    margin: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                      title: Text(
+                        exam.fileName,
+                        maxLines: 2, 
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(
+                        'Cargado: ${_formatter.format(exam.importDate)}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      trailing: Icon(Icons.chevron_right, color: Colors.grey[400]),
+                      onTap: () {
+                        if (exam.id != null) {
+                           _navigateToExamDetail(exam.id!, exam.fileName);
+                        } else {
+                           ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Error: ID de examen no válido.')),
+                           );
+                        }
+                      },
                     ),
-                    subtitle: Text(
-                      'Cargado: ${_formatter.format(exam.importDate)}',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    trailing: Icon(Icons.chevron_right, color: Colors.grey[400]),
-                    onTap: () {
-                      if (exam.id != null) {
-                         _navigateToExamDetail(exam.id!, exam.fileName);
-                      } else {
-                         ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Error: ID de examen no válido.')),
-                         );
-                      }
-                    },
                   ),
                 );
               },

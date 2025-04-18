@@ -102,6 +102,58 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  // --- Delete Confirmation Dialog (copied from HistoryScreen for consistency) ---
+  Future<bool?> _showDeleteConfirmationDialog(String examName) {
+    return showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirmar Borrado'),
+          content: Text('¿Estás seguro de que quieres borrar el examen "$examName" y todos sus datos asociados? Esta acción no se puede deshacer.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () {
+                Navigator.of(context).pop(false); // Return false
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.error), // Use error color
+              child: const Text('Borrar'),
+              onPressed: () {
+                Navigator.of(context).pop(true); // Return true
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // --- Handle Exam Deletion (similar to HistoryScreen) ---
+  Future<void> _deleteExam(int examId, String examName) async {
+    final confirmed = await _showDeleteConfirmationDialog(examName);
+    if (confirmed == true) {
+      try {
+        await dbService.deleteExamRecord(examId);
+        // Refresh both summary and recent exams after deletion
+        _loadData(); 
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Examen "$examName" borrado.')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error al borrar el examen: $e')),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final statusColors = StatusColors.of(context); // Get status colors
@@ -308,42 +360,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // --- Recent Exams Section Widget ---
   Widget _buildRecentExams(BuildContext context) {
-    final DateFormat dateFormatter = DateFormat('dd/MM/yyyy');
+    final DateFormat formatter = DateFormat('dd MMM yyyy');
     final statusColors = StatusColors.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Add Filter Button (placeholder)
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-             Text(
-               'Exámenes Recientes',
-               style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-             ),
-             TextButton.icon(
-                // Style to match mockup roughly
-                style: TextButton.styleFrom(
-                  foregroundColor: Theme.of(context).primaryColor,
-                  backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  textStyle: Theme.of(context).textTheme.labelMedium
-                ),
-                icon: const Icon(Icons.filter_list, size: 16),
-                label: const Text('Filtrar'),
-                onPressed: () {
-                  // TODO: Implement filtering logic
-                   ScaffoldMessenger.of(context).showSnackBar(
-                     const SnackBar(content: Text('Filtrar exámenes (No implementado)')),
-                   );
-                },
-             )
-          ],
+        Text(
+          'Exámenes Recientes',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
-        // Update FutureBuilder type
         FutureBuilder<List<Map<String, dynamic>>>(
           future: _recentExamsFuture,
           builder: (context, snapshot) {
@@ -354,69 +381,75 @@ class _HomeScreenState extends State<HomeScreen> {
               return Center(child: Text('Error al cargar exámenes: ${snapshot.error}', style: TextStyle(color: statusColors.attention)));
             }
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Card( 
-                 child: Padding(
-                   padding: EdgeInsets.all(16.0),
-                   child: Center(child: Text('No hay exámenes recientes.')),
-                 ),
-               );
+              return const Center(child: Padding(padding: EdgeInsets.all(16.0), child: Text('No hay exámenes recientes.')));
             }
 
-            // Data is List<Map<String, dynamic>>
-            final recentExamsData = snapshot.data!;
-
+            final recentExams = snapshot.data!;
             return ListView.builder(
-               shrinkWrap: true, 
-               physics: const NeverScrollableScrollPhysics(), 
-               itemCount: recentExamsData.length,
-               itemBuilder: (context, index) {
-                 final examData = recentExamsData[index];
-                 // Extract data from the map
-                 final int examId = examData['id'];
-                 final String fileName = examData['fileName'];
-                 final DateTime importDate = DateTime.parse(examData['importDate']);
-                 final int attentionCount = examData['attentionCount'];
-
-                 return Card(
-                   elevation: 1.0,
-                   margin: const EdgeInsets.symmetric(vertical: 4.0), 
-                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
-                   child: ListTile(
-                     contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                     title: Text(fileName, style: Theme.of(context).textTheme.titleMedium),
-                     subtitle: Text(dateFormatter.format(importDate)),
-                     // Modify trailing to include the alert tag
-                     trailing: Column(
-                       mainAxisAlignment: MainAxisAlignment.center,
-                       crossAxisAlignment: CrossAxisAlignment.end,
-                       mainAxisSize: MainAxisSize.min, // Important for Column in ListTile
-                       children: [
-                         const Icon(Icons.chevron_right, color: Colors.grey), // Keep the chevron
-                         // Show alert tag only if count > 0
-                         if (attentionCount > 0)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4.0), // Add space above tag
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: statusColors.attention.withOpacity(0.15), // Light background
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  '$attentionCount alertas',
-                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    color: statusColors.attention, // Use attention color
-                                    fontWeight: FontWeight.bold
-                                  ),
-                                ),
+              shrinkWrap: true, // Important inside another ListView
+              physics: const NeverScrollableScrollPhysics(), // Prevent scrolling conflicts
+              itemCount: recentExams.length,
+              itemBuilder: (context, index) {
+                final examData = recentExams[index];
+                final examId = examData['id'] as int?;
+                final fileName = examData['fileName'] as String? ?? 'Nombre no disponible';
+                final importDate = DateTime.parse(examData['importDate'] as String? ?? DateTime.now().toIso8601String());
+                final attentionCount = examData['attentionCount'] as int? ?? 0;
+                
+                // --- Wrap Card in GestureDetector --- 
+                return GestureDetector(
+                  onLongPress: () {
+                     if (examId != null) {
+                       _deleteExam(examId, fileName); // Call delete handler
+                     } 
+                   },
+                  child: Card(
+                    elevation: 1.0,
+                    margin: const EdgeInsets.symmetric(vertical: 6.0),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+                      title: Text(
+                        fileName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
+                      ),
+                      subtitle: Text(
+                        formatter.format(importDate),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (attentionCount > 0)
+                            Chip(
+                              label: Text(
+                                attentionCount.toString(),
+                                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                               ),
+                              backgroundColor: statusColors.attention,
+                              padding: EdgeInsets.zero,
+                              labelPadding: const EdgeInsets.symmetric(horizontal: 6.0),
+                              visualDensity: VisualDensity.compact,
+                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
-                       ],
-                     ),
-                     onTap: () => _navigateToExamCategories(examId, fileName), 
-                   ),
-                 );
-               }, 
+                          if (attentionCount > 0) const SizedBox(width: 8),
+                          Icon(Icons.chevron_right, color: Colors.grey[400]),
+                        ],
+                      ),
+                      onTap: () {
+                        if (examId != null) {
+                           _navigateToExamCategories(examId, fileName);
+                        } else {
+                           ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Error: ID de examen no válido.')),
+                           );
+                        }
+                      },
+                    ),
+                  ),
+                );
+              },
             );
           },
         ),

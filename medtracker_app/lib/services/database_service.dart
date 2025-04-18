@@ -39,7 +39,15 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 4, // <-- Increment version number to 4
+      version: 4, // Keep version 4
+      // --- Add onConfigure callback --- 
+      onConfigure: (db) async {
+         await db.execute('PRAGMA foreign_keys = ON'); // Use single quotes for PRAGMA command
+         if (kDebugMode) {
+            print("Database onConfigure: Foreign keys ENABLED.");
+         }
+      },
+      // -----------------------------
       onCreate: _onCreate,
       onUpgrade: _onUpgrade, 
     );
@@ -557,6 +565,29 @@ class DatabaseService {
       }
 
       return {'low': low, 'high': high};
+  }
+
+  // --- Data Deletion ---
+
+  /// Deletes an ExamRecord and its associated ParameterRecords (due to ON DELETE CASCADE).
+  Future<void> deleteExamRecord(int examId) async {
+    final db = await database;
+    try {
+      await db.delete(
+        'exam_records',
+        where: 'id = ?',
+        whereArgs: [examId],
+      );
+      if (kDebugMode) {
+        print("Deleted ExamRecord with ID: $examId and its parameters (via CASCADE).");
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error deleting ExamRecord with ID $examId: $e");
+      }
+      // Consider re-throwing or handling the error appropriately
+      rethrow;
+    }
   }
 
 } 
