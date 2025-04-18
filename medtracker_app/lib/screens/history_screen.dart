@@ -4,6 +4,7 @@ import 'package:intl/intl.dart'; // For date formatting
 // Import services and models
 import '../services/database_service.dart';
 import '../models/exam_record.dart';
+import '../main.dart'; // Import StatusColors
 
 // Import detail screen
 import 'exam_categories_screen.dart'; // Import the new screen
@@ -17,13 +18,24 @@ class HistoryScreen extends StatefulWidget {
 
 class _HistoryScreenState extends State<HistoryScreen> {
   // Store the future in the state to avoid re-fetching on every build
-  late Future<List<ExamRecord>> _examRecordsFuture;
-  final DateFormat _formatter = DateFormat('dd/MM/yyyy HH:mm'); // Formatter for display
+  late Future<List<Map<String, dynamic>>> _examRecordsFuture;
+  final DateFormat _formatter = DateFormat('dd MMM yyyy'); // Use same format as HomeScreen
   final dbService = DatabaseService(); // Instance of DatabaseService
+  // Get StatusColors instance
+  late StatusColors statusColors;
 
   @override
   void initState() {
     super.initState();
+    // Wait for didChangeDependencies to get StatusColors
+  }
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Get StatusColors here, after context is available
+    statusColors = StatusColors.of(context);
+    // Load data after StatusColors is available
     _loadExamRecords();
   }
 
@@ -31,7 +43,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Future<void> _loadExamRecords() async {
     // Assign the future to the state variable. FutureBuilder will handle awaiting it.
     setState(() {
-      _examRecordsFuture = dbService.getAllExamRecords();
+      // Call the new method
+      _examRecordsFuture = dbService.getAllExamRecordsWithAttentionCount();
     });
   }
 
@@ -123,7 +136,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: _loadExamRecords, // Call the load method on refresh
-        child: FutureBuilder<List<ExamRecord>>(
+        child: FutureBuilder<List<Map<String, dynamic>>>(
           future: _examRecordsFuture, // Use the state variable future
           builder: (context, snapshot) {
             // Handle loading state
@@ -175,11 +188,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
               padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0), // Add padding
               itemCount: exams.length,
               itemBuilder: (context, index) {
-                final exam = exams[index];
+                // Extract data from the map
+                final examData = exams[index];
+                final examId = examData['id'] as int?;
+                final fileName = examData['fileName'] as String? ?? 'Nombre no disponible';
+                final importDate = DateTime.parse(examData['importDate'] as String? ?? DateTime.now().toIso8601String());
+                final attentionCount = examData['attentionCount'] as int? ?? 0;
+
                 return GestureDetector( // Wrap Card in GestureDetector
                    onLongPress: () {
-                     if (exam.id != null) {
-                       _deleteExam(exam.id!, exam.fileName); // Call delete handler
+                     if (examId != null) {
+                       _deleteExam(examId, fileName); // Call delete handler
                      } 
                    },
                    child: Card(
@@ -188,19 +207,53 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     child: ListTile(
                       contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                       title: Text(
-                        exam.fileName,
+                        fileName,
                         maxLines: 2, 
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                       ),
-                      subtitle: Text(
-                        'Cargado: ${_formatter.format(exam.importDate)}',
-                        style: Theme.of(context).textTheme.bodySmall,
+                      subtitle: Row( // Wrap subtitle in a Row
+                        children: [
+                          Icon(Icons.calendar_today_outlined, size: 14, color: Colors.grey[600]), // Add icon
+                          const SizedBox(width: 4), // Add spacing
+                          Text(
+                            'Cargado: ${_formatter.format(importDate)}',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ],
                       ),
-                      trailing: Icon(Icons.chevron_right, color: Colors.grey[400]),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (attentionCount > 0)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: statusColors.watch.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.warning_amber_rounded, size: 12, color: statusColors.watch), // Icon added
+                                  const SizedBox(width: 4), // Spacing
+                                  Text(
+                                    '$attentionCount ${attentionCount == 1 ? 'alerta' : 'alertas'}',
+                                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                      color: statusColors.watch,
+                                      fontWeight: FontWeight.bold
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          if (attentionCount > 0) const SizedBox(width: 8),
+                          Icon(Icons.chevron_right, color: Colors.grey[400]),
+                        ],
+                      ),
                       onTap: () {
-                        if (exam.id != null) {
-                           _navigateToExamDetail(exam.id!, exam.fileName);
+                        if (examId != null) {
+                           _navigateToExamDetail(examId, fileName);
                         } else {
                            ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Error: ID de examen no válido.')),

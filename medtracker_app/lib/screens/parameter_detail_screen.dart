@@ -8,6 +8,9 @@ import '../services/database_service.dart';
 import '../models/parameter_record.dart';
 import '../main.dart'; // For StatusColors
 
+// Enum for time range selection
+enum TimeRange { threeMonths, sixMonths, oneYear, allTime }
+
 class ParameterDetailScreen extends StatefulWidget {
   final String categoryName;
   final String parameterName;
@@ -32,6 +35,11 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
   // Simpler format for axis labels
   final DateFormat _chartAxisFormatter = DateFormat("MMM ''yy");
 
+  // State for selected time range
+  TimeRange _selectedTimeRange = TimeRange.allTime;
+  // Holds the full history
+  List<ParameterRecord> _fullHistory = [];
+
   @override
   void initState() {
     super.initState();
@@ -42,7 +50,11 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
     setState(() {
       _historyFuture = dbService.getParameterHistory(
           widget.categoryName,
-          widget.parameterName);
+          widget.parameterName
+      ).then((history) {
+         _fullHistory = history; // Store the full history
+         return history; // Return it for the FutureBuilder
+      });
     });
   }
 
@@ -99,7 +111,7 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
           const String unit = ""; // TODO: Placeholder for unit
           final String rangeString = latestRecord.refOriginal ?? 'No Ref.';
 
-          // Prepare chart data
+          // Prepare chart data (original unfiltered)
            final chartData = history.reversed
              .where((record) => record.value != null)
              .map((record) => FlSpot(
@@ -107,6 +119,9 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
                   record.value!,
              ))
              .toList();
+             
+          // Filter data based on selected range (Moved declaration here)
+          final filteredChartData = _getFilteredChartData(); 
 
           // --- Main Content ---
           return ListView(
@@ -116,12 +131,6 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
               _buildCurrentValueCard(context, latestRecord, latestValueString, unit, rangeString, latestStatusColor),
               const SizedBox(height: 16), // Spacing
 
-              // --- NEW: Status Message Card ---
-              if (latestRecord.status != ParameterStatus.normal && latestRecord.status != ParameterStatus.unknown)
-                  _buildStatusMessageCard(context, latestRecord, latestStatusColor),
-              if (latestRecord.status != ParameterStatus.normal && latestRecord.status != ParameterStatus.unknown)
-                  const SizedBox(height: 16), // Spacing only if message card shown
-
               // --- Card Evolución (Gráfico) ---
               Card(
                  child: Padding(
@@ -129,14 +138,30 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
                    child: Column(
                      crossAxisAlignment: CrossAxisAlignment.start,
                      children: [
-                       Text('Evolución', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                       // --- Row for Title and Time Range Buttons ---
+                       Row(
+                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                         crossAxisAlignment: CrossAxisAlignment.center,
+                         children: [
+                           // Wrap title in Row and add Icon
+                           Row(
+                            children: [
+                              Icon(Icons.bar_chart, color: Theme.of(context).primaryColor, size: 22), // Icon added
+                              const SizedBox(width: 8), // Spacing
+                               Text('Evolución', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+                            ],
+                           ),
+                           _buildTimeRangeButtons(context), // Add buttons here
+                         ],
+                       ),
+                       // -------------------------------------------
                        const SizedBox(height: 20),
-                       if (chartData.length < 2)
-                         const Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 30), child: Text('No hay suficientes datos para graficar.')))
+                       if (filteredChartData.length < 2)
+                         const Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 30), child: Text('No hay suficientes datos para graficar en este rango.')))
                        else
                          SizedBox(
                             height: 200,
-                            child: _buildLineChart(context, chartData, latestRecord),
+                            child: _buildLineChart(context, filteredChartData, latestRecord),
                          ),
                      ],
                    ),
@@ -201,121 +226,132 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
       return Card(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
-          child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text('Valor Actual', style: TextStyle(color: Colors.grey[700])), 
-                const SizedBox(height: 8),
-                Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.baseline, 
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Text(
-                        primaryDisplay, // Show absolute value or text
-                        style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                          fontWeight: FontWeight.bold, 
-                          color: valueColor // Apply status color only if numeric
-                        ),
-                      ),
-                      // --- Show unit only if value is numeric and unit exists ---
-                      if (displayUnit.isNotEmpty && numericValue != null) ...[
-                        const SizedBox(width: 6), // Space between value and unit
-                        Padding(
-                            padding: const EdgeInsets.only(top: 8.0), // Adjust vertical alignment
-                            child: Text(
-                              displayUnit,
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.grey[700]),
+          // Wrap Column in a Stack to position the status indicator
+          child: Stack(
+            children: [
+              // Existing Column with main content
+              Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text('Valor Actual', style: TextStyle(color: Colors.grey[700])), 
+                    const SizedBox(height: 8),
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.baseline, 
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            primaryDisplay, // Show absolute value or text
+                            style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                              fontWeight: FontWeight.bold, 
+                              color: valueColor // Apply status color only if numeric
                             ),
-                        ),
-                      ]
-                      // -----------------------------------------------------------
+                          ),
+                          // --- Show unit only if value is numeric and unit exists ---
+                          if (displayUnit.isNotEmpty && numericValue != null) ...[
+                            const SizedBox(width: 6), // Space between value and unit
+                            Padding(
+                                padding: const EdgeInsets.only(top: 8.0), // Adjust vertical alignment
+                                child: Text(
+                                  displayUnit,
+                                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.grey[700]),
+                                ),
+                            ),
+                          ]
+                          // -----------------------------------------------------------
+                        ],
+                    ),
+                    // Show percentage below if applicable
+                    if (showPercentage) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        '($secondaryString %)', // Show percentage
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[700])
+                      ),
                     ],
+                    const SizedBox(height: 8),
+                    // Container to hold the range string, giving it a subtle background
+                    Container(
+                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                       decoration: BoxDecoration(
+                         color: Colors.grey.shade100, // Subtle background color
+                         borderRadius: BorderRadius.circular(8),
+                       ),
+                       child: Text(
+                         'Valores normales: $displayRangeString', 
+                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[700]), // Slightly darker text
+                         textAlign: TextAlign.center,
+                       ),
+                    ),
+                  ]
+              ),
+              // Positioned Status Indicator (Top Right)
+              if (latestRecord.status != ParameterStatus.normal && latestRecord.status != ParameterStatus.unknown)
+                Positioned(
+                  top: 0, // Align to top padding edge
+                  right: 0, // Align to right padding edge
+                  child: _buildSmallStatusIndicator(context, latestRecord, latestStatusColor),
                 ),
-                 // Show percentage below if applicable
-                if (showPercentage) ...[
-                   const SizedBox(height: 4),
-                   Text(
-                     '($secondaryString %)', // Show percentage
-                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[700])
-                   ),
-                ],
-                const SizedBox(height: 8),
-                Text(
-                  'Valores normales: $displayRangeString', // Use the updated displayRangeString
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
-                  textAlign: TextAlign.center,
-                  ),
-              ]
+            ],
           ),
         ),
       );
  }
 
- // --- NEW: Status Message Card Builder ---
- Widget _buildStatusMessageCard(BuildContext context, ParameterRecord record, Color statusColor) {
+ // --- NEW: Small Status Indicator Builder ---
+ Widget _buildSmallStatusIndicator(BuildContext context, ParameterRecord record, Color statusColor) {
     String message = "";
-    IconData icon = _getStatusIcon(record.status); // Get appropriate icon
-    // Use the darker foreground colors from the fixed version
-    Color backgroundColor; 
-    Color foregroundColor; 
+    Color backgroundColor = Colors.amber.shade100; // Default to light yellow
+    Color foregroundColor = Colors.amber.shade800; // Default to dark amber
+    IconData icon = Icons.warning_amber_rounded;
 
-    // Determine message, icon, and colors based on status
     switch (record.status) {
-       case ParameterStatus.watch:
-          backgroundColor = Colors.orange.shade50; // Very light orange background
-          foregroundColor = Colors.orange.shade800; // Darker orange for text/icon
-          if (record.value != null && record.refRangeLow != null && record.value! < record.refRangeLow!) {
-             message = "Ligeramente por debajo del valor normal";
-          } else if (record.value != null && record.refRangeHigh != null && record.value! > record.refRangeHigh!) {
-             message = "Ligeramente por encima del valor normal";
-          } else {
-             message = "Valor en rango de vigilancia"; // Fallback
-          }
-          break;
-       case ParameterStatus.attention:
-          backgroundColor = Colors.amber.shade50; // Very light amber background
-          foregroundColor = Colors.amber.shade900; // Darker amber for text/icon
-           if (record.value != null && record.refRangeLow != null && record.value! < record.refRangeLow!) {
-             message = "Valor por debajo del rango normal";
-          } else if (record.value != null && record.refRangeHigh != null && record.value! > record.refRangeHigh!) {
-             message = "Valor por encima del rango normal";
-          } else {
-             message = "Requiere atención"; // Fallback
-          }
-          break;
-       // Add cases for normal/unknown if you want messages for them too
-       default:
-          return Container(); // Don't show for normal/unknown by default
+      case ParameterStatus.watch:
+        // Keep background/foreground for watch as amber/yellowish
+        if (record.value != null && record.refRangeLow != null && record.value! < record.refRangeLow!) {
+           message = "Lig. por debajo"; // Shorter message
+        } else if (record.value != null && record.refRangeHigh != null && record.value! > record.refRangeHigh!) {
+           message = "Lig. por encima"; // Shorter message
+        } else {
+           message = "Vigilancia"; // Shorter fallback
+        }
+        break;
+      case ParameterStatus.attention:
+        // Keep background/foreground for attention as amber/yellowish
+         if (record.value != null && record.refRangeLow != null && record.value! < record.refRangeLow!) {
+           message = "Por debajo"; // Shorter message
+        } else if (record.value != null && record.refRangeHigh != null && record.value! > record.refRangeHigh!) {
+           message = "Por encima"; // Shorter message
+        } else {
+           message = "Atención"; // Shorter fallback
+        }
+        break;
+      default:
+        return Container(); // Don't show for normal/unknown
     }
 
-    return Card(
-       color: backgroundColor,
-       elevation: 1.0,
-       shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          // Use the darker foregroundColor for the border for consistency
-          side: BorderSide(color: foregroundColor.withOpacity(0.3), width: 1) 
-       ),
-       child: Padding(
-         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-         child: Row(
-           children: [
-             // Use the determined darker foregroundColor
-             Icon(icon, color: foregroundColor, size: 24),
-             const SizedBox(width: 12),
-             Expanded(
-               child: Text(
-                 message, 
-                 // Use the determined darker foregroundColor
-                 style: Theme.of(context).textTheme.titleSmall?.copyWith(color: foregroundColor, fontWeight: FontWeight.w500),
-               ),
-             ),
-           ],
-         ),
-       ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(12.0), // Rounded corners
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min, // Fit content
+        children: [
+          Icon(icon, color: foregroundColor, size: 12),
+          const SizedBox(width: 4),
+          Text(
+            message,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: foregroundColor, 
+                  fontWeight: FontWeight.bold,
+                ), // Small label style
+          ),
+        ],
+      ),
     );
- }
+  }
 
  // --- NEW: Description Card Builder ---
  Widget _buildDescriptionCard(BuildContext context, String description) {
@@ -582,6 +618,80 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
    // --- Math helpers for min/max ---
   double min(double a, double b) => a < b ? a : b;
   double max(double a, double b) => a > b ? a : b;
+
+  // --- Helper to filter chart data based on selected range ---
+  List<FlSpot> _getFilteredChartData() {
+     final now = DateTime.now();
+     DateTime startDate;
+
+     switch (_selectedTimeRange) {
+       case TimeRange.threeMonths:
+         startDate = now.subtract(const Duration(days: 90));
+         break;
+       case TimeRange.sixMonths:
+         startDate = now.subtract(const Duration(days: 180));
+         break;
+       case TimeRange.oneYear:
+         startDate = now.subtract(const Duration(days: 365));
+         break;
+       case TimeRange.allTime:
+       default:
+         // No filtering needed for all time, use the full history
+          return _fullHistory.reversed
+            .where((record) => record.value != null)
+            .map((record) => FlSpot(
+                 record.date.millisecondsSinceEpoch.toDouble(),
+                 record.value!,
+            ))
+            .toList();
+     }
+
+     // Filter the full history
+     return _fullHistory
+         .where((record) => record.value != null && record.date.isAfter(startDate))
+         .map((record) => FlSpot(
+              record.date.millisecondsSinceEpoch.toDouble(),
+              record.value!,
+         ))
+         .toList()
+         .reversed // Ensure chronological order for chart
+         .toList(); 
+  }
+
+  // --- Widget for Time Range Buttons ---
+  Widget _buildTimeRangeButtons(BuildContext context) {
+      final isSelected = <bool>[
+        _selectedTimeRange == TimeRange.threeMonths,
+        _selectedTimeRange == TimeRange.sixMonths,
+        _selectedTimeRange == TimeRange.oneYear,
+        _selectedTimeRange == TimeRange.allTime,
+      ];
+
+      return ToggleButtons(
+        isSelected: isSelected,
+        onPressed: (int index) {
+          setState(() {
+            if (index == 0) _selectedTimeRange = TimeRange.threeMonths;
+            else if (index == 1) _selectedTimeRange = TimeRange.sixMonths;
+            else if (index == 2) _selectedTimeRange = TimeRange.oneYear;
+            else _selectedTimeRange = TimeRange.allTime;
+            // No need to call _loadHistory, just rebuild with filtered data
+          });
+        },
+        borderRadius: BorderRadius.circular(8.0),
+        selectedBorderColor: Theme.of(context).primaryColor,
+        selectedColor: Colors.white,
+        fillColor: Theme.of(context).primaryColor,
+        color: Theme.of(context).primaryColor,
+        constraints: const BoxConstraints(minHeight: 32.0, minWidth: 40.0), // Adjust size
+        children: const <Widget>[
+          Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('3M')), 
+          Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('6M')), 
+          Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('1A')), 
+          Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('Todo')), 
+        ],
+      );
+  }
 }
 
 // Extension is now defined in main.dart 

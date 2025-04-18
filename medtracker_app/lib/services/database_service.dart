@@ -323,10 +323,9 @@ class DatabaseService {
   /// Fetches all exam records from the database, ordered by import date descending.
   Future<List<ExamRecord>> getAllExamRecords() async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'exam_records',
-      orderBy: 'importDate DESC',
-    );
+    final List<Map<String, dynamic>> maps = await db.query('exam_records', orderBy: 'importDate DESC');
+
+    // Convert the List<Map<String, dynamic>> into a List<ExamRecord>.
     return List.generate(maps.length, (i) {
       return ExamRecord.fromMap(maps[i]);
     });
@@ -444,6 +443,25 @@ class DatabaseService {
 
     // The result is already List<Map<String, dynamic>> with the required fields
     return results;
+  }
+
+  // Fetches all exams with their attention count
+  Future<List<Map<String, dynamic>>> getAllExamRecordsWithAttentionCount() async {
+    final db = await database;
+    final String statusAttention = ParameterStatus.attention.name;
+    final List<Map<String, dynamic>> result = await db.rawQuery('''
+      SELECT 
+        e.id, 
+        e.fileName, 
+        e.importDate, 
+        COUNT(CASE WHEN p.status = ? THEN 1 ELSE NULL END) as attentionCount
+      FROM exam_records e
+      LEFT JOIN parameter_records p ON e.id = p.examRecordId
+      GROUP BY e.id, e.fileName, e.importDate
+      ORDER BY e.importDate DESC
+    ''', [statusAttention]);
+
+    return result;
   }
 
   // --- Utility / Parsing ---
