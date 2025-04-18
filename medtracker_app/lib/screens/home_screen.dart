@@ -421,19 +421,23 @@ class _HomeScreenState extends State<HomeScreen> {
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          // --- Use Container for Custom Alert Tag --- 
                           if (attentionCount > 0)
-                            Chip(
-                              label: Text(
-                                attentionCount.toString(),
-                                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: statusColors.watch.withOpacity(0.2), // Light yellow/amber background
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              backgroundColor: statusColors.attention,
-                              padding: EdgeInsets.zero,
-                              labelPadding: const EdgeInsets.symmetric(horizontal: 6.0),
-                              visualDensity: VisualDensity.compact,
-                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              child: Text(
+                                '$attentionCount ${attentionCount == 1 ? 'alerta' : 'alertas'}', // Dynamic text
+                                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  color: statusColors.watch, // Darker amber/yellow text
+                                  fontWeight: FontWeight.bold
+                                ),
+                              ),
                             ),
-                          if (attentionCount > 0) const SizedBox(width: 8),
+                          if (attentionCount > 0) const SizedBox(width: 8), // Keep space if tag is shown
                           Icon(Icons.chevron_right, color: Colors.grey[400]),
                         ],
                       ),

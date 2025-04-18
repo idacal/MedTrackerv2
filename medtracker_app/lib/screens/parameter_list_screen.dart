@@ -214,6 +214,8 @@ class _ParameterListScreenState extends State<ParameterListScreen> {
      final statusColors = StatusColors.of(context);
      final statusColor = statusColors.getColor(record.status);
      final statusIcon = _getStatusIcon(record.status);
+     final numericValue = record.value; // Get numeric value
+     final displayUnit = record.unit ?? ''; // Get unit
      
      // Determine background color based on status 
      Color? cardBackgroundColor;
@@ -248,42 +250,69 @@ class _ParameterListScreenState extends State<ParameterListScreen> {
                // Left: Icon
                Icon(statusIcon, color: statusColor, size: 36),
                const SizedBox(width: 12),
-               // Center: Texts
+               // Center: Parameter Name and Date/Diff
                Expanded(
                  child: Column(
                    crossAxisAlignment: CrossAxisAlignment.start,
                    children: [
-                     Text(record.parameterName, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                     const SizedBox(height: 2),
-                     Text(record.category.toUpperCase(), style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600])), // Uppercase category
-                     const SizedBox(height: 4),
-                     Text('Referencia: ${record.refOriginal ?? "--"}', style: Theme.of(context).textTheme.bodySmall),
-                     // Show difference text if calculated
-                     if (differenceText.isNotEmpty)
-                        Padding(
-                           padding: const EdgeInsets.only(top: 4.0),
-                           child: Text(
-                             differenceText, 
-                             style: Theme.of(context).textTheme.bodySmall?.copyWith(color: statusColor, fontWeight: FontWeight.w500)
-                           ),
-                        ),
+                     Text(record.parameterName, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500)),
+                     const SizedBox(height: 3),
+                      // --- Add Category back --- 
+                     Text(
+                         record.category.toUpperCase(), 
+                         style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600], fontSize: 11)
+                     ),
+                     const SizedBox(height: 5),
+                     // --- Add Reference Range back --- 
+                     Text(
+                       'Referencia: ${record.refOriginal ?? "--"}',
+                       style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 11),
+                     ),
+                     // --- Show date or difference text (adjust spacing if needed) ---
+                     if (differenceText.isNotEmpty) ...[ // Only show diff if it exists
+                       const SizedBox(height: 5),
+                       Text(
+                         differenceText, 
+                         style: Theme.of(context).textTheme.bodySmall?.copyWith(color: statusColor.withOpacity(0.8), fontSize: 11, fontWeight: FontWeight.w500)
+                       ),
+                     ] else ... [ // Otherwise, show date (consider if needed here or only on detail screen)
+                        // Currently, date is not shown here if diff text is empty, keep it that way for now?
+                        // Or add: const SizedBox(height: 3), Text(DateFormat('dd MMM yy').format(record.date), style: ...)
+                     ]
                    ],
                  ),
                ),
-               const SizedBox(width: 8),
-               // Right: Value and Chevron
+               const SizedBox(width: 12),
+               // Right: Value and Unit (if available)
                Column(
-                 mainAxisAlignment: MainAxisAlignment.center,
-                 crossAxisAlignment: CrossAxisAlignment.end,
+                 mainAxisAlignment: MainAxisAlignment.center, // Center vertically
+                 crossAxisAlignment: CrossAxisAlignment.end,   // Align text to the right
                  children: [
-                    Text(
-                       record.value != null ? _valueFormatter.format(record.value) : 'N/A',
-                       style: Theme.of(context).textTheme.titleLarge?.copyWith(color: statusColor, fontWeight: FontWeight.bold)
-                    ),
-                    const SizedBox(height: 10), // Add space like mockup
-                    Icon(Icons.chevron_right, color: Colors.grey[400]),
+                   Row( // Row for value and unit
+                     mainAxisSize: MainAxisSize.min,
+                     crossAxisAlignment: CrossAxisAlignment.baseline,
+                     textBaseline: TextBaseline.alphabetic,
+                     children: [
+                       Text(
+                         record.displayValue, 
+                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                           fontWeight: FontWeight.bold, 
+                           color: numericValue != null ? statusColor : null // Color if numeric
+                         )
+                       ),
+                       // --- Show unit only if value is numeric and unit exists ---
+                       if (displayUnit.isNotEmpty && numericValue != null) ...[
+                          const SizedBox(width: 4), // Space
+                          Text(
+                            displayUnit,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[700]),
+                          ),
+                       ],
+                       // ---------------------------------------------------------
+                     ],
+                   ),
                  ],
-               )
+               ),
              ],
            ),
          ),
