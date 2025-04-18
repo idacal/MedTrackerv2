@@ -318,6 +318,8 @@ class _CategoryParametersScreenState extends State<CategoryParametersScreen> {
       final statusColor = _getStatusColor(context, param.status);
       final statusIcon = _getStatusIcon(param.status);
       final primaryDisplay = param.displayValue; 
+      final numericValue = param.value; // Needed to check if unit should be shown
+      final String displayUnit = param.unit ?? ''; // Get unit
       
       // --- Improved Range String Logic ---
       String rangeString;
@@ -375,16 +377,28 @@ class _CategoryParametersScreenState extends State<CategoryParametersScreen> {
             ),
             // Use the calculated rangeString
             subtitle: Text(rangeString, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
+            // --- Update Trailing Row --- 
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.baseline, // Align value and unit
+              textBaseline: TextBaseline.alphabetic,
               children: [
                 Text(
                     primaryDisplay, 
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                        fontWeight: FontWeight.bold, 
-                       color: param.value != null ? statusColor : null,
+                       color: numericValue != null ? statusColor : null, // Use numericValue here
                     )
                  ),
+                 // --- Show unit only if value is numeric and unit exists ---
+                 if (displayUnit.isNotEmpty && numericValue != null) ...[
+                   const SizedBox(width: 4), // Space between value and unit
+                   Text(
+                     displayUnit,
+                     style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[700]),
+                   ),
+                 ],
+                 // ---------------------------------------------------------
                  const SizedBox(width: 8),
                  Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
               ],

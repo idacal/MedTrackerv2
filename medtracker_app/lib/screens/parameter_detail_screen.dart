@@ -172,6 +172,8 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
       final valueColor = numericValue != null ? latestStatusColor : Theme.of(context).textTheme.bodyLarge?.color;
       // Check if we have the percentage case
       final bool showPercentage = numericValue != null && secondaryString != null && secondaryString.isNotEmpty;
+      // Get unit from the record
+      final String displayUnit = latestRecord.unit ?? '';
       
       // --- Improved Range String Logic (same as CategoryParametersScreen) ---
       String displayRangeString;
@@ -216,17 +218,18 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
                           color: valueColor // Apply status color only if numeric
                         ),
                       ),
-                      // Show unit only if value is numeric 
-                      if (unit.isNotEmpty && numericValue != null) ...[
-                        const SizedBox(width: 4),
+                      // --- Show unit only if value is numeric and unit exists ---
+                      if (displayUnit.isNotEmpty && numericValue != null) ...[
+                        const SizedBox(width: 6), // Space between value and unit
                         Padding(
-                            padding: const EdgeInsets.only(bottom: 4.0), 
+                            padding: const EdgeInsets.only(top: 8.0), // Adjust vertical alignment
                             child: Text(
-                              unit, 
+                              displayUnit,
                               style: Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.grey[700]),
                             ),
                         ),
                       ]
+                      // -----------------------------------------------------------
                     ],
                 ),
                  // Show percentage below if applicable

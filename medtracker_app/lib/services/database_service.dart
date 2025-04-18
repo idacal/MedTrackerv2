@@ -271,11 +271,10 @@ class DatabaseService {
             // 3. Otherwise, status remains unknown.
             // ----------------------------------------------------
             
-            // --- Read description and recommendation from JSON data ---
+            // --- Read description, recommendation, and unit from JSON data ---
             final String? description = data['descripcion'] as String?;
             final String? recommendation = data['recomendacion'] as String?;
-            // TODO: Read unit if/when available in JSON
-            // final String? unit = data['unidad'] as String?; 
+            final String? unit = data['unidad'] as String?; // <-- Read unit
             // --------------------------------------------------------
 
             // 4. Create ParameterRecord (Ensure all fields are passed)
@@ -290,9 +289,9 @@ class DatabaseService {
               refOriginal: refOriginal,
               date: date,
               status: calculatedStatus,
-              description: description, // <-- Added description
-              recommendation: recommendation, // <-- Added recommendation
-              // unit: unit, // <-- Add unit when available
+              description: description, 
+              recommendation: recommendation, 
+              unit: unit, // <-- Pass unit
             );
 
             // 5. Insert ParameterRecord
