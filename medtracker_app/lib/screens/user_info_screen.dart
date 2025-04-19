@@ -7,11 +7,11 @@ class UserInfoScreen extends StatelessWidget {
   // --- Hardcoded Data (Keep constants here) ---
   final String userName = 'Ignacio';
   final String userSex = 'Masculino';
-  final String userHeight = '175 cm';
-  final String userWeight = '72 kg';
-  final String userLocation = 'Madrid';
+  final String userHeight = '167 cm';
+  final String userWeight = '67 kg';
+  final String userLocation = 'Viña del Mar';
   final String userBloodType = 'O+';
-  final List<String> userAllergies = const ['Polen', 'Penicilina'];
+  final List<String> userAllergies = const ['Polen', 'Polvo', 'Mani'];
   final String userPhysicalActivity = 'Moderada';
   // --------------------------------------------
 
@@ -50,7 +50,7 @@ class UserInfoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // --- Initialize non-const data inside build --- 
-    final DateTime userBirthDate = DateTime(1985, 6, 15);
+    final DateTime userBirthDate = DateTime(1989, 11, 26);
     final DateTime lastUpdate = DateTime(2025, 4, 19, 13, 57);
     // ---------------------------------------------
 

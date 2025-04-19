@@ -19,6 +19,7 @@ import 'profile_screen.dart'; // Import the ProfileScreen
 import 'tracked_parameters_screen.dart'; // Import the new screen
 import 'share_screen.dart'; // <-- Import the new ShareScreen
 import 'user_info_screen.dart'; // <-- Import the new screen
+import './analysis_screen.dart'; // <-- Import the new AnalysisScreen
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -300,7 +301,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // --- Define Widgets for each Tab --- 
     final List<Widget> _widgetOptions = <Widget>[
       _buildHomeTabContent(context), // Index 0: Inicio
-      const Center(child: Text('Análisis (Próximamente)')), // Index 1: Análisis
+      const AnalysisScreen(), // Index 1: Análisis (Use the new screen)
       const HistoryScreen(), // Index 2: Historial
       const ShareScreen(), // <-- Index 3: Use ShareScreen
       const ProfileScreen(), // Index 4: Ajustes
