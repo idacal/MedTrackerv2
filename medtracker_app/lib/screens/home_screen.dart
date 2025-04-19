@@ -17,6 +17,7 @@ import 'parameter_detail_screen.dart';
 import 'history_screen.dart';
 import 'profile_screen.dart'; // Import the ProfileScreen
 import 'tracked_parameters_screen.dart'; // Import the new screen
+import 'share_screen.dart'; // <-- Import the new ShareScreen
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -300,7 +301,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _buildHomeTabContent(context), // Index 0: Inicio
       const Center(child: Text('Análisis (Próximamente)')), // Index 1: Análisis
       const HistoryScreen(), // Index 2: Historial
-      const Center(child: Text('Compartir (Próximamente)')), // Index 3: Compartir - Added back
+      const ShareScreen(), // <-- Index 3: Use ShareScreen
       const ProfileScreen(), // Index 4: Ajustes
     ];
     // -----------------------------------
