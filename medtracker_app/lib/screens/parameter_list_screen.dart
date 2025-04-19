@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math'; // For max/min
 import 'package:intl/intl.dart'; // For number formatting
+import 'package:provider/provider.dart';
 
 import 'package:medtracker_app/main.dart'; // For StatusColors
 import 'package:medtracker_app/models/parameter_record.dart';
@@ -10,11 +11,13 @@ import 'package:medtracker_app/services/database_service.dart';
 class ParameterListScreen extends StatefulWidget {
   final ParameterStatus targetStatus;
   final int totalParameterCount; // Added total count
+  final VoidCallback? onTrackingChanged; // <-- ADD THIS CALLBACK
 
   const ParameterListScreen({
     super.key, 
     required this.targetStatus, 
-    required this.totalParameterCount 
+    required this.totalParameterCount,
+    this.onTrackingChanged, // <-- INITIALIZE CALLBACK
   });
 
   @override
@@ -27,10 +30,16 @@ class _ParameterListScreenState extends State<ParameterListScreen> {
   final NumberFormat _valueFormatter = NumberFormat("#,##0.##");
   final NumberFormat _diffFormatter = NumberFormat("+#,##0.##;-#,##0.##"); // Format for difference
 
+  // --- State for Tracking --- 
+  Set<String> _trackedParameterKeys = {};
+  bool _isLoadingTracking = true;
+  // ------------------------
+
   @override
   void initState() {
     super.initState();
     _loadFilteredParameters();
+    _loadTrackingStatus(); // Load tracking status initially
   }
 
   Future<void> _loadFilteredParameters() async {
@@ -39,6 +48,32 @@ class _ParameterListScreenState extends State<ParameterListScreen> {
         return allLatest.where((p) => p.status == widget.targetStatus).toList();
       });
     });
+  }
+
+  Future<void> _loadTrackingStatus() async {
+    if (!mounted) return;
+    setState(() { _isLoadingTracking = true; });
+    try {
+       final trackedNames = await dbService.getTrackedParameterNames();
+       final Set<String> keys = {};
+       for (var item in trackedNames) {
+          if (item['categoryName'] != null && item['parameterName'] != null) {
+             keys.add("${item['categoryName']}_${item['parameterName']}");
+          }
+       }
+       if (mounted) {
+         setState(() {
+           _trackedParameterKeys = keys;
+           _isLoadingTracking = false;
+         });
+       }
+    } catch (e) {
+      print("Error loading tracking status in ParameterListScreen: $e");
+       if (mounted) {
+          setState(() { _isLoadingTracking = false; });
+          // Optionally show error snackbar?
+       }
+    }
   }
 
   String _getTitleForStatus(ParameterStatus status, {bool short = false}) {
@@ -216,6 +251,8 @@ class _ParameterListScreenState extends State<ParameterListScreen> {
      final statusIcon = _getStatusIcon(record.status);
      final numericValue = record.value; // Get numeric value
      final displayUnit = record.unit ?? ''; // Get unit
+     final parameterKey = "${record.category}_${record.parameterName}"; // Key for tracking
+     final bool isTracked = _trackedParameterKeys.contains(parameterKey); // Check tracking status
      
      // Determine background color based on status 
      Color? cardBackgroundColor;
@@ -242,13 +279,33 @@ class _ParameterListScreenState extends State<ParameterListScreen> {
        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
        child: InkWell( // Make the card tappable
          onTap: () => _navigateToParameterDetail(record),
+         onLongPress: () => _handleLongPress(context, record),
          borderRadius: BorderRadius.circular(12.0), // Match card shape
          child: Padding(
            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
            child: Row(
              children: [
-               // Left: Icon
-               Icon(statusIcon, color: statusColor, size: 36),
+               // Left: Icon + Optional Star
+               Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                     Icon(statusIcon, color: statusColor, size: 36),
+                     const SizedBox(width: 6),
+                     // Show star icon ONLY if tracked and status loaded
+                     if (!_isLoadingTracking && isTracked)
+                         Icon(
+                            Icons.star, // Only show filled star 
+                            color: Colors.amber.shade600,
+                            size: 18,
+                         ), 
+                      // Show loader if tracking status is loading
+                      if (_isLoadingTracking) 
+                          const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+                      // Add placeholder SizedBox if not loading AND not tracked to maintain layout
+                      if (!_isLoadingTracking && !isTracked)
+                         const SizedBox(width: 18), // Empty space if not tracked
+                  ],
+               ),
                const SizedBox(width: 12),
                // Center: Parameter Name and Date/Diff
                Expanded(
@@ -319,4 +376,75 @@ class _ParameterListScreenState extends State<ParameterListScreen> {
        ),
      );
    }
+
+  // --- Renamed method to handle long press logic ---
+  Future<void> _handleLongPress(BuildContext context, ParameterRecord parameter) async {
+     final parameterKey = "${parameter.category}_${parameter.parameterName}";
+     final bool isCurrentlyTracked = _trackedParameterKeys.contains(parameterKey);
+     final String actionVerb = isCurrentlyTracked ? 'Dejar de seguir' : 'Seguir';
+     final String actionResultVerb = isCurrentlyTracked ? 'quitado de' : 'añadido a';
+     
+     // Show confirmation dialog
+     final bool? confirmed = await showDialog<bool>(
+       context: context,
+       builder: (BuildContext dialogContext) {
+         return AlertDialog(
+           title: Text('$actionVerb Indicador'),
+           content: Text('¿Quieres $actionVerb el parámetro "${parameter.parameterName}"?'),
+           actions: <Widget>[
+             TextButton(
+               child: const Text('Cancelar'),
+               onPressed: () => Navigator.of(dialogContext).pop(false),
+             ),
+             TextButton(
+               style: TextButton.styleFrom(foregroundColor: isCurrentlyTracked ? Theme.of(context).colorScheme.error : null),
+               child: Text(actionVerb),
+               onPressed: () => Navigator.of(dialogContext).pop(true),
+             ),
+           ],
+         );
+       },
+     );
+     
+     if (confirmed == true) {
+       try {
+         if (isCurrentlyTracked) {
+           await dbService.removeTrackedParameter(parameter.category, parameter.parameterName);
+         } else {
+           await dbService.addTrackedParameter(parameter.category, parameter.parameterName);
+         }
+         
+         // Update tracking status locally AFTER successful DB operation
+         await _loadTrackingStatus(); 
+
+         // Show confirmation SnackBar (check context mounted again)
+         if (mounted && context.mounted) { 
+           ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                 content: Text('"${parameter.parameterName}" $actionResultVerb seguimiento.', style: const TextStyle(color: Colors.white)), 
+                 backgroundColor: Colors.green[700],
+                 duration: const Duration(seconds: 2),
+              ),
+           );
+           // --- Call the callback if provided --- 
+           widget.onTrackingChanged?.call();
+           // -------------------------------------
+         }
+       } catch (e) {
+         print("Error updating tracking from ParameterListScreen: $e");
+         if (mounted && context.mounted) {
+             ScaffoldMessenger.of(context).showSnackBar(
+               SnackBar(
+                  content: Text('Error al $actionVerb "${parameter.parameterName}".', style: const TextStyle(color: Colors.white)), 
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                  duration: const Duration(seconds: 2),
+                ),
+             );
+         }
+         // Optional: Reload status even on error to ensure consistency? 
+         // await _loadTrackingStatus(); 
+       }
+     }
+  }
+  // ---------------------------------------------------------------
 } 

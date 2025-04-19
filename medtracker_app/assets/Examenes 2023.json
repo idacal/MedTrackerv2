@@ -2,128 +2,188 @@
   "HEMATOLOGIA": {
     "Leucocitos": {
       "valor": 6.63,
-      "rango_referencia": [4.0, 11.0],
+      "rango_referencia": [
+        4.0,
+        11.0
+      ],
       "referencia_original": "4  -  11",
       "fecha": "26/04/2023",
       "descripcion": "Células blancas de la sangre encargadas de la defensa inmunitaria.",
-      "recomendacion": "Mantén una dieta rica en vitaminas y proteínas, ejercicio moderado y control de estrés."
+      "recomendacion": "Mantén una dieta rica en vitaminas y proteínas, ejercicio moderado y control de estrés.",
+      "unidad": ""
     },
     "Eritrocitos": {
       "valor": 4.63,
-      "rango_referencia": [4.3, 5.7],
+      "rango_referencia": [
+        4.3,
+        5.7
+      ],
       "referencia_original": "4,3  -  5,7",
       "fecha": "26/04/2023",
       "descripcion": "Glóbulos rojos que transportan oxígeno a tejidos y órganos.",
-      "recomendacion": "Consume hierro (carnes rojas, legumbres) y vitaminas B para apoyar la producción."
+      "recomendacion": "Consume hierro (carnes rojas, legumbres) y vitaminas B para apoyar la producción.",
+      "unidad": "x10^12/Lt"
     },
     "Hemoglobina": {
       "valor": 14.2,
-      "rango_referencia": [13.5, 17.5],
+      "rango_referencia": [
+        13.5,
+        17.5
+      ],
       "referencia_original": "13,5  -  17,5",
       "fecha": "26/04/2023",
       "descripcion": "Proteína de los eritrocitos que une y transporta oxígeno.",
-      "recomendacion": "Mantén una ingesta adecuada de hierro y evita la deshidratación."
+      "recomendacion": "Mantén una ingesta adecuada de hierro y evita la deshidratación.",
+      "unidad": "g/dl"
     },
     "Hematocrito": {
       "valor": 43.8,
-      "rango_referencia": [38.8, 50.0],
+      "rango_referencia": [
+        38.8,
+        50.0
+      ],
       "referencia_original": "38,8  -  50",
       "fecha": "26/04/2023",
       "descripcion": "Porcentaje de glóbulos rojos respecto al volumen sanguíneo.",
-      "recomendacion": "Hidrátate bien y controla la ingesta de hierro."
+      "recomendacion": "Hidrátate bien y controla la ingesta de hierro.",
+      "unidad": "%"
     },
     "V.C.M.": {
       "valor": 94.6,
-      "rango_referencia": [80.0, 100.0],
+      "rango_referencia": [
+        80.0,
+        100.0
+      ],
       "referencia_original": "80  -  100",
       "fecha": "26/04/2023",
       "descripcion": "Volumen corpuscular medio: tamaño promedio de los eritrocitos.",
-      "recomendacion": "Equilibra ingesta de folato y vitamina B12."
+      "recomendacion": "Equilibra ingesta de folato y vitamina B12.",
+      "unidad": "fL"
     },
     "H.C.M.": {
       "valor": 30.7,
-      "rango_referencia": [27.0, 34.0],
+      "rango_referencia": [
+        27.0,
+        34.0
+      ],
       "referencia_original": "27  -  34",
       "fecha": "26/04/2023",
       "descripcion": "Hemoglobina corpuscular media: contenido de hemoglobina en cada eritrocito.",
-      "recomendacion": "Asegura aporte de hierro y vitaminas del complejo B."
+      "recomendacion": "Asegura aporte de hierro y vitaminas del complejo B.",
+      "unidad": "pg"
     },
     "C.H.C.M.": {
       "valor": 32.4,
-      "rango_referencia": [30.0, 36.0],
+      "rango_referencia": [
+        30.0,
+        36.0
+      ],
       "referencia_original": "30  -  36",
       "fecha": "26/04/2023",
       "descripcion": "Concentración de hemoglobina corpuscular media en un volumen de glóbulos rojos.",
-      "recomendacion": "Mantén niveles adecuados de hierro y proteínas."
+      "recomendacion": "Mantén niveles adecuados de hierro y proteínas.",
+      "unidad": "g/dl"
     },
     "A.D.E.": {
       "valor": 11.7,
-      "rango_referencia": [11.0, 15.0],
+      "rango_referencia": [
+        11.0,
+        15.0
+      ],
       "referencia_original": "11  -  15",
       "fecha": "26/04/2023",
       "descripcion": "Ancho de distribución eritrocitaria: variabilidad de tamaño de los glóbulos rojos.",
-      "recomendacion": "Evita deficiencias de vitaminas y minerales que afecten la producción de eritrocitos."
+      "recomendacion": "Evita deficiencias de vitaminas y minerales que afecten la producción de eritrocitos.",
+      "unidad": "%"
     },
     "Plaquetas": {
       "valor": 187.0,
-      "rango_referencia": [150.0, 400.0],
+      "rango_referencia": [
+        150.0,
+        400.0
+      ],
       "referencia_original": "150  -  400",
       "fecha": "26/04/2023",
       "descripcion": "Células sanguíneas que intervienen en la coagulación.",
-      "recomendacion": "Consume alimentos ricos en vitamina K y mantén una hidratación adecuada."
+      "recomendacion": "Consume alimentos ricos en vitamina K y mantén una hidratación adecuada.",
+      "unidad": "x10^9/Lt"
     },
     "V.H.S.": {
       "valor": 5.0,
-      "rango_referencia": [1.0, 15.0],
+      "rango_referencia": [
+        1.0,
+        15.0
+      ],
       "referencia_original": "1  -  15",
       "fecha": "26/04/2023",
       "descripcion": "Velocidad de sedimentación globular: indicador de inflamación.",
-      "recomendacion": "Evita infecciones, controla inflamación con dieta antiinflamatoria."
+      "recomendacion": "Evita infecciones, controla inflamación con dieta antiinflamatoria.",
+      "unidad": "mm/hr"
     },
     "Eosinófilos": {
       "valor": 2.3,
-      "rango_referencia": [0.05, 0.5],
+      "rango_referencia": [
+        0.05,
+        0.5
+      ],
       "referencia_original": null,
       "valor_absoluto": 0.15,
       "fecha": "26/04/2023",
       "descripcion": "Tipo de glóbulo blanco involucrado en reacciones alérgicas y parasitarias.",
-      "recomendacion": "Controla alergias, consulta si hay síntomas respiratorios."
+      "recomendacion": "Controla alergias, consulta si hay síntomas respiratorios.",
+      "unidad": "%"
     },
     "Basófilos": {
       "valor": 0.6,
-      "rango_referencia": [0.0, 0.3],
+      "rango_referencia": [
+        0.0,
+        0.3
+      ],
       "referencia_original": null,
       "valor_absoluto": 0.04,
       "fecha": "26/04/2023",
       "descripcion": "Glóbulos blancos que liberan histamina en respuesta alérgica.",
-      "recomendacion": "Controla posibles alergias y toma antihistamínicos si te lo indica un médico."
+      "recomendacion": "Controla posibles alergias y toma antihistamínicos si te lo indica un médico.",
+      "unidad": "%"
     },
     "Neutrófilos": {
       "valor": 62.1,
-      "rango_referencia": [1.7, 7.0],
+      "rango_referencia": [
+        1.7,
+        7.0
+      ],
       "referencia_original": null,
       "valor_absoluto": 4.12,
       "fecha": "26/04/2023",
       "descripcion": "Glóbulos blancos principales en defensa contra infecciones bacterianas.",
-      "recomendacion": "Mantén higiene adecuada y consulta ante infecciones frecuentes."
+      "recomendacion": "Mantén higiene adecuada y consulta ante infecciones frecuentes.",
+      "unidad": "%"
     },
     "Linfocitos": {
       "valor": 29.3,
-      "rango_referencia": [1.0, 5.0],
+      "rango_referencia": [
+        1.0,
+        5.0
+      ],
       "referencia_original": null,
       "valor_absoluto": 1.94,
       "fecha": "26/04/2023",
       "descripcion": "Glóbulos blancos responsables de la inmunidad específica (viral y celular).",
-      "recomendacion": "Vacúnate al día y duerme bien para fortalecer la inmunidad."
+      "recomendacion": "Vacúnate al día y duerme bien para fortalecer la inmunidad.",
+      "unidad": "%"
     },
     "Monocitos": {
       "valor": 5.7,
-      "rango_referencia": [0.3, 0.9],
+      "rango_referencia": [
+        0.3,
+        0.9
+      ],
       "referencia_original": null,
       "valor_absoluto": 0.38,
       "fecha": "26/04/2023",
       "descripcion": "Glóbulos blancos que fagocitan patógenos y restos celulares.",
-      "recomendacion": "Mantén un estilo de vida saludable y controla inflamaciones crónicas."
+      "recomendacion": "Mantén un estilo de vida saludable y controla inflamaciones crónicas.",
+      "unidad": "%"
     }
   },
   "ORINAS": {
@@ -131,35 +191,49 @@
       "valor": "Claro",
       "fecha": "28/04/2023",
       "descripcion": "Claridad de la orina, indica concentración y posible hidratación.",
-      "recomendacion": "Bebe suficiente agua para mantener orina clara."
+      "recomendacion": "Bebe suficiente agua para mantener orina clara.",
+      "unidad": ""
     },
     "Color": {
       "valor": "Amarillo",
       "fecha": "28/04/2023",
       "descripcion": "Color de la muestra, asociado a hidratación y presencia de pigmentos.",
-      "recomendacion": "Mantén hidratación; colores oscuros pueden indicar deshidratación."
+      "recomendacion": "Mantén hidratación; colores oscuros pueden indicar deshidratación.",
+      "unidad": ""
     },
     "Densidad": {
       "valor": 1.015,
-      "rango_referencia": [1.003, 1.030],
+      "rango_referencia": [
+        1.003,
+        1.03
+      ],
       "fecha": "28/04/2023",
       "descripcion": "Medida de concentración de la orina.",
-      "recomendacion": "Hidrátate correctamente para evitar concentraciones extremas."
+      "recomendacion": "Hidrátate correctamente para evitar concentraciones extremas.",
+      "unidad": ""
     },
     "pH": {
       "valor": 5.5,
-      "rango_referencia": [5.0, 7.0],
+      "rango_referencia": [
+        5.0,
+        7.0
+      ],
       "fecha": "28/04/2023",
       "descripcion": "Acidez o alcalinidad de la orina.",
-      "recomendacion": "Equilibra consumo de frutas y verduras para mantener pH estable."
+      "recomendacion": "Equilibra consumo de frutas y verduras para mantener pH estable.",
+      "unidad": ""
     },
     "Leucocitos": {
       "valor": "Negativo",
-      "rango_referencia": [null, 15],
+      "rango_referencia": [
+        null,
+        15
+      ],
       "referencia_original": "Neg < 15",
       "fecha": "28/04/2023",
       "descripcion": "Células de defensa que en orina pueden indicar infección urinaria.",
-      "recomendacion": "Si aparece positivo, consulta a un médico para descartar infección."
+      "recomendacion": "Si aparece positivo, consulta a un médico para descartar infección.",
+      "unidad": ""
     },
     "Nitritos": {
       "valor": "Negativo",
@@ -167,7 +241,8 @@
       "referencia_original": "Negativo",
       "fecha": "28/04/2023",
       "descripcion": "Sustancias producidas por bacterias en orina.",
-      "recomendacion": "Negativo es normal; positivo sugiere infección bacteriana."
+      "recomendacion": "Negativo es normal; positivo sugiere infección bacteriana.",
+      "unidad": ""
     },
     "Proteína": {
       "valor": "Negativo",
@@ -175,15 +250,20 @@
       "referencia_original": "Negativo",
       "fecha": "28/04/2023",
       "descripcion": "Presencia de proteínas; en orina sana suele ser ausente.",
-      "recomendacion": "Controla presión arterial y función renal si apareciera positivo."
+      "recomendacion": "Controla presión arterial y función renal si apareciera positivo.",
+      "unidad": ""
     },
     "Glucosa": {
       "valor": "Negativo",
-      "rango_referencia": [null, 100],
+      "rango_referencia": [
+        null,
+        100
+      ],
       "referencia_original": "Neg < 100",
       "fecha": "28/04/2023",
       "descripcion": "Azúcar en orina; su aparición puede indicar diabetes.",
-      "recomendacion": "Mantén control de glucemia y dieta baja en azúcares refinados."
+      "recomendacion": "Mantén control de glucemia y dieta baja en azúcares refinados.",
+      "unidad": "mg/dl"
     },
     "Cuerpos cetónicos": {
       "valor": "Negativo",
@@ -191,15 +271,20 @@
       "referencia_original": "Negativo",
       "fecha": "28/04/2023",
       "descripcion": "Productos de descomposición de grasas; su presencia indica cetosis.",
-      "recomendacion": "Equilibra ingesta de carbohidratos y grasas para evitar cetosis excesiva."
+      "recomendacion": "Equilibra ingesta de carbohidratos y grasas para evitar cetosis excesiva.",
+      "unidad": ""
     },
     "Urobilinógeno": {
       "valor": 0.2,
-      "rango_referencia": [null, 1.0],
+      "rango_referencia": [
+        null,
+        1.0
+      ],
       "referencia_original": "Neg < 1,0",
       "fecha": "28/04/2023",
       "descripcion": "Subproducto de la degradación de la bilirrubina.",
-      "recomendacion": "Valores normales; mantén función hepática saludable."
+      "recomendacion": "Valores normales; mantén función hepática saludable.",
+      "unidad": "EU/dL"
     },
     "Bilirrubina": {
       "valor": "Negativo",
@@ -207,31 +292,44 @@
       "referencia_original": "Negativo",
       "fecha": "28/04/2023",
       "descripcion": "Pigmento biliar; su presencia en orina indica problemas hepáticos.",
-      "recomendacion": "Consulta si aparece positivo para evaluar función hepática."
+      "recomendacion": "Consulta si aparece positivo para evaluar función hepática.",
+      "unidad": ""
     },
     "Sangre (Hb)": {
       "valor": "Negativo",
-      "rango_referencia": [null, 10],
+      "rango_referencia": [
+        null,
+        10
+      ],
       "referencia_original": "Neg < 10",
       "fecha": "28/04/2023",
       "descripcion": "Detecta hemoglobina en orina; su presencia puede indicar sangrado.",
-      "recomendacion": "Consulta si es positivo para descartar lesiones urinarias."
+      "recomendacion": "Consulta si es positivo para descartar lesiones urinarias.",
+      "unidad": ""
     },
     "Hematíes": {
       "valor": "No se observa",
-      "rango_referencia": [null, 3],
+      "rango_referencia": [
+        null,
+        3
+      ],
       "referencia_original": "No se observa",
       "fecha": "28/04/2023",
       "descripcion": "Glóbulos rojos en sedimento urinario.",
-      "recomendacion": "Normal si no se observan; positivo requiere evaluación médica."
+      "recomendacion": "Normal si no se observan; positivo requiere evaluación médica.",
+      "unidad": ""
     },
     "Leucocitos (sedimento)": {
       "valor": "1 - 4",
-      "rango_referencia": [null, 5],
+      "rango_referencia": [
+        null,
+        5
+      ],
       "referencia_original": "< 5",
       "fecha": "28/04/2023",
       "descripcion": "Glóbulos blancos en sedimento, indicador de infección.",
-      "recomendacion": "Mantén buena higiene y consulta si aumenta el conteo."
+      "recomendacion": "Mantén buena higiene y consulta si aumenta el conteo.",
+      "unidad": "células/campo"
     },
     "Piocitos": {
       "valor": "No se observa",
@@ -239,15 +337,20 @@
       "referencia_original": "No se observa",
       "fecha": "28/04/2023",
       "descripcion": "Células de pus en orina.",
-      "recomendacion": "Ausentes es normal; su presencia sugiere infección."
+      "recomendacion": "Ausentes es normal; su presencia sugiere infección.",
+      "unidad": ""
     },
     "Células epiteliales": {
       "valor": "No se observa",
-      "rango_referencia": [null, 5],
+      "rango_referencia": [
+        null,
+        5
+      ],
       "referencia_original": "< 5",
       "fecha": "28/04/2023",
       "descripcion": "Células que recubren tracto urinario.",
-      "recomendacion": "Valores bajos son normales; altas indican irritación."
+      "recomendacion": "Valores bajos son normales; altas indican irritación.",
+      "unidad": ""
     },
     "Bacterias": {
       "valor": "Muy escasa cantidad",
@@ -255,7 +358,8 @@
       "referencia_original": "No se observa",
       "fecha": "28/04/2023",
       "descripcion": "Presencia de bacterias en sedimento.",
-      "recomendacion": "Higiene y consulta si aumenta la cantidad."
+      "recomendacion": "Higiene y consulta si aumenta la cantidad.",
+      "unidad": ""
     },
     "Mucus": {
       "valor": "No se observa",
@@ -263,7 +367,8 @@
       "referencia_original": "No se observa",
       "fecha": "28/04/2023",
       "descripcion": "Filamentos de moco en orina.",
-      "recomendacion": "Normal si no se observan; su aparición requiere evaluación."
+      "recomendacion": "Normal si no se observan; su aparición requiere evaluación.",
+      "unidad": ""
     },
     "Levaduras": {
       "valor": "No se observa",
@@ -271,7 +376,8 @@
       "referencia_original": "No se observa",
       "fecha": "28/04/2023",
       "descripcion": "Hongos en sedimento.",
-      "recomendacion": "Normal si no aparecen; positivo indica infección fúngica."
+      "recomendacion": "Normal si no aparecen; positivo indica infección fúngica.",
+      "unidad": ""
     },
     "Cristales oxalato cálcico": {
       "valor": "No se observa",
@@ -279,7 +385,8 @@
       "referencia_original": "No se observa",
       "fecha": "28/04/2023",
       "descripcion": "Cristales asociados a formación de cálculos renales.",
-      "recomendacion": "Bebe agua y modera consumo de oxalatos (espinacas, frutos secos)."
+      "recomendacion": "Bebe agua y modera consumo de oxalatos (espinacas, frutos secos).",
+      "unidad": ""
     },
     "Cristales amorfos": {
       "valor": "No se observa",
@@ -287,15 +394,20 @@
       "referencia_original": "No se observa",
       "fecha": "28/04/2023",
       "descripcion": "Cristales de fosfato o urato sin forma definida.",
-      "recomendacion": "Mantén pH urinario equilibrado con dieta adecuada."
+      "recomendacion": "Mantén pH urinario equilibrado con dieta adecuada.",
+      "unidad": ""
     },
     "Hialinos": {
       "valor": "No se observa",
-      "rango_referencia": [null, 2],
+      "rango_referencia": [
+        null,
+        2
+      ],
       "referencia_original": "< 2",
       "fecha": "28/04/2023",
       "descripcion": "Cilindros de proteínas filtradas en glomérulos renales.",
-      "recomendacion": "Controla función renal y evita deshidratación."
+      "recomendacion": "Controla función renal y evita deshidratación.",
+      "unidad": ""
     },
     "Granulosos gruesos": {
       "valor": "No se observa",
@@ -303,300 +415,439 @@
       "referencia_original": "No se observa",
       "fecha": "28/04/2023",
       "descripcion": "Cilindros con células y detritos, indican daño tubular.",
-      "recomendacion": "Consulta a nefrología si aparecen."
+      "recomendacion": "Consulta a nefrología si aparecen.",
+      "unidad": ""
     }
   },
   "ESTUDIO DE LIPIDOS": {
     "Colesterol Total": {
       "valor": 116.0,
-      "rango_referencia": [0, 200],
+      "rango_referencia": [
+        0,
+        200
+      ],
       "referencia_original": "Deseable hasta 200",
       "fecha": "26/04/2023",
       "descripcion": "Nivel total de colesterol en sangre, indicador cardiovascular.",
-      "recomendacion": "Dieta baja en grasas saturadas y carbohidratos refinados."
+      "recomendacion": "Dieta baja en grasas saturadas y carbohidratos refinados.",
+      "unidad": "mg/dl"
     },
     "Colesterol HDL": {
       "valor": 39.8,
-      "rango_referencia": [35, 55],
+      "rango_referencia": [
+        35,
+        55
+      ],
       "referencia_original": "Pronóstico favorable",
       "fecha": "26/04/2023",
       "descripcion": "Colesterol “bueno” que protege arterias.",
-      "recomendacion": "Ejercicio aeróbico regular y grasas saludables (aceite, pescado)."
+      "recomendacion": "Ejercicio aeróbico regular y grasas saludables (aceite, pescado).",
+      "unidad": "mg/dl"
     },
     "Colesterol No HDL": {
       "valor": 76.2,
-      "rango_referencia": [0, 130],
+      "rango_referencia": [
+        0,
+        130
+      ],
       "referencia_original": "Óptimo: < de 130",
       "fecha": "26/04/2023",
       "descripcion": "Suma de colesterol LDL y VLDL, riesgo cardiovascular.",
-      "recomendacion": "Controla LDL con dieta y ejercicio."
+      "recomendacion": "Controla LDL con dieta y ejercicio.",
+      "unidad": "mg/dl"
     },
     "Colesterol LDL": {
       "valor": 64.8,
-      "rango_referencia": [0, 100],
+      "rango_referencia": [
+        0,
+        100
+      ],
       "referencia_original": "Óptimo: < de 100",
       "fecha": "26/04/2023",
       "descripcion": "Colesterol “malo” asociado a aterosclerosis.",
-      "recomendacion": "Reduce grasas trans y saturadas."
+      "recomendacion": "Reduce grasas trans y saturadas.",
+      "unidad": "mg/dl"
     },
     "Colesterol VLDL": {
       "valor": 11.0,
-      "rango_referencia": [0, 30],
+      "rango_referencia": [
+        0,
+        30
+      ],
       "referencia_original": "Deseable: hasta 30",
       "fecha": "26/04/2023",
       "descripcion": "Transporta triglicéridos; contribuye a LDL.",
-      "recomendacion": "Modera azúcares simples y alcohol."
+      "recomendacion": "Modera azúcares simples y alcohol.",
+      "unidad": "mg/dl"
     },
     "Triglicéridos": {
       "valor": 57.0,
-      "rango_referencia": [0, 150],
+      "rango_referencia": [
+        0,
+        150
+      ],
       "referencia_original": "Deseable: hasta 150",
       "fecha": "26/04/2023",
       "descripcion": "Grasas en sangre derivadas de la dieta.",
-      "recomendacion": "Evita azúcares y carbohidratos refinados."
+      "recomendacion": "Evita azúcares y carbohidratos refinados.",
+      "unidad": "mg/dl"
     },
     "Colesterol total / HDL": {
       "valor": 2.91,
-      "rango_referencia": [0, 5.0],
+      "rango_referencia": [
+        0,
+        5.0
+      ],
       "referencia_original": "Riesgo estándar: 5.0",
       "fecha": "26/04/2023",
       "descripcion": "Índice de riesgo cardiovascular.",
-      "recomendacion": "Mejora HDL y reduce colesterol total."
+      "recomendacion": "Mejora HDL y reduce colesterol total.",
+      "unidad": ""
     }
   },
   "PERFIL HEPATICO": {
     "Bilirrubina total": {
       "valor": 0.52,
-      "rango_referencia": [0.15, 1.1],
+      "rango_referencia": [
+        0.15,
+        1.1
+      ],
       "referencia_original": "0,15  -  1,1",
       "fecha": "26/04/2023",
       "descripcion": "Bilirrubina circulante: producto de degradación de glóbulos rojos.",
-      "recomendacion": "Evita alcohol y medicamentos hepatotóxicos."
+      "recomendacion": "Evita alcohol y medicamentos hepatotóxicos.",
+      "unidad": "mg/dl"
     },
     "Bilirrubina directa": {
       "valor": 0.22,
-      "rango_referencia": [0.05, 0.3],
+      "rango_referencia": [
+        0.05,
+        0.3
+      ],
       "referencia_original": "0,05  -  0,3",
       "fecha": "26/04/2023",
       "descripcion": "Bilirrubina conjugada excretada por hígado.",
-      "recomendacion": "Mantén función hepática con dieta equilibrada."
+      "recomendacion": "Mantén función hepática con dieta equilibrada.",
+      "unidad": "mg/dl"
     },
     "A.S.A.T. (GOT)": {
       "valor": 32.0,
-      "rango_referencia": [0.0, 37.0],
+      "rango_referencia": [
+        0.0,
+        37.0
+      ],
       "referencia_original": "< 37",
       "fecha": "26/04/2023",
       "descripcion": "Enzima hepática; su elevación indica lesión hepática o muscular.",
-      "recomendacion": "Evita alcohol y ejercicio extenuante previo al examen."
+      "recomendacion": "Evita alcohol y ejercicio extenuante previo al examen.",
+      "unidad": "U/L"
     },
     "A.L.A.T. (GPT)": {
       "valor": 35.0,
-      "rango_referencia": [0.0, 41.0],
+      "rango_referencia": [
+        0.0,
+        41.0
+      ],
       "referencia_original": "< 41",
       "fecha": "26/04/2023",
       "descripcion": "Enzima más específica de hígado.",
-      "recomendacion": "Balancea dieta y evita tóxicos hepáticos."
+      "recomendacion": "Balancea dieta y evita tóxicos hepáticos.",
+      "unidad": "U/L"
     },
     "Fosfatasa alcalina": {
       "valor": 78.0,
-      "rango_referencia": [45.0, 115.0],
+      "rango_referencia": [
+        45.0,
+        115.0
+      ],
       "referencia_original": "45  -  115",
       "fecha": "26/04/2023",
       "descripcion": "Enzima presente en hígado y hueso.",
-      "recomendacion": "Mantén niveles de vitamina D y evita tóxicos hepáticos."
+      "recomendacion": "Mantén niveles de vitamina D y evita tóxicos hepáticos.",
+      "unidad": "U/L"
     },
     "Gama-Glutamiltransp": {
       "valor": 14.0,
-      "rango_referencia": [0.0, 61.0],
+      "rango_referencia": [
+        0.0,
+        61.0
+      ],
       "referencia_original": "< 61",
       "fecha": "26/04/2023",
       "descripcion": "Enzima hepática; marcador de consumo de alcohol.",
-      "recomendacion": "Modera consumo de alcohol."
+      "recomendacion": "Modera consumo de alcohol.",
+      "unidad": "U/L"
     },
     "Tpo de protrombina (seg)": {
       "valor": 13.2,
       "fecha": "26/04/2023",
       "descripcion": "Tiempo de coagulación dependiente de factores hepáticos.",
-      "recomendacion": "Mantén vitamina K con dieta (verduras de hoja verde)."
+      "recomendacion": "Mantén vitamina K con dieta (verduras de hoja verde).",
+      "unidad": "segundos"
     },
     "Tpo de protrombina (%)": {
       "valor": 75.8,
-      "rango_referencia": [70.0, 130.0],
+      "rango_referencia": [
+        70.0,
+        130.0
+      ],
       "referencia_original": "70  -  130",
       "fecha": "26/04/2023",
       "descripcion": "Porcentaje de actividad de protrombina.",
-      "recomendacion": "Igual que el tiempo en segundos."
+      "recomendacion": "Igual que el tiempo en segundos.",
+      "unidad": "%"
     },
     "I.N.R.": {
       "valor": 1.15,
-      "rango_referencia": [2.0, 4.0],
+      "rango_referencia": [
+        2.0,
+        4.0
+      ],
       "referencia_original": "2,0  -  4,0",
       "fecha": "26/04/2023",
       "descripcion": "Razón internacional normalizada del tiempo de protrombina.",
-      "recomendacion": "Usado en pacientes con anticoagulación."
+      "recomendacion": "Usado en pacientes con anticoagulación.",
+      "unidad": ""
     },
     "FIB-4": {
       "valor": 0.95,
       "referencia_original": "< 1,30",
       "fecha": "26/04/2023",
       "descripcion": "Índice no invasivo para fibrosis hepática.",
-      "recomendacion": "Controla funciones hepáticas y revisa si sube."
+      "recomendacion": "Controla funciones hepáticas y revisa si sube.",
+      "unidad": ""
     }
   },
   "PERFIL BIOQUIMICO": {
     "Bilirrubina total": {
       "valor": 0.52,
-      "rango_referencia": [0.15, 1.1],
+      "rango_referencia": [
+        0.15,
+        1.1
+      ],
       "referencia_original": "0,15  -  1,1",
       "fecha": "26/04/2023",
       "descripcion": "Producto de degradación de hemoglobina.",
-      "recomendacion": "Evita alcohol y tóxicos hepáticos."
+      "recomendacion": "Evita alcohol y tóxicos hepáticos.",
+      "unidad": "mg/dl"
     },
     "Bilirrubina directa": {
       "valor": 0.22,
-      "rango_referencia": [0.05, 0.3],
+      "rango_referencia": [
+        0.05,
+        0.3
+      ],
       "referencia_original": "0,05  -  0,3",
       "fecha": "26/04/2023",
       "descripcion": "Bilirrubina conjugada excretada por el hígado.",
-      "recomendacion": "Evita alcohol y tóxicos hepáticos."
+      "recomendacion": "Evita alcohol y tóxicos hepáticos.",
+      "unidad": "mg/dl"
     },
     "Creatinina": {
       "valor": 0.95,
-      "rango_referencia": [0.5, 1.3],
+      "rango_referencia": [
+        0.5,
+        1.3
+      ],
       "referencia_original": "0,5  -  1,3",
       "fecha": "26/04/2023",
       "descripcion": "Producto de desecho muscular, reflejo de función renal.",
-      "recomendacion": "Mantén hidratación y controla ejercicio intenso."
+      "recomendacion": "Mantén hidratación y controla ejercicio intenso.",
+      "unidad": "mg/dl"
     },
     "Glucosa": {
       "valor": 100.0,
-      "rango_referencia": [70.0, 99.0],
+      "rango_referencia": [
+        70.0,
+        99.0
+      ],
       "referencia_original": "70  -  99",
       "fecha": "26/04/2023",
       "descripcion": "Nivel de azúcar en sangre en ayunas.",
-      "recomendacion": "Dieta baja en azúcares simples y ejercicio regular."
+      "recomendacion": "Dieta baja en azúcares simples y ejercicio regular.",
+      "unidad": "mg/dl"
     },
     "Acido úrico": {
-      "valor": 4.00,
-      "rango_referencia": [3.4, 7.0],
+      "valor": 4.0,
+      "rango_referencia": [
+        3.4,
+        7.0
+      ],
       "referencia_original": "3,4  -  7",
       "fecha": "26/04/2023",
       "descripcion": "Producto de degradación de purinas, asociado a gota.",
-      "recomendacion": "Modera carnes rojas y mariscos."
+      "recomendacion": "Modera carnes rojas y mariscos.",
+      "unidad": "mg/dl"
     },
     "Urea": {
       "valor": 33.0,
-      "rango_referencia": [10.0, 50.0],
+      "rango_referencia": [
+        10.0,
+        50.0
+      ],
       "referencia_original": "10  -  50",
       "fecha": "26/04/2023",
       "descripcion": "Producto final del metabolismo proteico, evalúa riñón.",
-      "recomendacion": "Hidrátate y controla ingesta de proteínas."
+      "recomendacion": "Hidrátate y controla ingesta de proteínas.",
+      "unidad": "mg/dl"
     },
     "Calcio": {
       "valor": 9.43,
-      "rango_referencia": [8.4, 10.4],
+      "rango_referencia": [
+        8.4,
+        10.4
+      ],
       "referencia_original": "8,4  -  10,4",
       "fecha": "26/04/2023",
       "descripcion": "Nivel de calcio sérico, importante para huesos y músculos.",
-      "recomendacion": "Consume lácteos y vitamina D."
+      "recomendacion": "Consume lácteos y vitamina D.",
+      "unidad": "mg/dl"
     },
     "Fósforo": {
       "valor": 3.26,
-      "rango_referencia": [2.4, 5.1],
+      "rango_referencia": [
+        2.4,
+        5.1
+      ],
       "referencia_original": "2,4  -  5,1",
       "fecha": "26/04/2023",
       "descripcion": "Mineral que regula energía celular y huesos.",
-      "recomendacion": "Equilibra con calcio en la dieta."
+      "recomendacion": "Equilibra con calcio en la dieta.",
+      "unidad": "mg/dl"
     },
     "Colesterol": {
       "valor": 116.0,
-      "rango_referencia": [130.0, 200.0],
+      "rango_referencia": [
+        130.0,
+        200.0
+      ],
       "referencia_original": "130  -  200",
       "fecha": "26/04/2023",
       "descripcion": "Colesterol total en sangre.",
-      "recomendacion": "Dieta baja en grasas saturadas."
+      "recomendacion": "Dieta baja en grasas saturadas.",
+      "unidad": "mg/dl"
     },
     "Triglicéridos": {
       "valor": 57.0,
-      "rango_referencia": [50.0, 150.0],
+      "rango_referencia": [
+        50.0,
+        150.0
+      ],
       "referencia_original": "50  -  150",
       "fecha": "26/04/2023",
       "descripcion": "Grasas derivadas de la dieta.",
-      "recomendacion": "Evita excesos de carbohidratos."
+      "recomendacion": "Evita excesos de carbohidratos.",
+      "unidad": "mg/dl"
     },
     "Proteínas totales": {
       "valor": 7.27,
-      "rango_referencia": [6.3, 8.3],
+      "rango_referencia": [
+        6.3,
+        8.3
+      ],
       "referencia_original": "6,3  -  8,3",
       "fecha": "26/04/2023",
       "descripcion": "Suma de albúmina y globulinas, refleja estado nutricional.",
-      "recomendacion": "Consume proteínas magras y controla balance hídrico."
-    },  
+      "recomendacion": "Consume proteínas magras y controla balance hídrico.",
+      "unidad": "g/dl"
+    },
     "Albúmina": {
       "valor": 4.28,
-      "rango_referencia": [3.8, 5.1],  
-      "referencia_original": "3,8  -  5,1",  
-      "fecha": "26/04/2023",  
-      "descripcion": "Proteína principal del plasma, mantiene presión oncótica.",  
-      "recomendacion": "Aporta proteínas de alto valor biológico."  
-    },  
-    "Globulinas": {  
-      "valor": 2.99,  
-      "rango_referencia": [1.5, 3.5],  
-      "referencia_original": "1,5  -  3,5",  
-      "fecha": "26/04/2023",  
-      "descripcion": "Grupo de proteínas con funciones inmunitarias y de transporte.",  
-      "recomendacion": "Mantén sistema inmunitario activo con nutrición adecuada."  
-    },  
+      "rango_referencia": [
+        3.8,
+        5.1
+      ],
+      "referencia_original": "3,8  -  5,1",
+      "fecha": "26/04/2023",
+      "descripcion": "Proteína principal del plasma, mantiene presión oncótica.",
+      "recomendacion": "Aporta proteínas de alto valor biológico.",
+      "unidad": "g/dl"
+    },
+    "Globulinas": {
+      "valor": 2.99,
+      "rango_referencia": [
+        1.5,
+        3.5
+      ],
+      "referencia_original": "1,5  -  3,5",
+      "fecha": "26/04/2023",
+      "descripcion": "Grupo de proteínas con funciones inmunitarias y de transporte.",
+      "recomendacion": "Mantén sistema inmunitario activo con nutrición adecuada.",
+      "unidad": "g/dl"
+    },
     "Índice Alb/Glob": {
       "valor": 1.43,
-      "rango_referencia": [1.0, 2.5],
+      "rango_referencia": [
+        1.0,
+        2.5
+      ],
       "referencia_original": "1  -  2,5",
       "fecha": "26/04/2023",
       "descripcion": "Relación albúmina/globulinas.",
-      "recomendacion": "Mantén balance de ambas fracciones proteicas."
+      "recomendacion": "Mantén balance de ambas fracciones proteicas.",
+      "unidad": ""
     },
     "A.S.A.T. (GOT)": {
       "valor": 32.0,
-      "rango_referencia": [0.0, 37.0],
+      "rango_referencia": [
+        0.0,
+        37.0
+      ],
       "referencia_original": "< 37",
       "fecha": "26/04/2023",
       "descripcion": "Enzima hepática y muscular.",
-      "recomendacion": "Evita ejercicio extremo antes del examen."
+      "recomendacion": "Evita ejercicio extremo antes del examen.",
+      "unidad": "U/L"
     },
     "A.L.A.T. (GPT)": {
       "valor": 35.0,
-      "rango_referencia": [0.0, 41.0],
+      "rango_referencia": [
+        0.0,
+        41.0
+      ],
       "referencia_original": "< 41",
       "fecha": "26/04/2023",
       "descripcion": "Enzima más específica de hígado.",
-      "recomendacion": "Mantén función hepática con dieta sana."
+      "recomendacion": "Mantén función hepática con dieta sana.",
+      "unidad": "U/L"
     },
     "Fosfatasa alcalina": {
       "valor": 78.0,
-      "rango_referencia": [45.0, 115.0],
+      "rango_referencia": [
+        45.0,
+        115.0
+      ],
       "referencia_original": "45  -  115",
       "fecha": "26/04/2023",
       "descripcion": "Enzima presente en hígado y huesos.",
-      "recomendacion": "Consume vitamina D y calcio."
+      "recomendacion": "Consume vitamina D y calcio.",
+      "unidad": "U/L"
     },
     "Lactato Deshidrogenasa": {
       "valor": 159.0,
-      "rango_referencia": [135.0, 225.0],
+      "rango_referencia": [
+        135.0,
+        225.0
+      ],
       "referencia_original": "135  -  225",
       "fecha": "26/04/2023",
       "descripcion": "Enzima presente en múltiples tejidos; refleja daño celular.",
-      "recomendacion": "Evita esfuerzos extremos antes del examen."
+      "recomendacion": "Evita esfuerzos extremos antes del examen.",
+      "unidad": "U/L"
     }
   },
   "HORMONAS": {
     "Tirotropina (TSH ultrasensible)": {
       "valor": 2.89,
-      "rango_referencia": [0.35, 4.68],
+      "rango_referencia": [
+        0.35,
+        4.68
+      ],
       "referencia_original": "0,35  -  4,68",
       "fecha": "26/04/2023",
       "descripcion": "Hormona que regula función tiroidea.",
-      "recomendacion": "Mantén yodo adecuado en la dieta."
+      "recomendacion": "Mantén yodo adecuado en la dieta.",
+      "unidad": "µUI/ml"
     }
   },
   "INMUNOLOGIA": {
@@ -605,39 +856,50 @@
       "referencia_original": "No Reactivo",
       "fecha": "26/04/2023",
       "descripcion": "Prueba de detección de VIH.",
-      "recomendacion": "Practica sexo seguro y realiza controles periódicos."
+      "recomendacion": "Practica sexo seguro y realiza controles periódicos.",
+      "unidad": ""
     },
     "Anticuerpos anti Treponémicos": {
       "valor": "No Reactivo",
       "referencia_original": "No Reactivo",
       "fecha": "26/04/2023",
       "descripcion": "Detección de sífilis por anticuerpos.",
-      "recomendacion": "Mantén prácticas sexuales responsables."
+      "recomendacion": "Mantén prácticas sexuales responsables.",
+      "unidad": ""
     },
     "V.D.R.L.": {
       "valor": "No Reactivo",
       "referencia_original": "No Reactivo",
       "fecha": "26/04/2023",
       "descripcion": "Cribado de sífilis por antígenos lipídicos.",
-      "recomendacion": "Igual que anterior."
+      "recomendacion": "Igual que anterior.",
+      "unidad": ""
     }
   },
   "VITAMINAS": {
     "Vitamina B12": {
       "valor": 761.0,
-      "rango_referencia": [211, 946],
+      "rango_referencia": [
+        211,
+        946
+      ],
       "referencia_original": "211  -  946",
       "fecha": "26/04/2023",
       "descripcion": "Vitamina esencial para formación de glóbulos rojos y nervios.",
-      "recomendacion": "Consume carnes, pescados y huevos."
+      "recomendacion": "Consume carnes, pescados y huevos.",
+      "unidad": "pg/ml"
     },
     "25-hidroxi-vitamina D": {
       "valor": 47.7,
-      "rango_referencia": [30, null],
+      "rango_referencia": [
+        30,
+        null
+      ],
       "referencia_original": "Deseable > 30",
       "fecha": "26/04/2023",
       "descripcion": "Forma circulante de vitamina D.",
-      "recomendacion": "Exposición solar y consumo de lácteos fortificados."
+      "recomendacion": "Exposición solar y consumo de lácteos fortificados.",
+      "unidad": "ng/ml"
     }
   }
 }

@@ -111,6 +111,13 @@ class _HomeScreenState extends State<HomeScreen> {
             builder: (context) => ParameterListScreen(
               targetStatus: status,
               totalParameterCount: totalCount,
+              onTrackingChanged: () {
+                if (mounted) {
+                  setState(() {
+                    _trackedParametersFuture = _loadTrackedParametersData();
+                  });
+                }
+              },
             ),
           ),
         );
@@ -971,4 +978,37 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
   }
+
+  // --- Helper to add parameter to tracking from status sections ---
+  Future<void> _addParameterToTracking(BuildContext context, ParameterRecord parameter) async {
+     try {
+       await dbService.addTrackedParameter(parameter.category, parameter.parameterName);
+       if (mounted && context.mounted) { // Check mounted status for both widget and context
+          ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(
+                content: Text('"${parameter.parameterName}" añadido a seguimiento.', style: const TextStyle(color: Colors.white)), 
+                backgroundColor: Colors.green[700],
+                duration: const Duration(seconds: 2),
+             ),
+          );
+          // --- Reload tracked parameters for immediate update ---
+          setState(() { 
+              _trackedParametersFuture = _loadTrackedParametersData(); 
+          });
+          // -----------------------------------------------------
+       }
+     } catch (e) {
+       print("Error adding parameter to tracking from HomeScreen: $e");
+       if (mounted && context.mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(
+                content: Text('Error al añadir "${parameter.parameterName}" a seguimiento.', style: const TextStyle(color: Colors.white)), 
+                backgroundColor: Theme.of(context).colorScheme.error,
+                duration: const Duration(seconds: 2),
+              ),
+           );
+       }
+     }
+  }
+  // ----------------------------------------------------------------
 }

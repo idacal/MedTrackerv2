@@ -1,0 +1,401 @@
+{
+  "HEMATOLOGIA": {
+    "Leucocitos": {
+      "fecha": "03/04/2024",
+      "descripcion": "Células blancas de la sangre encargadas de la defensa inmunitaria.",
+      "recomendacion": "Mantén una dieta rica en vitaminas y proteínas, ejercicio moderado y control de estrés."
+    },
+    "Eritrocitos": {
+      "fecha": "03/04/2024",
+      "descripcion": "Glóbulos rojos que transportan oxígeno a tejidos y órganos.",
+      "recomendacion": "Consume hierro (carnes rojas, legumbres) y vitaminas B para apoyar la producción."
+    },
+    "Hemoglobina": {
+      "fecha": "03/04/2024",
+      "descripcion": "Proteína de los eritrocitos que une y transporta oxígeno.",
+      "recomendacion": "Mantén una ingesta adecuada de hierro y evita la deshidratación."
+    },
+    "Hematocrito": {
+      "fecha": "03/04/2024",
+      "descripcion": "Porcentaje de glóbulos rojos respecto al volumen sanguíneo.",
+      "recomendacion": "Hidrátate bien y controla la ingesta de hierro."
+    },
+    "V.C.M.": {
+      "fecha": "03/04/2024",
+      "descripcion": "Volumen corpuscular medio: tamaño promedio de los eritrocitos.",
+      "recomendacion": "Equilibra ingesta de folato y vitamina B12."
+    },
+    "H.C.M.": {
+      "fecha": "03/04/2024",
+      "descripcion": "Hemoglobina corpuscular media: contenido de hemoglobina en cada eritrocito.",
+      "recomendacion": "Asegura aporte de hierro y proteínas de calidad."
+    },
+    "C.H.C.M.": {
+      "fecha": "03/04/2024",
+      "descripcion": "Concentración de hemoglobina corpuscular media en glóbulos rojos.",
+      "recomendacion": "Mantén niveles adecuados de hierro."
+    },
+    "A.D.E.": {
+      "fecha": "03/04/2024",
+      "descripcion": "Ancho de distribución eritrocitaria.",
+      "recomendacion": "Evita deficiencias vitamínicas."
+    },
+    "Plaquetas": {
+      "fecha": "03/04/2024",
+      "descripcion": "Células que intervienen en la coagulación.",
+      "recomendacion": "Consume vitamina K y mantén hidratación."
+    },
+    "V.H.S.": {
+      "fecha": "03/04/2024",
+      "descripcion": "Indicador de inflamación.",
+      "recomendacion": "Dieta antiinflamatoria y ejercicio moderado."
+    },
+    "Eosinófilos": {
+      "valor_absoluto": 0.31,
+      "fecha": "03/04/2024",
+      "descripcion": "Glóbulos blancos en reacciones alérgicas.",
+      "recomendacion": "Controla alergias ambientales."
+    },
+    "Basófilos": {
+      "valor_absoluto": 0.04,
+      "fecha": "03/04/2024",
+      "descripcion": "Glóbulos blancos que liberan histamina.",
+      "recomendacion": "Consulta si persisten síntomas alérgicos."
+    },
+    "Neutrófilos": {
+      "valor_absoluto": 3.28,
+      "fecha": "03/04/2024",
+      "descripcion": "Defensa principal frente a bacterias.",
+      "recomendacion": "Mantén higiene y evita infecciones."
+    },
+    "Linfocitos": {
+      "valor_absoluto": 2.14,
+      "fecha": "03/04/2024",
+      "descripcion": "Defensa específica (virus y células).",
+      "recomendacion": "Descanso adecuado y vacunación."
+    },
+    "Monocitos": {
+      "valor_absoluto": 0.4,
+      "fecha": "03/04/2024",
+      "descripcion": "Fagocitan patógenos y restos celulares.",
+      "recomendacion": "Controla inflamaciones crónicas."
+    }
+  },
+  "ORINAS": {
+    "Aspecto": {
+      "fecha": "03/04/2024",
+      "descripcion": "Claridad de la orina, refleja concentración.",
+      "recomendacion": "Bebe suficiente agua."
+    },
+    "Color": {
+      "fecha": "03/04/2024",
+      "descripcion": "Tono de la orina, puede indicar hidratación.",
+      "recomendacion": "Mantén hidratación para color óptimo."
+    },
+    "Densidad": {
+      "fecha": "03/04/2024",
+      "descripcion": "Concentración de sólidos disueltos.",
+      "recomendacion": "Hidrátate bien para evitar densidades extremas."
+    },
+    "pH": {
+      "fecha": "03/04/2024",
+      "descripcion": "Acidez/alcalinidad.",
+      "recomendacion": "Equilibra frutas y verduras."
+    },
+    "Leucocitos": {
+      "fecha": "03/04/2024",
+      "descripcion": "Indicador de infección urinaria.",
+      "recomendacion": "Consulta si cambia a positivo."
+    },
+    "Nitritos": {
+      "fecha": "03/04/2024",
+      "descripcion": "Detecta bacterias productoras de nitritos.",
+      "recomendacion": "Normal si es negativo."
+    },
+    "Proteína": {
+      "fecha": "03/04/2024",
+      "descripcion": "Presencia de proteínas en orina.",
+      "recomendacion": "Consulta si aparece positivo."
+    },
+    "Glucosa": {
+      "fecha": "03/04/2024",
+      "descripcion": "Azúcar en orina, indicador de glucemia.",
+      "recomendacion": "Controla dieta si se detecta."
+    },
+    "Cuerpos cetónicos": {
+      "fecha": "03/04/2024",
+      "descripcion": "Productos de descomposición de grasas.",
+      "recomendacion": "Equilibra ingesta de carbohidratos y grasas."
+    },
+    "Urobilinógeno": {
+      "fecha": "03/04/2024",
+      "descripcion": "Subproducto de bilirrubina.",
+      "recomendacion": "Función hepática normal."
+    },
+    "Bilirrubina": {
+      "fecha": "03/04/2024",
+      "descripcion": "Pigmento biliar en orina.",
+      "recomendacion": "Consulta si cambia a positivo."
+    },
+    "Sangre (Hb)": {
+      "fecha": "03/04/2024",
+      "descripcion": "Hemoglobina en orina.",
+      "recomendacion": "Evalúa si se detecta."
+    },
+    "Hematíes": {
+      "fecha": "03/04/2024",
+      "descripcion": "Glóbulos rojos en sedimento.",
+      "recomendacion": "Normal si no aparecen."
+    },
+    "Leucocitos (sedimento)": {
+      "fecha": "03/04/2024",
+      "descripcion": "Glóbulos blancos en sedimento.",
+      "recomendacion": "Consulta si aumenta."
+    },
+    "Piocitos": {
+      "fecha": "03/04/2024",
+      "descripcion": "Células de pus.",
+      "recomendacion": "Normal si no aparecen."
+    },
+    "Células epiteliales": {
+      "fecha": "03/04/2024",
+      "descripcion": "Células de recubrimiento urinario.",
+      "recomendacion": "Valores bajos son normales."
+    },
+    "Bacterias": {
+      "fecha": "03/04/2024",
+      "descripcion": "Bacterias en sedimento.",
+      "recomendacion": "Mantén higiene adecuada."
+    },
+    "Mucus": {
+      "fecha": "03/04/2024",
+      "descripcion": "Filamentos de moco.",
+      "recomendacion": "Normal si no aparecen."
+    },
+    "Levaduras": {
+      "fecha": "03/04/2024",
+      "descripcion": "Hongos en orina.",
+      "recomendacion": "Consulta si se detectan."
+    },
+    "Cristales oxalato cálcico": {
+      "fecha": "03/04/2024",
+      "descripcion": "Cristales asociados a cálculos renales.",
+      "recomendacion": "Hidrátate y modera oxalatos."
+    },
+    "Cristales amorfos": {
+      "fecha": "03/04/2024",
+      "descripcion": "Cristales sin forma definida.",
+      "recomendacion": "Neutraliza pH con dieta."
+    },
+    "Hialinos": {
+      "fecha": "03/04/2024",
+      "descripcion": "Cilindros proteicos renales.",
+      "recomendacion": "Hidrátate y controla función renal."
+    },
+    "Granulosos gruesos": {
+      "fecha": "03/04/2024",
+      "descripcion": "Cilindros con detritos.",
+      "recomendacion": "Consulta si aparecen."
+    }
+  },
+  "ESTUDIO DE LIPIDOS": {
+    "Colesterol Total": {
+      "fecha": "03/04/2024",
+      "descripcion": "Colesterol total en sangre.",
+      "recomendacion": "Dieta baja en grasas saturadas."
+    },
+    "Colesterol HDL": {
+      "fecha": "03/04/2024",
+      "descripcion": "Colesterol “bueno”.",
+      "recomendacion": "Ejercicio aeróbico y grasas saludables."
+    },
+    "Colesterol No HDL": {
+      "fecha": "03/04/2024",
+      "descripcion": "Riesgo cardiovascular combinado.",
+      "recomendacion": "Controla LDL y triglicéridos."
+    },
+    "Colesterol LDL": {
+      "fecha": "03/04/2024",
+      "descripcion": "Colesterol “malo”.",
+      "recomendacion": "Reduce grasas saturadas."
+    },
+    "Colesterol VLDL": {
+      "fecha": "03/04/2024",
+      "descripcion": "Transporta triglicéridos.",
+      "recomendacion": "Modera azúcares simples."
+    },
+    "Triglicéridos": {
+      "fecha": "03/04/2024",
+      "descripcion": "Grasas derivadas de la dieta.",
+      "recomendacion": "Evita excesos de carbohidratos."
+    },
+    "Colesterol total / HDL": {
+      "fecha": "03/04/2024",
+      "descripcion": "Índice de riesgo aterosclerótico.",
+      "recomendacion": "Mejora HDL y controla colesterol total."
+    }
+  },
+  "PERFIL HEPATICO": {
+    "Bilirrubina total": {
+      "fecha": "03/04/2024",
+      "descripcion": "Producto de degradación de hemoglobina.",
+      "recomendacion": "Evita alcohol y tóxicos hepáticos."
+    },
+    "Bilirrubina directa": {
+      "fecha": "03/04/2024",
+      "descripcion": "Bilirrubina conjugada excretada por el hígado.",
+      "recomendacion": "Evita alcohol y tóxicos hepáticos."
+    },
+    "A.S.A.T. (GOT)": {
+      "fecha": "03/04/2024",
+      "descripcion": "Enzima hepática y muscular.",
+      "recomendacion": "Evita ejercicio extremo antes del examen."
+    },
+    "A.L.A.T. (GPT)": {
+      "fecha": "03/04/2024",
+      "descripcion": "Enzima más específica de hígado.",
+      "recomendacion": "Mantén función hepática con dieta sana."
+    },
+    "Fosfatasa alcalina": {
+      "fecha": "03/04/2024",
+      "descripcion": "Enzima presente en hígado y huesos.",
+      "recomendacion": "Consume vitamina D y calcio."
+    },
+    "Gama-Glutamiltransp": {
+      "fecha": "03/04/2024",
+      "descripcion": "Marcador de consumo de alcohol.",
+      "recomendacion": "Modera el consumo de alcohol."
+    },
+    "Tpo de protrombina (seg)": {
+      "fecha": "03/04/2024",
+      "descripcion": "Tiempo de coagulación dependiente del hígado.",
+      "recomendacion": "Mantén vitamina K con dieta."
+    },
+    "Tpo de protrombina (%)": {
+      "fecha": "03/04/2024",
+      "descripcion": "Porcentaje de actividad de protrombina.",
+      "recomendacion": "Ver tiempo en segundos."
+    },
+    "I.N.R.": {
+      "fecha": "03/04/2024",
+      "descripcion": "Normaliza el tiempo de protrombina.",
+      "recomendacion": "Sólo relevante si anticoagulado."
+    },
+    "FIB-4": {
+      "fecha": "03/04/2024",
+      "descripcion": "Índice de fibrosis hepática.",
+      "recomendacion": "Vigila función hepática con controles periódicos."
+    }
+  },
+  "PERFIL BIOQUIMICO": {
+    "Bilirrubina total": {
+      "fecha": "03/04/2024",
+      "descripcion": "Producto de degradación de hemoglobina.",
+      "recomendacion": "Evita alcohol y tóxicos hepáticos."
+    },
+    "Bilirrubina directa": {
+      "fecha": "03/04/2024",
+      "descripcion": "Bilirrubina conjugada excretada por el hígado.",
+      "recomendacion": "Evita alcohol y tóxicos hepáticos."
+    },
+    "Creatinina": {
+      "fecha": "03/04/2024",
+      "descripcion": "Indicador de función renal.",
+      "recomendacion": "Hidrata bien y controla proteínas."
+    },
+    "Glucosa": {
+      "fecha": "03/04/2024",
+      "descripcion": "Azúcar en sangre en ayunas.",
+      "recomendacion": "Dieta baja en azúcares simples."
+    },
+    "Acido úrico": {
+      "fecha": "03/04/2024",
+      "descripcion": "Asociado a metabolismo de purinas.",
+      "recomendacion": "Modera carnes rojas y mariscos."
+    },
+    "Urea": {
+      "fecha": "03/04/2024",
+      "descripcion": "Refleja función renal y balance proteico.",
+      "recomendacion": "Controla ingesta de proteínas y bebe agua."
+    },
+    "Calcio": {
+      "fecha": "03/04/2024",
+      "descripcion": "Nivel de calcio sérico.",
+      "recomendacion": "Consume lácteos y vitamina D."
+    },
+    "Fósforo": {
+      "fecha": "03/04/2024",
+      "descripcion": "Mineral relacionado con energía celular.",
+      "recomendacion": "Equilibra con calcio."
+    },
+    "Colesterol": {
+      "fecha": "03/04/2024",
+      "descripcion": "Colesterol total en sangre.",
+      "recomendacion": "Dieta baja en grasas saturadas."
+    },
+    "Triglicéridos": {
+      "fecha": "03/04/2024",
+      "descripcion": "Grasas derivadas de la dieta.",
+      "recomendacion": "Evita excesos de carbohidratos."
+    },
+    "Proteínas totales": {
+      "fecha": "03/04/2024",
+      "descripcion": "Balance de albúmina y globulinas.",
+      "recomendacion": "Proteínas magras y buena hidratación."
+    },
+    "Albúmina": {
+      "fecha": "03/04/2024",
+      "descripcion": "Proteína plasmática principal.",
+      "recomendacion": "Aporta proteínas de calidad."
+    },
+    "Globulinas": {
+      "fecha": "03/04/2024",
+      "descripcion": "Proteínas del sistema inmune.",
+      "recomendacion": "Mantén sistema inmunitario activo."
+    },
+    "Índice Alb/Glob": {
+      "fecha": "03/04/2024",
+      "descripcion": "Relación albúmina/globulinas.",
+      "recomendacion": "Balancea ambas fracciones."
+    },
+    "A.S.A.T. (GOT)": {
+      "fecha": "03/04/2024",
+      "descripcion": "Enzima hepática y muscular.",
+      "recomendacion": "Evita ejercicio extremo antes del examen."
+    },
+    "A.L.A.T. (GPT)": {
+      "fecha": "03/04/2024",
+      "descripcion": "Enzima más específica de hígado.",
+      "recomendacion": "Mantén función hepática con dieta sana."
+    },
+    "Fosfatasa alcalina": {
+      "fecha": "03/04/2024",
+      "descripcion": "Enzima presente en hígado y huesos.",
+      "recomendacion": "Consume vitamina D y calcio."
+    },
+    "Lactato Deshidrogenasa": {
+      "fecha": "03/04/2024",
+      "descripcion": "Enzima de daño celular genérico.",
+      "recomendacion": "Evita esfuerzos intensos antes del examen."
+    }
+  },
+  "HORMONAS": {
+    "Tirotropina (TSH ultrasensible)": {
+      "fecha": "03/04/2024",
+      "descripcion": "Regula función tiroidea.",
+      "recomendacion": "Incluye yodo en la dieta."
+    }
+  },
+  "VITAMINAS": {
+    "Vitamina B12": {
+      "fecha": "03/04/2024",
+      "descripcion": "Esencial para glóbulos rojos y nervios.",
+      "recomendacion": "Carnes, pescados y huevos."
+    },
+    "25-hidroxi-vitamina D": {
+      "fecha": "03/04/2024",
+      "descripcion": "Forma circulante de D.",
+      "recomendacion": "Exposición solar y lácteos fortificados."
+    }
+  }
+}

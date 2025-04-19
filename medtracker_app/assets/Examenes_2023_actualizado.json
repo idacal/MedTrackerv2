@@ -1,0 +1,747 @@
+{
+  "HEMATOLOGIA": {
+    "Leucocitos": {
+      "valor": 6.63,
+      "rango_referencia": [
+        4.0,
+        11.0
+      ],
+      "referencia_original": "4  -  11",
+      "fecha": "26/04/2023",
+      "unidad": ""
+    },
+    "Eritrocitos": {
+      "valor": 4.63,
+      "rango_referencia": [
+        4.3,
+        5.7
+      ],
+      "referencia_original": "4,3  -  5,7",
+      "fecha": "26/04/2023",
+      "unidad": "x10^12/Lt"
+    },
+    "Hemoglobina": {
+      "valor": 14.2,
+      "rango_referencia": [
+        13.5,
+        17.5
+      ],
+      "referencia_original": "13,5  -  17,5",
+      "fecha": "26/04/2023",
+      "unidad": "g/dl"
+    },
+    "Hematocrito": {
+      "valor": 43.8,
+      "rango_referencia": [
+        38.8,
+        50.0
+      ],
+      "referencia_original": "38,8  -  50",
+      "fecha": "26/04/2023",
+      "unidad": "%"
+    },
+    "V.C.M.": {
+      "valor": 94.6,
+      "rango_referencia": [
+        80.0,
+        100.0
+      ],
+      "referencia_original": "80  -  100",
+      "fecha": "26/04/2023",
+      "unidad": "fL"
+    },
+    "H.C.M.": {
+      "valor": 30.7,
+      "rango_referencia": [
+        27.0,
+        34.0
+      ],
+      "referencia_original": "27  -  34",
+      "fecha": "26/04/2023",
+      "unidad": "pg"
+    },
+    "C.H.C.M.": {
+      "valor": 32.4,
+      "rango_referencia": [
+        30.0,
+        36.0
+      ],
+      "referencia_original": "30  -  36",
+      "fecha": "26/04/2023",
+      "unidad": "g/dl"
+    },
+    "A.D.E.": {
+      "valor": 11.7,
+      "rango_referencia": [
+        11.0,
+        15.0
+      ],
+      "referencia_original": "11  -  15",
+      "fecha": "26/04/2023",
+      "unidad": "%"
+    },
+    "Plaquetas": {
+      "valor": 187.0,
+      "rango_referencia": [
+        150.0,
+        400.0
+      ],
+      "referencia_original": "150  -  400",
+      "fecha": "26/04/2023",
+      "unidad": "x10^9/Lt"
+    },
+    "V.H.S.": {
+      "valor": 5.0,
+      "rango_referencia": [
+        1.0,
+        15.0
+      ],
+      "referencia_original": "1  -  15",
+      "fecha": "26/04/2023",
+      "unidad": "mm/hr"
+    },
+    "Eosinófilos": {
+      "valor": 2.3,
+      "rango_referencia": [
+        0.05,
+        0.5
+      ],
+      "referencia_original": null,
+      "valor_absoluto": 0.15,
+      "fecha": "26/04/2023",
+      "unidad": "%"
+    },
+    "Basófilos": {
+      "valor": 0.6,
+      "rango_referencia": [
+        0.0,
+        0.3
+      ],
+      "referencia_original": null,
+      "valor_absoluto": 0.04,
+      "fecha": "26/04/2023",
+      "unidad": "%"
+    },
+    "Neutrófilos": {
+      "valor": 62.1,
+      "rango_referencia": [
+        1.7,
+        7.0
+      ],
+      "referencia_original": null,
+      "valor_absoluto": 4.12,
+      "fecha": "26/04/2023",
+      "unidad": "%"
+    },
+    "Linfocitos": {
+      "valor": 29.3,
+      "rango_referencia": [
+        1.0,
+        5.0
+      ],
+      "referencia_original": null,
+      "valor_absoluto": 1.94,
+      "fecha": "26/04/2023",
+      "unidad": "%"
+    },
+    "Monocitos": {
+      "valor": 5.7,
+      "rango_referencia": [
+        0.3,
+        0.9
+      ],
+      "referencia_original": null,
+      "valor_absoluto": 0.38,
+      "fecha": "26/04/2023",
+      "unidad": "%"
+    }
+  },
+  "ORINAS": {
+    "Aspecto": {
+      "valor": "Claro",
+      "fecha": "28/04/2023",
+      "unidad": ""
+    },
+    "Color": {
+      "valor": "Amarillo",
+      "fecha": "28/04/2023",
+      "unidad": ""
+    },
+    "Densidad": {
+      "valor": 1.015,
+      "rango_referencia": [
+        1.003,
+        1.03
+      ],
+      "fecha": "28/04/2023",
+      "unidad": ""
+    },
+    "pH": {
+      "valor": 5.5,
+      "rango_referencia": [
+        5.0,
+        7.0
+      ],
+      "fecha": "28/04/2023",
+      "unidad": ""
+    },
+    "Leucocitos": {
+      "valor": "Negativo",
+      "rango_referencia": [
+        null,
+        15
+      ],
+      "referencia_original": "Neg < 15",
+      "fecha": "28/04/2023",
+      "unidad": ""
+    },
+    "Nitritos": {
+      "valor": "Negativo",
+      "rango_referencia": null,
+      "referencia_original": "Negativo",
+      "fecha": "28/04/2023",
+      "unidad": ""
+    },
+    "Proteína": {
+      "valor": "Negativo",
+      "rango_referencia": null,
+      "referencia_original": "Negativo",
+      "fecha": "28/04/2023",
+      "unidad": ""
+    },
+    "Glucosa": {
+      "valor": "Negativo",
+      "rango_referencia": [
+        null,
+        100
+      ],
+      "referencia_original": "Neg < 100",
+      "fecha": "28/04/2023",
+      "unidad": "mg/dl"
+    },
+    "Cuerpos cetónicos": {
+      "valor": "Negativo",
+      "rango_referencia": null,
+      "referencia_original": "Negativo",
+      "fecha": "28/04/2023",
+      "unidad": ""
+    },
+    "Urobilinógeno": {
+      "valor": 0.2,
+      "rango_referencia": [
+        null,
+        1.0
+      ],
+      "referencia_original": "Neg < 1,0",
+      "fecha": "28/04/2023",
+      "unidad": "EU/dL"
+    },
+    "Bilirrubina": {
+      "valor": "Negativo",
+      "rango_referencia": null,
+      "referencia_original": "Negativo",
+      "fecha": "28/04/2023",
+      "unidad": ""
+    },
+    "Sangre (Hb)": {
+      "valor": "Negativo",
+      "rango_referencia": [
+        null,
+        10
+      ],
+      "referencia_original": "Neg < 10",
+      "fecha": "28/04/2023",
+      "unidad": ""
+    },
+    "Hematíes": {
+      "valor": "No se observa",
+      "rango_referencia": [
+        null,
+        3
+      ],
+      "referencia_original": "No se observa",
+      "fecha": "28/04/2023",
+      "unidad": ""
+    },
+    "Leucocitos (sedimento)": {
+      "valor": "1 - 4",
+      "rango_referencia": [
+        null,
+        5
+      ],
+      "referencia_original": "< 5",
+      "fecha": "28/04/2023",
+      "unidad": "células/campo"
+    },
+    "Piocitos": {
+      "valor": "No se observa",
+      "rango_referencia": null,
+      "referencia_original": "No se observa",
+      "fecha": "28/04/2023",
+      "unidad": ""
+    },
+    "Células epiteliales": {
+      "valor": "No se observa",
+      "rango_referencia": [
+        null,
+        5
+      ],
+      "referencia_original": "< 5",
+      "fecha": "28/04/2023",
+      "unidad": ""
+    },
+    "Bacterias": {
+      "valor": "Muy escasa cantidad",
+      "rango_referencia": null,
+      "referencia_original": "No se observa",
+      "fecha": "28/04/2023",
+      "unidad": ""
+    },
+    "Mucus": {
+      "valor": "No se observa",
+      "rango_referencia": null,
+      "referencia_original": "No se observa",
+      "fecha": "28/04/2023",
+      "unidad": ""
+    },
+    "Levaduras": {
+      "valor": "No se observa",
+      "rango_referencia": null,
+      "referencia_original": "No se observa",
+      "fecha": "28/04/2023",
+      "unidad": ""
+    },
+    "Cristales oxalato cálcico": {
+      "valor": "No se observa",
+      "rango_referencia": null,
+      "referencia_original": "No se observa",
+      "fecha": "28/04/2023",
+      "unidad": ""
+    },
+    "Cristales amorfos": {
+      "valor": "No se observa",
+      "rango_referencia": null,
+      "referencia_original": "No se observa",
+      "fecha": "28/04/2023",
+      "unidad": ""
+    },
+    "Hialinos": {
+      "valor": "No se observa",
+      "rango_referencia": [
+        null,
+        2
+      ],
+      "referencia_original": "< 2",
+      "fecha": "28/04/2023",
+      "unidad": ""
+    },
+    "Granulosos gruesos": {
+      "valor": "No se observa",
+      "rango_referencia": null,
+      "referencia_original": "No se observa",
+      "fecha": "28/04/2023",
+      "unidad": ""
+    }
+  },
+  "ESTUDIO DE LIPIDOS": {
+    "Colesterol Total": {
+      "valor": 116.0,
+      "rango_referencia": [
+        0,
+        200
+      ],
+      "referencia_original": "Deseable hasta 200",
+      "fecha": "26/04/2023",
+      "unidad": "mg/dl"
+    },
+    "Colesterol HDL": {
+      "valor": 39.8,
+      "rango_referencia": [
+        35,
+        55
+      ],
+      "referencia_original": "Pronóstico favorable",
+      "fecha": "26/04/2023",
+      "unidad": "mg/dl"
+    },
+    "Colesterol No HDL": {
+      "valor": 76.2,
+      "rango_referencia": [
+        0,
+        130
+      ],
+      "referencia_original": "Óptimo: < de 130",
+      "fecha": "26/04/2023",
+      "unidad": "mg/dl"
+    },
+    "Colesterol LDL": {
+      "valor": 64.8,
+      "rango_referencia": [
+        0,
+        100
+      ],
+      "referencia_original": "Óptimo: < de 100",
+      "fecha": "26/04/2023",
+      "unidad": "mg/dl"
+    },
+    "Colesterol VLDL": {
+      "valor": 11.0,
+      "rango_referencia": [
+        0,
+        30
+      ],
+      "referencia_original": "Deseable: hasta 30",
+      "fecha": "26/04/2023",
+      "unidad": "mg/dl"
+    },
+    "Triglicéridos": {
+      "valor": 57.0,
+      "rango_referencia": [
+        0,
+        150
+      ],
+      "referencia_original": "Deseable: hasta 150",
+      "fecha": "26/04/2023",
+      "unidad": "mg/dl"
+    },
+    "Colesterol total / HDL": {
+      "valor": 2.91,
+      "rango_referencia": [
+        0,
+        5.0
+      ],
+      "referencia_original": "Riesgo estándar: 5.0",
+      "fecha": "26/04/2023",
+      "unidad": ""
+    }
+  },
+  "PERFIL HEPATICO": {
+    "Bilirrubina total": {
+      "valor": 0.52,
+      "rango_referencia": [
+        0.15,
+        1.1
+      ],
+      "referencia_original": "0,15  -  1,1",
+      "fecha": "26/04/2023",
+      "unidad": "mg/dl"
+    },
+    "Bilirrubina directa": {
+      "valor": 0.22,
+      "rango_referencia": [
+        0.05,
+        0.3
+      ],
+      "referencia_original": "0,05  -  0,3",
+      "fecha": "26/04/2023",
+      "unidad": "mg/dl"
+    },
+    "A.S.A.T. (GOT)": {
+      "valor": 32.0,
+      "rango_referencia": [
+        0.0,
+        37.0
+      ],
+      "referencia_original": "< 37",
+      "fecha": "26/04/2023",
+      "unidad": "U/L"
+    },
+    "A.L.A.T. (GPT)": {
+      "valor": 35.0,
+      "rango_referencia": [
+        0.0,
+        41.0
+      ],
+      "referencia_original": "< 41",
+      "fecha": "26/04/2023",
+      "unidad": "U/L"
+    },
+    "Fosfatasa alcalina": {
+      "valor": 78.0,
+      "rango_referencia": [
+        45.0,
+        115.0
+      ],
+      "referencia_original": "45  -  115",
+      "fecha": "26/04/2023",
+      "unidad": "U/L"
+    },
+    "Gama-Glutamiltransp": {
+      "valor": 14.0,
+      "rango_referencia": [
+        0.0,
+        61.0
+      ],
+      "referencia_original": "< 61",
+      "fecha": "26/04/2023",
+      "unidad": "U/L"
+    },
+    "Tpo de protrombina (seg)": {
+      "valor": 13.2,
+      "fecha": "26/04/2023",
+      "unidad": "segundos"
+    },
+    "Tpo de protrombina (%)": {
+      "valor": 75.8,
+      "rango_referencia": [
+        70.0,
+        130.0
+      ],
+      "referencia_original": "70  -  130",
+      "fecha": "26/04/2023",
+      "unidad": "%"
+    },
+    "I.N.R.": {
+      "valor": 1.15,
+      "rango_referencia": [
+        2.0,
+        4.0
+      ],
+      "referencia_original": "2,0  -  4,0",
+      "fecha": "26/04/2023",
+      "unidad": ""
+    },
+    "FIB-4": {
+      "valor": 0.95,
+      "referencia_original": "< 1,30",
+      "fecha": "26/04/2023",
+      "unidad": ""
+    }
+  },
+  "PERFIL BIOQUIMICO": {
+    "Bilirrubina total": {
+      "valor": 0.52,
+      "rango_referencia": [
+        0.15,
+        1.1
+      ],
+      "referencia_original": "0,15  -  1,1",
+      "fecha": "26/04/2023",
+      "unidad": "mg/dl"
+    },
+    "Bilirrubina directa": {
+      "valor": 0.22,
+      "rango_referencia": [
+        0.05,
+        0.3
+      ],
+      "referencia_original": "0,05  -  0,3",
+      "fecha": "26/04/2023",
+      "unidad": "mg/dl"
+    },
+    "Creatinina": {
+      "valor": 0.95,
+      "rango_referencia": [
+        0.5,
+        1.3
+      ],
+      "referencia_original": "0,5  -  1,3",
+      "fecha": "26/04/2023",
+      "unidad": "mg/dl"
+    },
+    "Glucosa": {
+      "valor": 100.0,
+      "rango_referencia": [
+        70.0,
+        99.0
+      ],
+      "referencia_original": "70  -  99",
+      "fecha": "26/04/2023",
+      "unidad": "mg/dl"
+    },
+    "Acido úrico": {
+      "valor": 4.0,
+      "rango_referencia": [
+        3.4,
+        7.0
+      ],
+      "referencia_original": "3,4  -  7",
+      "fecha": "26/04/2023",
+      "unidad": "mg/dl"
+    },
+    "Urea": {
+      "valor": 33.0,
+      "rango_referencia": [
+        10.0,
+        50.0
+      ],
+      "referencia_original": "10  -  50",
+      "fecha": "26/04/2023",
+      "unidad": "mg/dl"
+    },
+    "Calcio": {
+      "valor": 9.43,
+      "rango_referencia": [
+        8.4,
+        10.4
+      ],
+      "referencia_original": "8,4  -  10,4",
+      "fecha": "26/04/2023",
+      "unidad": "mg/dl"
+    },
+    "Fósforo": {
+      "valor": 3.26,
+      "rango_referencia": [
+        2.4,
+        5.1
+      ],
+      "referencia_original": "2,4  -  5,1",
+      "fecha": "26/04/2023",
+      "unidad": "mg/dl"
+    },
+    "Colesterol": {
+      "valor": 116.0,
+      "rango_referencia": [
+        130.0,
+        200.0
+      ],
+      "referencia_original": "130  -  200",
+      "fecha": "26/04/2023",
+      "unidad": "mg/dl"
+    },
+    "Triglicéridos": {
+      "valor": 57.0,
+      "rango_referencia": [
+        50.0,
+        150.0
+      ],
+      "referencia_original": "50  -  150",
+      "fecha": "26/04/2023",
+      "unidad": "mg/dl"
+    },
+    "Proteínas totales": {
+      "valor": 7.27,
+      "rango_referencia": [
+        6.3,
+        8.3
+      ],
+      "referencia_original": "6,3  -  8,3",
+      "fecha": "26/04/2023",
+      "unidad": "g/dl"
+    },
+    "Albúmina": {
+      "valor": 4.28,
+      "rango_referencia": [
+        3.8,
+        5.1
+      ],
+      "referencia_original": "3,8  -  5,1",
+      "fecha": "26/04/2023",
+      "unidad": "g/dl"
+    },
+    "Globulinas": {
+      "valor": 2.99,
+      "rango_referencia": [
+        1.5,
+        3.5
+      ],
+      "referencia_original": "1,5  -  3,5",
+      "fecha": "26/04/2023",
+      "unidad": "g/dl"
+    },
+    "Índice Alb/Glob": {
+      "valor": 1.43,
+      "rango_referencia": [
+        1.0,
+        2.5
+      ],
+      "referencia_original": "1  -  2,5",
+      "fecha": "26/04/2023",
+      "unidad": ""
+    },
+    "A.S.A.T. (GOT)": {
+      "valor": 32.0,
+      "rango_referencia": [
+        0.0,
+        37.0
+      ],
+      "referencia_original": "< 37",
+      "fecha": "26/04/2023",
+      "unidad": "U/L"
+    },
+    "A.L.A.T. (GPT)": {
+      "valor": 35.0,
+      "rango_referencia": [
+        0.0,
+        41.0
+      ],
+      "referencia_original": "< 41",
+      "fecha": "26/04/2023",
+      "unidad": "U/L"
+    },
+    "Fosfatasa alcalina": {
+      "valor": 78.0,
+      "rango_referencia": [
+        45.0,
+        115.0
+      ],
+      "referencia_original": "45  -  115",
+      "fecha": "26/04/2023",
+      "unidad": "U/L"
+    },
+    "Lactato Deshidrogenasa": {
+      "valor": 159.0,
+      "rango_referencia": [
+        135.0,
+        225.0
+      ],
+      "referencia_original": "135  -  225",
+      "fecha": "26/04/2023",
+      "unidad": "U/L"
+    }
+  },
+  "HORMONAS": {
+    "Tirotropina (TSH ultrasensible)": {
+      "valor": 2.89,
+      "rango_referencia": [
+        0.35,
+        4.68
+      ],
+      "referencia_original": "0,35  -  4,68",
+      "fecha": "26/04/2023",
+      "unidad": "µUI/ml"
+    }
+  },
+  "INMUNOLOGIA": {
+    "VIH 4ª generación (Ac + Ag P24)": {
+      "valor": "No Reactivo",
+      "referencia_original": "No Reactivo",
+      "fecha": "26/04/2023",
+      "unidad": ""
+    },
+    "Anticuerpos anti Treponémicos": {
+      "valor": "No Reactivo",
+      "referencia_original": "No Reactivo",
+      "fecha": "26/04/2023",
+      "unidad": ""
+    },
+    "V.D.R.L.": {
+      "valor": "No Reactivo",
+      "referencia_original": "No Reactivo",
+      "fecha": "26/04/2023",
+      "unidad": ""
+    }
+  },
+  "VITAMINAS": {
+    "Vitamina B12": {
+      "valor": 761.0,
+      "rango_referencia": [
+        211,
+        946
+      ],
+      "referencia_original": "211  -  946",
+      "fecha": "26/04/2023",
+      "unidad": "pg/ml"
+    },
+    "25-hidroxi-vitamina D": {
+      "valor": 47.7,
+      "rango_referencia": [
+        30,
+        null
+      ],
+      "referencia_original": "Deseable > 30",
+      "fecha": "26/04/2023",
+      "unidad": "ng/ml"
+    }
+  }
+}

@@ -6,6 +6,7 @@ import 'dart:convert'; // For jsonDecode
 import 'dart:io'; // For File related operations if needed later
 import 'package:flutter/foundation.dart'; // For kDebugMode
 import 'package:intl/intl.dart'; // For date parsing
+import 'package:flutter/services.dart' show rootBundle; // Added for rootBundle
 
 // Import models
 import '../models/exam_record.dart';
@@ -41,7 +42,7 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 5, // Increment DB version to 5
+      version: 6, // Increment DB version to 6
       // --- Add onConfigure callback --- 
       onConfigure: (db) async {
          await db.execute('PRAGMA foreign_keys = ON'); // Use single quotes for PRAGMA command
@@ -103,8 +104,39 @@ class DatabaseService {
     ''');
     // -----------------------------------------
 
+    // --- NEW: Parameter Glossary Table (V6) ---
+    await db.execute('''
+      CREATE TABLE parameter_glossary (
+        categoryName TEXT NOT NULL,
+        parameterName TEXT NOT NULL,
+        description TEXT,
+        recommendation TEXT,
+        PRIMARY KEY (categoryName, parameterName)
+      )
+    ''');
+    // -----------------------------------------
+
+      // --- Load Default Glossary on Create ---
+      try {
+        if (kDebugMode) {
+          print("Database onCreate: Attempting to load default glossary from assets...");
+        }
+        final String jsonString = await rootBundle.loadString('assets/glossary_medtracker.json');
+        // Use the internal method directly with the db instance provided to onCreate
+        await _internalUpdateGlossary(db, jsonString); 
+        if (kDebugMode) {
+          print("Database onCreate: Default glossary loaded successfully.");
+        }
+      } catch (e) {
+         if (kDebugMode) {
+           print("Database onCreate: ERROR loading default glossary from assets: $e");
+           // Don't rethrow here, onCreate should ideally still succeed
+         }
+      }
+      // ------------------------------------
+
       if (kDebugMode) {
-        print("Database onCreate: Tables created for V5.");
+        print("Database onCreate: Tables created for V6.");
      }
   }
 
@@ -170,6 +202,26 @@ class DatabaseService {
            if (kDebugMode) { print("Upgrade V4 -> V5 successful."); }
          } catch (e) {
             if (kDebugMode) { print("Error applying upgrade V4 -> V5: $e"); } 
+            rethrow;
+         }
+     }
+     
+     // --- Upgrade from V5 to V6 (Add parameter_glossary table) --- 
+     if (oldVersion < 6) {
+         if (kDebugMode) { print("Applying upgrade V5 -> V6: Adding parameter_glossary table..."); }
+         try {
+           await db.execute('''
+             CREATE TABLE parameter_glossary (
+               categoryName TEXT NOT NULL,
+               parameterName TEXT NOT NULL,
+               description TEXT,
+               recommendation TEXT,
+               PRIMARY KEY (categoryName, parameterName)
+             )
+           ''');
+           if (kDebugMode) { print("Upgrade V5 -> V6 successful."); }
+         } catch (e) {
+            if (kDebugMode) { print("Error applying upgrade V5 -> V6: $e"); } 
             rethrow;
          }
      }
@@ -390,14 +442,19 @@ class DatabaseService {
   }
 
   /// Fetches the history for a specific parameter (category + name), ordered by date descending.
+  /// Now includes description/recommendation from glossary.
   Future<List<ParameterRecord>> getParameterHistory(String category, String parameterName) async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'parameter_records',
-      where: 'category = ? AND parameterName = ?',
-      whereArgs: [category, parameterName],
-      orderBy: 'date DESC',
-    );
+    final List<Map<String, dynamic>> maps = await db.rawQuery('''
+      SELECT 
+        p.*, 
+        pg.description as glossary_description, 
+        pg.recommendation as glossary_recommendation
+      FROM parameter_records p
+      LEFT JOIN parameter_glossary pg ON UPPER(TRIM(p.category)) = UPPER(TRIM(pg.categoryName)) AND UPPER(TRIM(p.parameterName)) = UPPER(TRIM(pg.parameterName))
+      WHERE p.category = ? AND p.parameterName = ?
+      ORDER BY p.date DESC
+    ''', [category, parameterName]);
      if (maps.isEmpty) {
         return []; // Return empty list if no history found
     }
@@ -423,17 +480,21 @@ class DatabaseService {
     });
   }
 
- /// Fetches the most recent record for each unique parameter, now includes stored status.
+ /// Fetches the most recent record for each unique parameter, now includes glossary info.
   Future<List<ParameterRecord>> getLatestParameterValues() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.rawQuery('''
-      SELECT p.* 
+      SELECT 
+        p.*,
+        pg.description as glossary_description, 
+        pg.recommendation as glossary_recommendation
       FROM parameter_records p
       INNER JOIN (
           SELECT category, parameterName, MAX(date) as max_date
           FROM parameter_records
           GROUP BY category, parameterName
       ) AS latest ON p.category = latest.category AND p.parameterName = latest.parameterName AND p.date = latest.max_date
+      LEFT JOIN parameter_glossary pg ON UPPER(TRIM(p.category)) = UPPER(TRIM(pg.categoryName)) AND UPPER(TRIM(p.parameterName)) = UPPER(TRIM(pg.parameterName))
       ORDER BY p.category, p.parameterName
     ''');
     if (maps.isEmpty) return [];
@@ -721,6 +782,7 @@ class DatabaseService {
   }
 
   /// Fetches the latest record for each tracked parameter along with its change % string.
+  /// Now implicitly includes glossary info via getParameterHistory.
   Future<List<Map<String, dynamic>>> getLatestTrackedParameterValues() async {
     final db = await database;
     final NumberFormat percentFormatter = NumberFormat("+0.0%;-0.0%;0.0%");
@@ -834,6 +896,93 @@ class DatabaseService {
      }
   }
 
-  // ------------------------------------
+  // --- NEW: Glossary Update Method ---
+  /// Parses a JSON string containing glossary data and updates the glossary table.
+  Future<void> updateGlossaryFromJson(String jsonString) async {
+    final db = await database;
+    try {
+       await _internalUpdateGlossary(db, jsonString); // Call internal method
+        if (kDebugMode) {
+         print("Glossary update via public method successful.");
+       }
+    } catch (e) {
+       if (kDebugMode) {
+         print("Error updating glossary from public method: $e");
+       }
+       rethrow; 
+    }
+  }
+
+  // --- Internal Glossary Update Logic ---
+  Future<void> _internalUpdateGlossary(DatabaseExecutor dbOrTxn, String jsonString) async {
+     try {
+      // Expecting format: {"CategoryName": {"ParameterName": {"description": "...", "recommendation": "..."}}}
+      final Map<String, dynamic> glossaryData = jsonDecode(jsonString);
+      
+      // Use batch for potentially better performance, especially on first load
+      final batch = dbOrTxn.batch();
+
+      // await dbOrTxn.transaction((txn) async { // Transaction might be redundant if using batch
+        for (final categoryEntry in glossaryData.entries) {
+          final String categoryName = categoryEntry.key;
+          if (categoryEntry.value is! Map) continue; 
+          final Map<String, dynamic> parameters = Map<String, dynamic>.from(categoryEntry.value);
+
+          for (final parameterEntry in parameters.entries) {
+            final String parameterName = parameterEntry.key;
+            if (parameterEntry.value is! Map) continue; 
+            final Map<String, dynamic> data = Map<String, dynamic>.from(parameterEntry.value);
+
+            final String? description = data['descripcion'] as String?;
+            final String? recommendation = data['recomendacion'] as String?;
+
+            // Add insert/replace operation to batch
+            batch.insert(
+              'parameter_glossary',
+              {
+                'categoryName': categoryName,
+                'parameterName': parameterName,
+                'description': description,
+                'recommendation': recommendation,
+              },
+              conflictAlgorithm: ConflictAlgorithm.replace, 
+            );
+          }
+        }
+        // Commit the batch
+        await batch.commit(noResult: true); 
+      // }); // End transaction
+       if (kDebugMode) {
+        print("Internal Glossary update logic successful.");
+      }
+    } catch (e, stacktrace) {
+      if (kDebugMode) {
+        print("Error during internal glossary update: $e");
+        print("Stacktrace: $stacktrace");
+      }
+      rethrow; // Rethrow to signal failure
+    }
+  }
+
+  // --- Debugging Helper ---
+  Future<void> debugPrintGlossary() async {
+    if (!kDebugMode) return; // Only run in debug mode
+    final db = await database;
+    try {
+      print("DEBUG: Querying parameter_glossary table content...");
+      final List<Map<String, dynamic>> maps = await db.query('parameter_glossary');
+      if (maps.isEmpty) {
+        print("DEBUG: parameter_glossary table is EMPTY.");
+      } else {
+        print("DEBUG: parameter_glossary content (${maps.length} rows):");
+        for (var map in maps) {
+          print("  - ${map}");
+        }
+      }
+    } catch (e) {
+      print("DEBUG: Error querying parameter_glossary table: $e");
+    }
+  }
+  // ----------------------
 
 } 

@@ -56,31 +56,52 @@ class ParameterRecord {
 
   // Method to create ParameterRecord from a Map
   factory ParameterRecord.fromMap(Map<String, dynamic> map) {
-    // Helper to safely get enum by name, defaulting to unknown
-    ParameterStatus getStatusByName(String? name) {
-      if (name == null) return ParameterStatus.unknown;
-      try {
-        return ParameterStatus.values.byName(name);
-      } catch (_) {
-        return ParameterStatus.unknown; // Handle if name doesn't match enum
-      }
+    // Handle potential database nulls safely
+    final String? statusString = map['status'] as String?;
+    // Try to parse the status string, default to unknown if invalid/null
+    final ParameterStatus status = ParameterStatus.values.firstWhere(
+      (e) => e.name == statusString,
+      orElse: () => ParameterStatus.unknown, 
+    );
+
+    // --- Debug Print --- 
+    if (map.containsKey('glossary_description') || map.containsKey('glossary_recommendation')) {
+       print("DEBUG ParameterRecord.fromMap for [${map['parameterName']}]: ");
+       print("  - glossary_description: ${map['glossary_description']}");
+       print("  - glossary_recommendation: ${map['glossary_recommendation']}");
+       print("  - Original description: ${map['description']}");
+       print("  - Original recommendation: ${map['recommendation']}");
     }
+    // -------------------
+
+    // --- Prioritize glossary data if available --- 
+    final String? description = map['glossary_description'] as String? ?? map['description'] as String?;
+    final String? recommendation = map['glossary_recommendation'] as String? ?? map['recommendation'] as String?;
+    // ---------------------------------------------
+
+    // --- Debug Print after prioritization ---
+     if (map.containsKey('glossary_description') || map.containsKey('glossary_recommendation')) {
+         print("  - FINAL description: $description");
+         print("  - FINAL recommendation: $recommendation");
+     }
+    // ---------------------------------------
 
     return ParameterRecord(
-      id: map['id'],
-      examRecordId: map['examRecordId'],
-      category: map['category'],
-      parameterName: map['parameterName'],
-      value: map['value'],
-      resultString: map['resultString'],
-      refRangeLow: map['refRangeLow'],
-      refRangeHigh: map['refRangeHigh'],
-      refOriginal: map['refOriginal'],
-      date: DateTime.parse(map['date']),
-      status: getStatusByName(map['status']), // Parse status from string
-      unit: map['unit'],
-      description: map['description'],
-      recommendation: map['recommendation'],
+      id: map['id'] as int?,
+      examRecordId: map['examRecordId'] as int? ?? 0, // Provide default if needed
+      category: map['category'] as String? ?? '', // Provide default if needed
+      parameterName: map['parameterName'] as String? ?? '', // Provide default
+      value: map['value'] as double?,
+      resultString: map['resultString'] as String?,
+      refRangeLow: map['refRangeLow'] as double?,
+      refRangeHigh: map['refRangeHigh'] as double?,
+      refOriginal: map['refOriginal'] as String?,
+      // Safely parse the date string, handle null or invalid format
+      date: map['date'] != null ? (DateTime.tryParse(map['date'] as String) ?? DateTime.now()) : DateTime.now(),
+      status: status,
+      unit: map['unit'] as String?,
+      description: description, // Use the prioritized value
+      recommendation: recommendation, // Use the prioritized value
     );
   }
 
