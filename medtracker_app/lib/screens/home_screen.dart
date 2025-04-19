@@ -18,6 +18,7 @@ import 'history_screen.dart';
 import 'profile_screen.dart'; // Import the ProfileScreen
 import 'tracked_parameters_screen.dart'; // Import the new screen
 import 'share_screen.dart'; // <-- Import the new ShareScreen
+import 'user_info_screen.dart'; // <-- Import the new screen
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -445,13 +446,18 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             IconButton(
-              icon: Icon(Icons.account_circle_outlined, color: Colors.white, size: 32), 
+              icon: const Icon(Icons.person_outline),
+              color: Colors.white,
+              iconSize: 30,
+              tooltip: 'Perfil de Usuario', // Added tooltip
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Perfil no implementado')),
+                // --- Navigate to UserInfoScreen --- 
+                Navigator.push(
+                   context,
+                   MaterialPageRoute(builder: (context) => const UserInfoScreen()),
                 );
+                // ------------------------------------
               },
-              tooltip: 'Perfil',
             ),
           ],
         ),
