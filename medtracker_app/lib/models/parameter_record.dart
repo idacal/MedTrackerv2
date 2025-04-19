@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart'; // Add import for NumberFormat
+import 'dart:convert'; // REMOVE 'package:'
 
 /// Represents a single medical parameter record from an exam.
 class ParameterRecord {
@@ -16,6 +17,9 @@ class ParameterRecord {
   final String? unit; // Optional unit (e.g., "mg/dL")
   final String? description; // NEW: Parameter description
   final String? recommendation; // NEW: Specific recommendation
+  final List<String>? relatedParameters; // Added V7 from glossary
+  final List<num>? relatedParametersPercentage; // Added V8 from glossary
+  final List<String>? relatedParametersDescription; // Added V8 from glossary
 
   ParameterRecord({
     this.id,
@@ -32,6 +36,9 @@ class ParameterRecord {
     this.unit,
     this.description, // Added
     this.recommendation, // Added
+    this.relatedParameters, // Add to constructor
+    this.relatedParametersPercentage, // Add to constructor
+    this.relatedParametersDescription, // Add to constructor
   });
 
   // Method to convert ParameterRecord to a Map for DB insertion
@@ -75,16 +82,62 @@ class ParameterRecord {
     // -------------------
 
     // --- Prioritize glossary data if available --- 
-    final String? description = map['glossary_description'] as String? ?? map['description'] as String?;
-    final String? recommendation = map['glossary_recommendation'] as String? ?? map['recommendation'] as String?;
+    final String? descriptionFromGlossary = map['glossary_description'] as String?;
+    final String? recommendationFromGlossary = map['glossary_recommendation'] as String?;
     // ---------------------------------------------
 
     // --- Debug Print after prioritization ---
      if (map.containsKey('glossary_description') || map.containsKey('glossary_recommendation')) {
-         print("  - FINAL description: $description");
-         print("  - FINAL recommendation: $recommendation");
+         print("  - FINAL description: $descriptionFromGlossary");
+         print("  - FINAL recommendation: $recommendationFromGlossary");
      }
     // ---------------------------------------
+
+    // --- NEW: Parse related parameters JSON --- 
+    List<String>? parsedRelatedParameters;
+    final String? relatedJson = map['glossary_related'] as String?;
+    if (relatedJson != null && relatedJson.isNotEmpty) {
+      try {
+         final List<dynamic> decodedList = jsonDecode(relatedJson);
+         // Ensure the decoded list contains only strings
+         parsedRelatedParameters = decodedList.map((item) => item.toString()).toList();
+      } catch (e) {
+        print("Error decoding relatedParameters JSON: $e for data: $relatedJson");
+        // Keep parsedRelatedParameters as null on error
+      }
+    }
+    // ---------------------------------------
+
+    // --- NEW: Parse related percentage/description JSON --- 
+    List<num>? parsedRelatedPercentage;
+    List<String>? parsedRelatedDescription;
+    final String? relatedPercJson = map['glossary_related_percentage'] as String?;
+    final String? relatedDescJson = map['glossary_related_description'] as String?;
+    if (relatedPercJson != null && relatedPercJson.isNotEmpty) {
+      try {
+        final List<dynamic> decodedList = jsonDecode(relatedPercJson);
+        parsedRelatedPercentage = decodedList.whereType<num>().toList();
+      } catch (e) { print("Error decoding relatedPercentage JSON: $e"); }
+    }
+    if (relatedDescJson != null && relatedDescJson.isNotEmpty) {
+      try {
+        final List<dynamic> decodedList = jsonDecode(relatedDescJson);
+        parsedRelatedDescription = decodedList.map((item) => item.toString()).toList();
+      } catch (e) { print("Error decoding relatedDescription JSON: $e"); }
+    }
+    // --------------------------------------------------
+
+    // --- DEBUG PRINT for related data retrieval ---
+    if (map['parameterName'] == 'A.S.A.T. (GOT)' || map['parameterName'] == 'A.L.A.T. (GPT)') {
+      print("DEBUG fromMap [${map['parameterName']}]:");
+      print("  -> glossary_related: ${map['glossary_related']}");
+      print("  -> glossary_related_percentage: ${map['glossary_related_percentage']}");
+      print("  -> glossary_related_description: ${map['glossary_related_description']}");
+      print("  -> Parsed Related Names: ${parsedRelatedParameters?.join(', ')}");
+      print("  -> Parsed Related Perc: ${parsedRelatedPercentage?.join(', ')}");
+      print("  -> Parsed Related Desc Count: ${parsedRelatedDescription?.length}");
+    }
+    // ------------------------------------------
 
     return ParameterRecord(
       id: map['id'] as int?,
@@ -100,8 +153,11 @@ class ParameterRecord {
       date: map['date'] != null ? (DateTime.tryParse(map['date'] as String) ?? DateTime.now()) : DateTime.now(),
       status: status,
       unit: map['unit'] as String?,
-      description: description, // Use the prioritized value
-      recommendation: recommendation, // Use the prioritized value
+      description: map['description'] as String? ?? descriptionFromGlossary,
+      recommendation: map['recommendation'] as String? ?? recommendationFromGlossary,
+      relatedParameters: parsedRelatedParameters,
+      relatedParametersPercentage: parsedRelatedPercentage,
+      relatedParametersDescription: parsedRelatedDescription,
     );
   }
 

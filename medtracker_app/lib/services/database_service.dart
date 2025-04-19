@@ -31,18 +31,18 @@ class DatabaseService {
     final path = join(documentsDirectory.path, 'medtracker.db');
 
     // --- TEMPORARY FOR DEVELOPMENT: Force delete DB on init ---
-    /* // Comment out this block
+    /* // --- RE-COMMENT THIS BLOCK --- 
     if (kDebugMode) { 
         print("DEVELOPMENT: Deleting existing database at $path to ensure schema update...");
         await deleteDatabase(path);
         print("DEVELOPMENT: Database deleted.");
     }
-    */
+    */ // --- END RE-COMMENT ---
     // -----------------------------------------------------------
 
     return await openDatabase(
       path,
-      version: 6, // Increment DB version to 6
+      version: 8, // Increment DB version to 8
       // --- Add onConfigure callback --- 
       onConfigure: (db) async {
          await db.execute('PRAGMA foreign_keys = ON'); // Use single quotes for PRAGMA command
@@ -111,6 +111,9 @@ class DatabaseService {
         parameterName TEXT NOT NULL,
         description TEXT,
         recommendation TEXT,
+        relatedParameters TEXT,          -- Store related names as JSON string
+        relatedParametersPercentage TEXT, -- Store percentages as JSON list
+        relatedParametersDescription TEXT, -- Store descriptions as JSON list
         PRIMARY KEY (categoryName, parameterName)
       )
     ''');
@@ -146,6 +149,19 @@ class DatabaseService {
        print("Database onUpgrade: Upgrading from version $oldVersion to $newVersion...");
      }
      
+     // Helper function to check if a column exists
+     Future<bool> columnExists(DatabaseExecutor db, String tableName, String columnName) async {
+       try {
+          final List<Map<String, dynamic>> tableInfo = await db.rawQuery('PRAGMA table_info($tableName)');
+          return tableInfo.any((column) => column['name'] == columnName);
+       } catch (e) {
+          if (kDebugMode) {
+            print("Error checking column $columnName in $tableName: $e");
+          }
+          return false; // Assume it doesn't exist on error
+       }
+     }
+
      // Upgrade from V1 to V2 (Add status column)
      if (oldVersion < 2) {
         if (kDebugMode) { print("Applying upgrade V1 -> V2..."); }
@@ -216,6 +232,9 @@ class DatabaseService {
                parameterName TEXT NOT NULL,
                description TEXT,
                recommendation TEXT,
+               relatedParameters TEXT,          -- Store related names as JSON string
+               relatedParametersPercentage TEXT, -- Store percentages as JSON list
+               relatedParametersDescription TEXT, -- Store descriptions as JSON list
                PRIMARY KEY (categoryName, parameterName)
              )
            ''');
@@ -225,7 +244,50 @@ class DatabaseService {
             rethrow;
          }
      }
-     // ----------------------------------------------------------------------
+     
+     // --- Upgrade from V6 to V7 (Add relatedParameters to glossary) --- 
+     if (oldVersion < 7) {
+         if (kDebugMode) { print("Checking upgrade V6 -> V7..."); }
+         try {
+           // Check if column exists before adding
+           if (!await columnExists(db, 'parameter_glossary', 'relatedParameters')) {
+              if (kDebugMode) { print("Applying upgrade V6 -> V7: Adding relatedParameters column..."); }
+              await db.execute("ALTER TABLE parameter_glossary ADD COLUMN relatedParameters TEXT");
+           } else {
+               if (kDebugMode) { print("Upgrade V6 -> V7: Column relatedParameters already exists."); }
+           }
+           if (kDebugMode) { print("Upgrade V6 -> V7 check finished."); }
+         } catch (e) {
+            if (kDebugMode) { print("Error processing upgrade V6 -> V7: $e"); } 
+            rethrow;
+         }
+     }
+     
+     // --- Upgrade from V7 to V8 (Add related Percentage/Description to glossary) --- 
+     if (oldVersion < 8) {
+         if (kDebugMode) { print("Checking upgrade V7 -> V8..."); }
+         try {
+            // Check and add relatedParametersPercentage
+            if (!await columnExists(db, 'parameter_glossary', 'relatedParametersPercentage')) {
+               if (kDebugMode) { print("Applying upgrade V7 -> V8: Adding relatedParametersPercentage column..."); }
+               await db.execute("ALTER TABLE parameter_glossary ADD COLUMN relatedParametersPercentage TEXT");
+            } else {
+                if (kDebugMode) { print("Upgrade V7 -> V8: Column relatedParametersPercentage already exists."); }
+            }
+            // Check and add relatedParametersDescription
+            if (!await columnExists(db, 'parameter_glossary', 'relatedParametersDescription')) {
+               if (kDebugMode) { print("Applying upgrade V7 -> V8: Adding relatedParametersDescription column..."); }
+               await db.execute("ALTER TABLE parameter_glossary ADD COLUMN relatedParametersDescription TEXT");
+            } else {
+                if (kDebugMode) { print("Upgrade V7 -> V8: Column relatedParametersDescription already exists."); }
+            }
+           if (kDebugMode) { print("Upgrade V7 -> V8 check finished."); }
+         } catch (e) {
+            if (kDebugMode) { print("Error processing upgrade V7 -> V8: $e"); } 
+            rethrow;
+         }
+     }
+     // ------------------------------------------------------------------------------
      
       if (kDebugMode) {
        print("Database onUpgrade: Finished.");
@@ -360,9 +422,9 @@ class DatabaseService {
             final String? unit = data['unidad'] as String?; // <-- Read unit
             // --------------------------------------------------------
 
-            // 4. Create ParameterRecord (Ensure all fields are passed)
+            // 4. Create ParameterRecord (WITHOUT related fields)
             final parameterRecord = ParameterRecord(
-              examRecordId: examRecordId!,
+              examRecordId: examRecordId!, // Non-null assertion safe here
               category: categoryName,
               parameterName: parameterName,
               value: parsedValue, 
@@ -372,9 +434,12 @@ class DatabaseService {
               refOriginal: refOriginal,
               date: date,
               status: calculatedStatus,
-              description: description, 
-              recommendation: recommendation, 
-              unit: unit, // <-- Pass unit
+              description: description, // Description from exam JSON (if any)
+              recommendation: recommendation, // Recommendation from exam JSON (if any)
+              unit: unit, // Unit from exam JSON
+              // relatedParameters: null, // Omit these, they come from glossary later
+              // relatedParametersPercentage: null, 
+              // relatedParametersDescription: null,
             );
 
             // 5. Insert ParameterRecord
@@ -449,7 +514,10 @@ class DatabaseService {
       SELECT 
         p.*, 
         pg.description as glossary_description, 
-        pg.recommendation as glossary_recommendation
+        pg.recommendation as glossary_recommendation,
+        pg.relatedParameters as glossary_related, 
+        pg.relatedParametersPercentage as glossary_related_percentage, 
+        pg.relatedParametersDescription as glossary_related_description
       FROM parameter_records p
       LEFT JOIN parameter_glossary pg ON UPPER(TRIM(p.category)) = UPPER(TRIM(pg.categoryName)) AND UPPER(TRIM(p.parameterName)) = UPPER(TRIM(pg.parameterName))
       WHERE p.category = ? AND p.parameterName = ?
@@ -960,6 +1028,29 @@ class DatabaseService {
 
             final String? description = data['descripcion'] as String?;
             final String? recommendation = data['recomendacion'] as String?;
+            // --- NEW: Read related parameters --- 
+            final List<dynamic>? relatedListRaw = data['related_parameters'] as List<dynamic>?;
+            String? relatedParametersJson; // Store as JSON string in DB
+            if (relatedListRaw != null) {
+               // Ensure all items are strings before encoding
+               final List<String> relatedListString = relatedListRaw.map((item) => item.toString()).toList();
+               relatedParametersJson = jsonEncode(relatedListString);
+            }
+            // --- NEW: Read related parameters percentage and description --- 
+            final List<dynamic>? relatedPercRaw = data['related_parameters_percentage'] as List<dynamic>?;
+            final List<dynamic>? relatedDescRaw = data['related_parameters_des'] as List<dynamic>?;
+            String? relatedPercentageJson;
+            String? relatedDescriptionJson;
+            if (relatedPercRaw != null) {
+               // Ensure numbers (can be int or double in JSON)
+               final List<num> relatedPercNum = relatedPercRaw.whereType<num>().toList(); 
+               relatedPercentageJson = jsonEncode(relatedPercNum);
+            }
+             if (relatedDescRaw != null) {
+               final List<String> relatedDescString = relatedDescRaw.map((item) => item.toString()).toList();
+               relatedDescriptionJson = jsonEncode(relatedDescString);
+            }
+            // ---------------------------------------------------------
 
             // Add insert/replace operation to batch
             batch.insert(
@@ -969,6 +1060,9 @@ class DatabaseService {
                 'parameterName': parameterName,
                 'description': description,
                 'recommendation': recommendation,
+                'relatedParameters': relatedParametersJson,
+                'relatedParametersPercentage': relatedPercentageJson,
+                'relatedParametersDescription': relatedDescriptionJson,
               },
               conflictAlgorithm: ConflictAlgorithm.replace, 
             );
@@ -1035,5 +1129,29 @@ class DatabaseService {
      }
   }
   // --------------------------
+
+  // --- NEW: Find Category for a Parameter Name ---
+  Future<String?> findCategoryForParameter(String parameterName) async {
+    final db = await database;
+    try {
+      final List<Map<String, dynamic>> maps = await db.query(
+        'parameter_glossary',
+        columns: ['categoryName'],
+        where: 'parameterName = ?',
+        whereArgs: [parameterName],
+        limit: 1,
+      );
+      if (maps.isNotEmpty) {
+        return maps.first['categoryName'] as String?;
+      }
+      return null; // Not found in glossary
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error finding category for parameter '$parameterName': $e");
+      }
+      return null; // Return null on error
+    }
+  }
+  // ---------------------------------------------
 
 } 

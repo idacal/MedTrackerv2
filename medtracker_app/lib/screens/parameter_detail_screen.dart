@@ -3,6 +3,7 @@ import 'dart:math'; // For max/min
 import 'package:intl/intl.dart'; // For number formatting
 import 'package:fl_chart/fl_chart.dart'; // Import the chart package
 import 'package:collection/collection.dart'; // For firstWhereOrNull
+import 'package:flutter/foundation.dart'; // <-- ADD THIS IMPORT
 
 import '../services/database_service.dart';
 import '../models/parameter_record.dart';
@@ -25,7 +26,7 @@ class ParameterDetailScreen extends StatefulWidget {
   State<ParameterDetailScreen> createState() => _ParameterDetailScreenState();
 }
 
-class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
+class _ParameterDetailScreenState extends State<ParameterDetailScreen> with TickerProviderStateMixin {
   late Future<List<ParameterRecord>> _historyFuture;
   final dbService = DatabaseService();
   final NumberFormat _valueFormatter = NumberFormat("#,##0.##");
@@ -43,11 +44,22 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
   bool _isTracking = false;
   bool _isLoadingTracking = true; // Loading indicator for tracking status
 
+  // Add TabController
+  TabController? _tabController;
+
   @override
   void initState() {
     super.initState();
+    // Initialize TabController
+    _tabController = TabController(length: 3, vsync: this); 
     _loadHistory();
     _loadTrackingStatus();
+  }
+
+  @override
+  void dispose() {
+    _tabController?.dispose(); // Dispose controller
+    super.dispose();
   }
 
   void _loadHistory() {
@@ -143,7 +155,7 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
      final statusColors = StatusColors.of(context); // Still useful for direct access if needed
 
     return Scaffold(
-      // --- Custom Header (AppBar) ---
+      // --- Custom Header (AppBar without TabBar) ---
       appBar: AppBar(
         title: Text(widget.parameterName), // Parameter name in title
         backgroundColor: Theme.of(context).primaryColor, // Match mockup style
@@ -161,105 +173,317 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
                  onPressed: _toggleTracking,
                ),
         ],
+        // --- REMOVE TabBar from AppBar --- 
+        // bottom: TabBar(...) 
+        // ---------------------------------
       ),
+      // --- Reorganized Body ---
       body: FutureBuilder<List<ParameterRecord>>(
         future: _historyFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (snapshot.hasError) {
-            // Use the correct status color for error message
-            Color errorColor = statusColors.attention; 
-            return Center(child: Padding(padding: const EdgeInsets.all(16.0), child: Text('Error al cargar historial: ${snapshot.error}', style: TextStyle(color: errorColor))));
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Padding(padding: EdgeInsets.all(16.0), child: Text('No hay historial disponible para este parámetro.')));
+          if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+             String errorMessage = 'Error al cargar historial: ${snapshot.error}';
+             if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                errorMessage = 'No hay historial disponible para este parámetro.';
+             }
+             return Center(child: Padding(padding: const EdgeInsets.all(16.0), child: Text(errorMessage, style: TextStyle(color: statusColors.attention))));
           }
 
           final history = snapshot.data!;
           final latestRecord = history.first;
+          // Prepare details needed for the static Current Value card
           final latestValueString = latestRecord.value != null ? _valueFormatter.format(latestRecord.value) : 'N/A';
           final latestStatusColor = _getStatusColor(context, latestRecord.status);
-          const String unit = ""; // TODO: Placeholder for unit
-          final String rangeString = latestRecord.refOriginal ?? 'No Ref.';
+          final String rangeString = _buildRangeString(latestRecord); // Use helper
+          final String displayUnit = latestRecord.unit ?? '';
 
-          // Prepare chart data (original unfiltered)
-           final chartData = history.reversed
-             .where((record) => record.value != null)
-             .map((record) => FlSpot(
-                  record.date.millisecondsSinceEpoch.toDouble(),
-                  record.value!,
-             ))
-             .toList();
-             
-          // Filter data based on selected range (Moved declaration here)
-          final filteredChartData = _getFilteredChartData(); 
-
-          // --- Main Content ---
-          return ListView(
-            padding: const EdgeInsets.all(16.0),
-            children: [
-              // --- Card Valor Actual ---
-              _buildCurrentValueCard(context, latestRecord, latestValueString, unit, rangeString, latestStatusColor),
-              const SizedBox(height: 16), // Spacing
-
-              // --- Card Evolución (Gráfico) ---
-              Card(
-                 child: Padding(
-                   padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
-                   child: Column(
-                     crossAxisAlignment: CrossAxisAlignment.start,
-                     children: [
-                       // --- Row for Title and Time Range Buttons ---
-                       Row(
-                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                         crossAxisAlignment: CrossAxisAlignment.center,
-                         children: [
-                           // Wrap title in Row and add Icon
-                           Row(
-                            children: [
-                              Icon(Icons.bar_chart, color: Theme.of(context).primaryColor, size: 22), // Icon added
-                              const SizedBox(width: 8), // Spacing
-                               Text('Evolución', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-                            ],
-                           ),
-                           _buildTimeRangeButtons(context), // Add buttons here
-                         ],
-                       ),
-                       // -------------------------------------------
-                       const SizedBox(height: 20),
-                       if (filteredChartData.length < 2)
-                         const Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 30), child: Text('No hay suficientes datos para graficar en este rango.')))
-                       else
-                         SizedBox(
-                            height: 200,
-                            child: _buildLineChart(context, filteredChartData, latestRecord),
-                         ),
+          // --- Main Column Layout ---
+          return Column(
+             children: [
+                // 1. Static Current Value Card (Outside TabView)
+                Padding(
+                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8), // Padding around the card
+                   child: _buildCurrentValueCard(context, latestRecord, latestValueString, displayUnit, rangeString, latestStatusColor),
+                ),
+                
+                // 2. TabBar (Below Current Value Card)
+                Container(
+                   color: Theme.of(context).scaffoldBackgroundColor, // Match background
+                   child: TabBar(
+                     controller: _tabController,
+                     labelColor: Theme.of(context).colorScheme.primary, // Use primary color for selected label
+                     unselectedLabelColor: Colors.grey[600],           // Grey for unselected
+                     indicatorColor: Theme.of(context).colorScheme.primary, // Indicator color
+                     tabs: const [
+                       Tab(text: 'EVOLUCIÓN'),
+                       Tab(text: 'INFORMACIÓN'),
+                       Tab(text: 'RELACIONADOS'),
                      ],
                    ),
-                 ),
-              ),
-              const SizedBox(height: 16), // Spacing
-              
-              // --- NEW: Description Card (if description exists) ---
-              if (latestRecord.description != null && latestRecord.description!.isNotEmpty)
-                  _buildDescriptionCard(context, latestRecord.description!),
-              if (latestRecord.description != null && latestRecord.description!.isNotEmpty)
-                   const SizedBox(height: 16), // Spacing only if description shown
+                ),
 
-              // --- Recommendation Card (using new field) ---
-              // Show recommendation only if it exists
-              if (latestRecord.recommendation != null && latestRecord.recommendation!.isNotEmpty)
-                  _buildRecommendationCard(context, latestRecord.recommendation!), // Pass only the recommendation string
-
-            ],
+                // 3. Expanded TabBarView
+                Expanded(
+                  child: TabBarView(
+                     controller: _tabController,
+                     children: [
+                       // Tab 1: Evolución (Now only contains chart)
+                       _buildEvolutionTab(context, history, latestRecord), 
+                       // Tab 2: Información
+                       _buildInformationTab(context, latestRecord),
+                       // Tab 3: Relacionados 
+                       _buildRelatedTab(context, latestRecord),
+                     ],
+                  ),
+                ),
+             ],
           );
+          // -------------------------
         },
       ),
     );
   }
 
+ // Tab 1: Evolución (Now ONLY Chart)
+ Widget _buildEvolutionTab(BuildContext context, List<ParameterRecord> history, ParameterRecord latestRecord) {
+    final filteredChartData = _getFilteredChartData(); 
+
+    return ListView( // Keep ListView for padding and potential future items
+       padding: const EdgeInsets.all(16.0),
+       children: [
+          // --- Chart Section (No Card Wrapper) --- 
+          // Remove Card() and its Padding()
+          Column( // Keep the Column
+             crossAxisAlignment: CrossAxisAlignment.start,
+             children: [
+               Row(
+                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                 crossAxisAlignment: CrossAxisAlignment.center, // Center vertically
+                 children: [
+                   Flexible( 
+                     child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.bar_chart, color: Theme.of(context).primaryColor, size: 22),
+                          const SizedBox(width: 8),
+                          Flexible( 
+                            child: Text(
+                               'Evolución', 
+                               style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                               overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                       ),
+                   ),
+                   const SizedBox(width: 10), 
+                   _buildTimeRangeButtons(context), 
+                 ],
+               ),
+               const SizedBox(height: 20),
+               if (filteredChartData.length < 2)
+                 const Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 30), child: Text('No hay suficientes datos para graficar en este rango.')))
+               else
+                 SizedBox(
+                    height: 200,
+                    child: _buildLineChart(context, filteredChartData, latestRecord),
+                 ),
+                 const SizedBox(height: 16), // Add some space at the bottom if needed
+             ],
+          ),
+          // ------------------------------------
+       ],
+    );
+ }
+ 
+ // Tab 2: Información (Remove Cards, use direct Text widgets)
+ Widget _buildInformationTab(BuildContext context, ParameterRecord latestRecord) {
+     final textTheme = Theme.of(context).textTheme;
+     
+     // Helper to build sections like the reference image
+     Widget buildInfoSection(String title, String content) {
+        // Simple parser for basic bullet points (assuming '*' at the start of a line)
+        List<String> lines = content.split('\n');
+        List<Widget> contentWidgets = [];
+        for (String line in lines) {
+           line = line.trim();
+           if (line.startsWith('*')) {
+              contentWidgets.add(
+                 Padding(
+                   padding: const EdgeInsets.only(left: 16.0, top: 2.0, bottom: 2.0),
+                   child: Row(
+                     crossAxisAlignment: CrossAxisAlignment.start,
+                     children: [
+                       const Text("• ", style: TextStyle(fontWeight: FontWeight.bold)), // Bullet point
+                       Expanded(child: Text(line.substring(1).trimLeft(), style: textTheme.bodyMedium)),
+                     ],
+                   ),
+                 )
+              );
+           } else if (line.isNotEmpty) {
+              contentWidgets.add(Padding(
+                padding: const EdgeInsets.only(bottom: 8.0), // Space between paragraphs
+                child: Text(line, style: textTheme.bodyMedium),
+              ));
+           }
+        }
+
+        return Column(
+           crossAxisAlignment: CrossAxisAlignment.start,
+           children: [
+              Text(title, style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              ...contentWidgets,
+              const SizedBox(height: 20), // Space between sections
+           ],
+        );
+     }
+
+     return SingleChildScrollView( // Use SingleChildScrollView instead of ListView for simpler layout
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+           crossAxisAlignment: CrossAxisAlignment.start,
+           children: [
+             // --- Description Section --- 
+             if (latestRecord.description != null && latestRecord.description!.isNotEmpty)
+                 buildInfoSection('¿Qué es ${widget.parameterName}?', latestRecord.description!)
+             else 
+                const Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 30), child: Text('No hay descripción disponible.'))), 
+             
+             // --- Recommendation Section --- 
+             if (latestRecord.recommendation != null && latestRecord.recommendation!.isNotEmpty)
+                 buildInfoSection('Recomendaciones Generales', latestRecord.recommendation!)
+             else 
+                const Center(child: Padding(padding: EdgeInsets.symmetric(vertical: 30), child: Text('No hay recomendación disponible.'))), 
+           ],
+        ),
+     );
+ }
+ 
+ // Tab 3: Relacionados (Shows full info)
+ Widget _buildRelatedTab(BuildContext context, ParameterRecord latestRecord) {
+    // Get all three lists
+    final List<String>? names = latestRecord.relatedParameters;
+    final List<num>? percentages = latestRecord.relatedParametersPercentage;
+    final List<String>? descriptions = latestRecord.relatedParametersDescription;
+    
+    // Basic validation: ensure all lists are present and have the same length
+    if (names == null || percentages == null || descriptions == null || 
+        names.isEmpty || names.length != percentages.length || names.length != descriptions.length)
+    {
+       return const Center(
+         child: Padding(
+           padding: EdgeInsets.all(24.0),
+           child: Text('No hay parámetros relacionados definidos o los datos están incompletos.', textAlign: TextAlign.center),
+         ),
+      );
+    }
+
+    // Use FutureBuilder to fetch latest values for related parameters
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _fetchRelatedParameterDetails(names, percentages, descriptions),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError || !snapshot.hasData) {
+           return Center(
+             child: Padding(
+               padding: const EdgeInsets.all(24.0),
+               child: Text('Error al cargar detalles de parámetros relacionados: ${snapshot.error}', textAlign: TextAlign.center),
+             ),
+          );
+        }
+
+        final List<Map<String, dynamic>> detailedRelatedList = snapshot.data!;
+
+        // Display the list using ListTile
+        return ListView.separated(
+           padding: const EdgeInsets.symmetric(vertical: 16.0), 
+           itemCount: detailedRelatedList.length,
+           itemBuilder: (context, index) {
+             final Map<String, dynamic> relatedData = detailedRelatedList[index];
+             final String relatedName = relatedData['name'] as String;
+             final num relatedPerc = relatedData['percentage'] as num;
+             final String relatedDesc = relatedData['description'] as String;
+             final ParameterRecord? latestRelatedRecord = relatedData['latestRecord'] as ParameterRecord?;
+             
+             // Build value string with unit
+             String valueString = "--";
+             if (latestRelatedRecord != null) {
+                valueString = latestRelatedRecord.displayValue; // Use getter for formatting
+                if (latestRelatedRecord.unit != null && latestRelatedRecord.unit!.isNotEmpty) {
+                   valueString += " ${latestRelatedRecord.unit}";
+                }
+             }
+
+             return ListTile(
+                // Title is just the name
+                title: Text(relatedName, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500)), 
+                // Subtitle is a Column with Value+Unit and Description
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 4), // Add a little space below title
+                    Text( // Value + Unit
+                       valueString, 
+                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey[700])
+                    ),
+                    const SizedBox(height: 4), // Space between value and description
+                    Text( // Relationship description
+                       relatedDesc, 
+                       style: Theme.of(context).textTheme.bodySmall, 
+                       maxLines: 3, 
+                       overflow: TextOverflow.ellipsis
+                    ),
+                  ],
+                ),
+                trailing: Container( 
+                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                   decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                   ),
+                   child: Text(
+                     '${relatedPerc}% correlación',
+                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                         color: Theme.of(context).colorScheme.primary, 
+                         fontWeight: FontWeight.w500 
+                      )
+                   ),
+                ),
+                onTap: () async { 
+                    // Navigation logic remains the same
+                    final category = await dbService.findCategoryForParameter(relatedName);
+                    if (category != null && mounted) { 
+                       Navigator.push(
+                         context,
+                         MaterialPageRoute(
+                           builder: (context) => ParameterDetailScreen(
+                             categoryName: category,
+                             parameterName: relatedName,
+                           ),
+                         ),
+                       );
+                    } else if (mounted) {
+                       ScaffoldMessenger.of(context).showSnackBar(
+                         SnackBar(content: Text('No se pudo encontrar la categoría para "$relatedName".')),
+                       );
+                    }
+                },
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0), 
+                // isThreeLine: true, // Might not be needed explicitly now
+             );
+           },
+           separatorBuilder: (context, index) => const Divider(height: 1, indent: 16, endIndent: 16), 
+        );
+      }, // End of FutureBuilder builder
+    ); // End of FutureBuilder
+ }
+ 
  // --- Widget Builder Methods ---
 
  Widget _buildCurrentValueCard(BuildContext context, ParameterRecord latestRecord, String latestValueString, String unit, String rangeString, Color latestStatusColor) {
@@ -426,7 +650,7 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
     );
   }
 
- // --- NEW: Description Card Builder ---
+  // --- NEW: Description Card Builder ---
  Widget _buildDescriptionCard(BuildContext context, String description) {
     return Card(
        color: Colors.blueGrey.shade50, // A neutral, soft background
@@ -778,6 +1002,62 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
       ],
     );
   }
+
+  // Add helper method _buildRangeString (if not already present or moved from old card method)
+  String _buildRangeString(ParameterRecord record) {
+    final formatter = _valueFormatter;
+    if (record.refOriginal != null && record.refOriginal!.isNotEmpty) {
+      return record.refOriginal!;
+    } else if (record.refRangeLow != null || record.refRangeHigh != null) {
+      final low = record.refRangeLow != null ? formatter.format(record.refRangeLow) : null;
+      final high = record.refRangeHigh != null ? formatter.format(record.refRangeHigh) : null;
+      if (low != null && high != null) return '$low - $high';
+      if (low != null) return '> $low';
+      if (high != null) return '< $high';
+    }
+    return '--'; // Fallback
+  }
+
+  // --- NEW: Fetch details for related parameters --- 
+  Future<List<Map<String, dynamic>>> _fetchRelatedParameterDetails(
+      List<String> names, List<num> percentages, List<String> descriptions) async {
+    
+    List<Map<String, dynamic>> detailedRelatedList = [];
+
+    for (int i = 0; i < names.length; i++) {
+      final String name = names[i];
+      final num percentage = percentages[i];
+      final String description = descriptions[i];
+      ParameterRecord? latestRecord; // To store the latest record if found
+
+      try {
+        // Find the category for the related parameter
+        final category = await dbService.findCategoryForParameter(name);
+        if (category != null) {
+          // Fetch the most recent history entry (limit 1)
+          final history = await dbService.getParameterHistory(category, name); // Already ordered DESC
+          if (history.isNotEmpty) {
+            latestRecord = history.first;
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print("Error fetching details for related parameter '$name': $e");
+        }
+        // Continue without the latest record if an error occurs
+      }
+      
+      // Add the combined info to the list
+      detailedRelatedList.add({
+        'name': name,
+        'percentage': percentage,
+        'description': description,
+        'latestRecord': latestRecord, // Can be null
+      });
+    }
+    return detailedRelatedList;
+  }
+  // -------------------------------------------------
 }
 
 // Extension is now defined in main.dart 

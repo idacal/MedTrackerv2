@@ -3,399 +3,802 @@
     "Leucocitos": {
       "fecha": "03/04/2024",
       "descripcion": "Células blancas de la sangre encargadas de la defensa inmunitaria.",
-      "recomendacion": "Mantén una dieta rica en vitaminas y proteínas, ejercicio moderado y control de estrés."
+      "recomendacion": "Mantén una dieta rica en vitaminas y proteínas, ejercicio moderado y control de estrés.",
+      "related_parameters": [
+        "Neutrófilos",
+        "Linfocitos",
+        "Monocitos",
+        "Eosinófilos",
+        "Basófilos"
+      ],
+      "related_parameters_percentage": [95, 90, 70, 60, 50],
+      "related_parameters_des": [
+        "Los neutrófilos son la primera línea de defensa bacteriana dentro del recuento total de leucocitos.",
+        "Los linfocitos coordinan la inmunidad adaptativa y modulan la actividad global de leucocitos.",
+        "Los monocitos fagocitan patógenos y regulan la población de leucocitos.",
+        "Los eosinófilos participan en respuestas alérgicas afectando el balance leucocitario.",
+        "Los basófilos liberan histamina, influyendo en la respuesta inflamatoria de leucocitos."
+      ]
     },
     "Eritrocitos": {
       "fecha": "03/04/2024",
       "descripcion": "Glóbulos rojos que transportan oxígeno a tejidos y órganos.",
-      "recomendacion": "Consume hierro (carnes rojas, legumbres) y vitaminas B para apoyar la producción."
+      "recomendacion": "Consume hierro (carnes rojas, legumbres) y vitaminas B para apoyar la producción.",
+      "related_parameters": ["Hemoglobina", "Hematocrito", "V.C.M."],
+      "related_parameters_percentage": [95, 90, 75],
+      "related_parameters_des": [
+        "La hemoglobina transporta el oxígeno que los eritrocitos captan en los pulmones.",
+        "El hematocrito mide el volumen total que ocupan los eritrocitos en sangre.",
+        "El V.C.M. influye en la capacidad de los eritrocitos para transportar oxígeno."
+      ]
     },
     "Hemoglobina": {
       "fecha": "03/04/2024",
       "descripcion": "Proteína de los eritrocitos que une y transporta oxígeno.",
-      "recomendacion": "Mantén una ingesta adecuada de hierro y evita la deshidratación."
+      "recomendacion": "Mantén una ingesta adecuada de hierro y evita la deshidratación.",
+      "related_parameters": ["Eritrocitos", "Hematocrito", "H.C.M.", "C.H.C.M."],
+      "related_parameters_percentage": [95, 90, 80, 75],
+      "related_parameters_des": [
+        "La cantidad de eritrocitos determina cuántas moléculas de hemoglobina hay en sangre.",
+        "El hematocrito refleja el porcentaje de sangre ocupado por la hemoglobina contenida en eritrocitos.",
+        "El H.C.M. indica cuánta hemoglobina hay en promedio dentro de cada eritrocito.",
+        "El C.H.C.M. mide la concentración de hemoglobina en el volumen de eritrocitos."
+      ]
     },
     "Hematocrito": {
       "fecha": "03/04/2024",
       "descripcion": "Porcentaje de glóbulos rojos respecto al volumen sanguíneo.",
-      "recomendacion": "Hidrátate bien y controla la ingesta de hierro."
+      "recomendacion": "Hidrátate bien y controla la ingesta de hierro.",
+      "related_parameters": ["Eritrocitos", "Hemoglobina", "V.C.M."],
+      "related_parameters_percentage": [90, 90, 80],
+      "related_parameters_des": [
+        "El conteo de eritrocitos determina la base del hematocrito.",
+        "La hemoglobina dentro de esos eritrocitos compone la mayor parte del volumen medido.",
+        "El V.C.M. influye en el cálculo del porcentaje que ocupan los eritrocitos."
+      ]
     },
     "V.C.M.": {
       "fecha": "03/04/2024",
       "descripcion": "Volumen corpuscular medio: tamaño promedio de los eritrocitos.",
-      "recomendacion": "Equilibra ingesta de folato y vitamina B12."
+      "recomendacion": "Equilibra ingesta de folato y vitamina B12.",
+      "related_parameters": ["H.C.M.", "C.H.C.M.", "Eritrocitos"],
+      "related_parameters_percentage": [90, 85, 70],
+      "related_parameters_des": [
+        "El H.C.M. varía en función del volumen de cada eritrocito (V.C.M.).",
+        "El C.H.C.M. refleja la densidad de hemoglobina dentro del volumen promedio.",
+        "El conteo de eritrocitos junto al V.C.M. determina el hematocrito."
+      ]
     },
     "H.C.M.": {
       "fecha": "03/04/2024",
       "descripcion": "Hemoglobina corpuscular media: contenido de hemoglobina en cada eritrocito.",
-      "recomendacion": "Asegura aporte de hierro y proteínas de calidad."
+      "recomendacion": "Asegura aporte de hierro y proteínas de calidad.",
+      "related_parameters": ["V.C.M.", "C.H.C.M.", "Hemoglobina"],
+      "related_parameters_percentage": [85, 90, 80],
+      "related_parameters_des": [
+        "El V.C.M. define el espacio donde se distribuye la hemoglobina.",
+        "El C.H.C.M. mide cuán concentrada está la hemoglobina en ese volumen.",
+        "La hemoglobina total depende del H.C.M. y del número de eritrocitos."
+      ]
     },
     "C.H.C.M.": {
       "fecha": "03/04/2024",
       "descripcion": "Concentración de hemoglobina corpuscular media en glóbulos rojos.",
-      "recomendacion": "Mantén niveles adecuados de hierro."
+      "recomendacion": "Mantén niveles adecuados de hierro.",
+      "related_parameters": ["H.C.M.", "V.C.M."],
+      "related_parameters_percentage": [90, 85],
+      "related_parameters_des": [
+        "Refleja cuán concentrada está la hemoglobina dentro del volumen medio de eritrocitos.",
+        "Depende del contenido (H.C.M.) y volumen (V.C.M.) de cada célula."
+      ]
     },
     "A.D.E.": {
       "fecha": "03/04/2024",
       "descripcion": "Ancho de distribución eritrocitaria.",
-      "recomendacion": "Evita deficiencias vitamínicas."
+      "recomendacion": "Evita deficiencias vitamínicas.",
+      "related_parameters": ["V.C.M.", "H.C.M."],
+      "related_parameters_percentage": [70, 65],
+      "related_parameters_des": [
+        "Indica variabilidad en el tamaño (V.C.M.) de los eritrocitos.",
+        "La heterogeneidad en hemoglobina (H.C.M.) puede reflejarse en el A.D.E."
+      ]
     },
     "Plaquetas": {
       "fecha": "03/04/2024",
       "descripcion": "Células que intervienen en la coagulación.",
-      "recomendacion": "Consume vitamina K y mantén hidratación."
+      "recomendacion": "Consume vitamina K y mantén hidratación.",
+      "related_parameters": ["Eritrocitos", "Leucocitos"],
+      "related_parameters_percentage": [40, 30],
+      "related_parameters_des": [
+        "Interactúan con eritrocitos en la formación de coágulos.",
+        "Modulan respuesta inflamatoria junto a leucocitos."
+      ]
     },
     "V.H.S.": {
       "fecha": "03/04/2024",
       "descripcion": "Indicador de inflamación.",
-      "recomendacion": "Dieta antiinflamatoria y ejercicio moderado."
+      "recomendacion": "Dieta antiinflamatoria y ejercicio moderado.",
+      "related_parameters": ["Leucocitos"],
+      "related_parameters_percentage": [60],
+      "related_parameters_des": [
+        "Es un marcador indirecto de inflamación mediado por proteínas de fase aguda y leucocitos."
+      ]
     },
     "Eosinófilos": {
       "valor_absoluto": 0.31,
       "fecha": "03/04/2024",
       "descripcion": "Glóbulos blancos en reacciones alérgicas.",
-      "recomendacion": "Controla alergias ambientales."
+      "recomendacion": "Controla alergias ambientales.",
+      "related_parameters": ["Leucocitos", "Basófilos"],
+      "related_parameters_percentage": [90, 70],
+      "related_parameters_des": [
+        "Regulan respuestas alérgicas dentro del recuento total de leucocitos.",
+        "Trabajan junto a basófilos en la mediación de la inflamación alérgica."
+      ]
     },
     "Basófilos": {
       "valor_absoluto": 0.04,
       "fecha": "03/04/2024",
       "descripcion": "Glóbulos blancos que liberan histamina.",
-      "recomendacion": "Consulta si persisten síntomas alérgicos."
+      "recomendacion": "Consulta si persisten síntomas alérgicos.",
+      "related_parameters": ["Leucocitos", "Eosinófilos"],
+      "related_parameters_percentage": [80, 70],
+      "related_parameters_des": [
+        "Liberan histamina que potencia la respuesta inflamatoria de leucocitos.",
+        "Colaboran con eosinófilos en reacciones alérgicas."
+      ]
     },
     "Neutrófilos": {
       "valor_absoluto": 3.28,
       "fecha": "03/04/2024",
       "descripcion": "Defensa principal frente a bacterias.",
-      "recomendacion": "Mantén higiene y evita infecciones."
+      "recomendacion": "Mantén higiene y evita infecciones.",
+      "related_parameters": ["Leucocitos", "Linfocitos"],
+      "related_parameters_percentage": [95, 60],
+      "related_parameters_des": [
+        "Actúan primero en la fagocitosis bacteriana dentro de leucocitos.",
+        "Su actividad prepara el terreno para la respuesta adaptativa de linfocitos."
+      ]
     },
     "Linfocitos": {
       "valor_absoluto": 2.14,
       "fecha": "03/04/2024",
       "descripcion": "Defensa específica (virus y células).",
-      "recomendacion": "Descanso adecuado y vacunación."
+      "recomendacion": "Descanso adecuado y vacunación.",
+      "related_parameters": ["Leucocitos", "Neutrófilos"],
+      "related_parameters_percentage": [95, 60],
+      "related_parameters_des": [
+        "Encargados de inmunidad viral tras la fase inicial de neutrófilos.",
+        "Secretan citocinas que modulan la respuesta leucocitaria."
+      ]
     },
     "Monocitos": {
       "valor_absoluto": 0.4,
       "fecha": "03/04/2024",
       "descripcion": "Fagocitan patógenos y restos celulares.",
-      "recomendacion": "Controla inflamaciones crónicas."
+      "recomendacion": "Controla inflamaciones crónicas.",
+      "related_parameters": ["Leucocitos"],
+      "related_parameters_percentage": [90],
+      "related_parameters_des": [
+        "Fagocitan restos y patógenos complementando función de neutrófilos."
+      ]
     }
   },
   "ORINAS": {
-    "Aspecto": {
-      "fecha": "03/04/2024",
-      "descripcion": "Claridad de la orina, refleja concentración.",
-      "recomendacion": "Bebe suficiente agua."
-    },
-    "Color": {
-      "fecha": "03/04/2024",
-      "descripcion": "Tono de la orina, puede indicar hidratación.",
-      "recomendacion": "Mantén hidratación para color óptimo."
-    },
-    "Densidad": {
-      "fecha": "03/04/2024",
-      "descripcion": "Concentración de sólidos disueltos.",
-      "recomendacion": "Hidrátate bien para evitar densidades extremas."
-    },
-    "pH": {
-      "fecha": "03/04/2024",
-      "descripcion": "Acidez/alcalinidad.",
-      "recomendacion": "Equilibra frutas y verduras."
-    },
-    "Leucocitos": {
-      "fecha": "03/04/2024",
-      "descripcion": "Indicador de infección urinaria.",
-      "recomendacion": "Consulta si cambia a positivo."
-    },
-    "Nitritos": {
-      "fecha": "03/04/2024",
-      "descripcion": "Detecta bacterias productoras de nitritos.",
-      "recomendacion": "Normal si es negativo."
-    },
-    "Proteína": {
-      "fecha": "03/04/2024",
-      "descripcion": "Presencia de proteínas en orina.",
-      "recomendacion": "Consulta si aparece positivo."
-    },
-    "Glucosa": {
-      "fecha": "03/04/2024",
-      "descripcion": "Azúcar en orina, indicador de glucemia.",
-      "recomendacion": "Controla dieta si se detecta."
-    },
-    "Cuerpos cetónicos": {
-      "fecha": "03/04/2024",
-      "descripcion": "Productos de descomposición de grasas.",
-      "recomendacion": "Equilibra ingesta de carbohidratos y grasas."
-    },
-    "Urobilinógeno": {
-      "fecha": "03/04/2024",
-      "descripcion": "Subproducto de bilirrubina.",
-      "recomendacion": "Función hepática normal."
-    },
-    "Bilirrubina": {
-      "fecha": "03/04/2024",
-      "descripcion": "Pigmento biliar en orina.",
-      "recomendacion": "Consulta si cambia a positivo."
-    },
-    "Sangre (Hb)": {
-      "fecha": "03/04/2024",
-      "descripcion": "Hemoglobina en orina.",
-      "recomendacion": "Evalúa si se detecta."
-    },
-    "Hematíes": {
-      "fecha": "03/04/2024",
-      "descripcion": "Glóbulos rojos en sedimento.",
-      "recomendacion": "Normal si no aparecen."
-    },
-    "Leucocitos (sedimento)": {
-      "fecha": "03/04/2024",
-      "descripcion": "Glóbulos blancos en sedimento.",
-      "recomendacion": "Consulta si aumenta."
-    },
-    "Piocitos": {
-      "fecha": "03/04/2024",
-      "descripcion": "Células de pus.",
-      "recomendacion": "Normal si no aparecen."
-    },
-    "Células epiteliales": {
-      "fecha": "03/04/2024",
-      "descripcion": "Células de recubrimiento urinario.",
-      "recomendacion": "Valores bajos son normales."
-    },
-    "Bacterias": {
-      "fecha": "03/04/2024",
-      "descripcion": "Bacterias en sedimento.",
-      "recomendacion": "Mantén higiene adecuada."
-    },
-    "Mucus": {
-      "fecha": "03/04/2024",
-      "descripcion": "Filamentos de moco.",
-      "recomendacion": "Normal si no aparecen."
-    },
-    "Levaduras": {
-      "fecha": "03/04/2024",
-      "descripcion": "Hongos en orina.",
-      "recomendacion": "Consulta si se detectan."
-    },
-    "Cristales oxalato cálcico": {
-      "fecha": "03/04/2024",
-      "descripcion": "Cristales asociados a cálculos renales.",
-      "recomendacion": "Hidrátate y modera oxalatos."
-    },
-    "Cristales amorfos": {
-      "fecha": "03/04/2024",
-      "descripcion": "Cristales sin forma definida.",
-      "recomendacion": "Neutraliza pH con dieta."
-    },
-    "Hialinos": {
-      "fecha": "03/04/2024",
-      "descripcion": "Cilindros proteicos renales.",
-      "recomendacion": "Hidrátate y controla función renal."
-    },
-    "Granulosos gruesos": {
-      "fecha": "03/04/2024",
-      "descripcion": "Cilindros con detritos.",
-      "recomendacion": "Consulta si aparecen."
-    }
+  "Aspecto": {
+    "fecha": "03/04/2024",
+    "descripcion": "Claridad de la orina, refleja concentración.",
+    "recomendacion": "Bebe suficiente agua.",
+    "related_parameters": ["Densidad", "Leucocitos (sedimento)"],
+    "related_parameters_percentage": [80, 70],
+    "related_parameters_des": [
+      "La turbidez (Aspecto) suele correlacionarse con aumento de partículas que elevan la Densidad.",
+      "Presencia de leucocitos en sedimento causa orina turbia."
+    ]
   },
-  "ESTUDIO DE LIPIDOS": {
-    "Colesterol Total": {
-      "fecha": "03/04/2024",
-      "descripcion": "Colesterol total en sangre.",
-      "recomendacion": "Dieta baja en grasas saturadas."
-    },
-    "Colesterol HDL": {
-      "fecha": "03/04/2024",
-      "descripcion": "Colesterol “bueno”.",
-      "recomendacion": "Ejercicio aeróbico y grasas saludables."
-    },
-    "Colesterol No HDL": {
-      "fecha": "03/04/2024",
-      "descripcion": "Riesgo cardiovascular combinado.",
-      "recomendacion": "Controla LDL y triglicéridos."
-    },
-    "Colesterol LDL": {
-      "fecha": "03/04/2024",
-      "descripcion": "Colesterol “malo”.",
-      "recomendacion": "Reduce grasas saturadas."
-    },
-    "Colesterol VLDL": {
-      "fecha": "03/04/2024",
-      "descripcion": "Transporta triglicéridos.",
-      "recomendacion": "Modera azúcares simples."
-    },
-    "Triglicéridos": {
-      "fecha": "03/04/2024",
-      "descripcion": "Grasas derivadas de la dieta.",
-      "recomendacion": "Evita excesos de carbohidratos."
-    },
-    "Colesterol total / HDL": {
-      "fecha": "03/04/2024",
-      "descripcion": "Índice de riesgo aterosclerótico.",
-      "recomendacion": "Mejora HDL y controla colesterol total."
-    }
+  "Color": {
+    "fecha": "03/04/2024",
+    "descripcion": "Tono de la orina, puede indicar hidratación.",
+    "recomendacion": "Mantén hidratación para color óptimo.",
+    "related_parameters": ["Densidad", "Bilirrubina"],
+    "related_parameters_percentage": [70, 50],
+    "related_parameters_des": [
+      "Un color oscuro coincide con alta densidad por hidratación baja.",
+      "Bilirrubina en orina puede dar tonalidades amarillas o rojizas."
+    ]
   },
-  "PERFIL HEPATICO": {
-    "Bilirrubina total": {
-      "fecha": "03/04/2024",
-      "descripcion": "Producto de degradación de hemoglobina.",
-      "recomendacion": "Evita alcohol y tóxicos hepáticos."
-    },
-    "Bilirrubina directa": {
-      "fecha": "03/04/2024",
-      "descripcion": "Bilirrubina conjugada excretada por el hígado.",
-      "recomendacion": "Evita alcohol y tóxicos hepáticos."
-    },
-    "A.S.A.T. (GOT)": {
-      "fecha": "03/04/2024",
-      "descripcion": "Enzima hepática y muscular.",
-      "recomendacion": "Evita ejercicio extremo antes del examen."
-    },
-    "A.L.A.T. (GPT)": {
-      "fecha": "03/04/2024",
-      "descripcion": "Enzima más específica de hígado.",
-      "recomendacion": "Mantén función hepática con dieta sana."
-    },
-    "Fosfatasa alcalina": {
-      "fecha": "03/04/2024",
-      "descripcion": "Enzima presente en hígado y huesos.",
-      "recomendacion": "Consume vitamina D y calcio."
-    },
-    "Gama-Glutamiltransp": {
-      "fecha": "03/04/2024",
-      "descripcion": "Marcador de consumo de alcohol.",
-      "recomendacion": "Modera el consumo de alcohol."
-    },
-    "Tpo de protrombina (seg)": {
-      "fecha": "03/04/2024",
-      "descripcion": "Tiempo de coagulación dependiente del hígado.",
-      "recomendacion": "Mantén vitamina K con dieta."
-    },
-    "Tpo de protrombina (%)": {
-      "fecha": "03/04/2024",
-      "descripcion": "Porcentaje de actividad de protrombina.",
-      "recomendacion": "Ver tiempo en segundos."
-    },
-    "I.N.R.": {
-      "fecha": "03/04/2024",
-      "descripcion": "Normaliza el tiempo de protrombina.",
-      "recomendacion": "Sólo relevante si anticoagulado."
-    },
-    "FIB-4": {
-      "fecha": "03/04/2024",
-      "descripcion": "Índice de fibrosis hepática.",
-      "recomendacion": "Vigila función hepática con controles periódicos."
-    }
+  "Densidad": {
+    "fecha": "03/04/2024",
+    "descripcion": "Concentración de sólidos disueltos.",
+    "recomendacion": "Hidrátate bien para evitar densidades extremas.",
+    "related_parameters": ["Color", "Proteína", "Glucosa"],
+    "related_parameters_percentage": [70, 50, 50],
+    "related_parameters_des": [
+      "Color oscuro suele acompañar densidad alta.",
+      "Proteínas aumentan sólidos disueltos incrementando densidad.",
+      "Glucosa en orina eleva la densidad."
+    ]
   },
-  "PERFIL BIOQUIMICO": {
-    "Bilirrubina total": {
-      "fecha": "03/04/2024",
-      "descripcion": "Producto de degradación de hemoglobina.",
-      "recomendacion": "Evita alcohol y tóxicos hepáticos."
-    },
-    "Bilirrubina directa": {
-      "fecha": "03/04/2024",
-      "descripcion": "Bilirrubina conjugada excretada por el hígado.",
-      "recomendacion": "Evita alcohol y tóxicos hepáticos."
-    },
-    "Creatinina": {
-      "fecha": "03/04/2024",
-      "descripcion": "Indicador de función renal.",
-      "recomendacion": "Hidrata bien y controla proteínas."
-    },
-    "Glucosa": {
-      "fecha": "03/04/2024",
-      "descripcion": "Azúcar en sangre en ayunas.",
-      "recomendacion": "Dieta baja en azúcares simples."
-    },
-    "Acido úrico": {
-      "fecha": "03/04/2024",
-      "descripcion": "Asociado a metabolismo de purinas.",
-      "recomendacion": "Modera carnes rojas y mariscos."
-    },
-    "Urea": {
-      "fecha": "03/04/2024",
-      "descripcion": "Refleja función renal y balance proteico.",
-      "recomendacion": "Controla ingesta de proteínas y bebe agua."
-    },
-    "Calcio": {
-      "fecha": "03/04/2024",
-      "descripcion": "Nivel de calcio sérico.",
-      "recomendacion": "Consume lácteos y vitamina D."
-    },
-    "Fósforo": {
-      "fecha": "03/04/2024",
-      "descripcion": "Mineral relacionado con energía celular.",
-      "recomendacion": "Equilibra con calcio."
-    },
-    "Colesterol": {
-      "fecha": "03/04/2024",
-      "descripcion": "Colesterol total en sangre.",
-      "recomendacion": "Dieta baja en grasas saturadas."
-    },
-    "Triglicéridos": {
-      "fecha": "03/04/2024",
-      "descripcion": "Grasas derivadas de la dieta.",
-      "recomendacion": "Evita excesos de carbohidratos."
-    },
-    "Proteínas totales": {
-      "fecha": "03/04/2024",
-      "descripcion": "Balance de albúmina y globulinas.",
-      "recomendacion": "Proteínas magras y buena hidratación."
-    },
-    "Albúmina": {
-      "fecha": "03/04/2024",
-      "descripcion": "Proteína plasmática principal.",
-      "recomendacion": "Aporta proteínas de calidad."
-    },
-    "Globulinas": {
-      "fecha": "03/04/2024",
-      "descripcion": "Proteínas del sistema inmune.",
-      "recomendacion": "Mantén sistema inmunitario activo."
-    },
-    "Índice Alb/Glob": {
-      "fecha": "03/04/2024",
-      "descripcion": "Relación albúmina/globulinas.",
-      "recomendacion": "Balancea ambas fracciones."
-    },
-    "A.S.A.T. (GOT)": {
-      "fecha": "03/04/2024",
-      "descripcion": "Enzima hepática y muscular.",
-      "recomendacion": "Evita ejercicio extremo antes del examen."
-    },
-    "A.L.A.T. (GPT)": {
-      "fecha": "03/04/2024",
-      "descripcion": "Enzima más específica de hígado.",
-      "recomendacion": "Mantén función hepática con dieta sana."
-    },
-    "Fosfatasa alcalina": {
-      "fecha": "03/04/2024",
-      "descripcion": "Enzima presente en hígado y huesos.",
-      "recomendacion": "Consume vitamina D y calcio."
-    },
-    "Lactato Deshidrogenasa": {
-      "fecha": "03/04/2024",
-      "descripcion": "Enzima de daño celular genérico.",
-      "recomendacion": "Evita esfuerzos intensos antes del examen."
-    }
+  "pH": {
+    "fecha": "03/04/2024",
+    "descripcion": "Acidez/alcalinidad.",
+    "recomendacion": "Equilibra frutas y verduras.",
+    "related_parameters": ["Cristales oxalato cálcico"],
+    "related_parameters_percentage": [60],
+    "related_parameters_des": [
+      "pH ácido favorece formación de cristales de oxalato cálcico."
+    ]
   },
-  "HORMONAS": {
-    "Tirotropina (TSH ultrasensible)": {
-      "fecha": "03/04/2024",
-      "descripcion": "Regula función tiroidea.",
-      "recomendacion": "Incluye yodo en la dieta."
-    }
+  "Leucocitos": {
+    "fecha": "03/04/2024",
+    "descripcion": "Indicador de infección urinaria.",
+    "recomendacion": "Consulta si cambia a positivo.",
+    "related_parameters": ["Nitritos", "Piocitos"],
+    "related_parameters_percentage": [90, 70],
+    "related_parameters_des": [
+      "Nitritos y leucocitos positivos refuerzan diagnóstico de ITU.",
+      "Piocitos (pus) aparecen junto a leucocitos en orinas infectadas."
+    ]
   },
-  "VITAMINAS": {
-    "Vitamina B12": {
-      "fecha": "03/04/2024",
-      "descripcion": "Esencial para glóbulos rojos y nervios.",
-      "recomendacion": "Carnes, pescados y huevos."
-    },
-    "25-hidroxi-vitamina D": {
-      "fecha": "03/04/2024",
-      "descripcion": "Forma circulante de D.",
-      "recomendacion": "Exposición solar y lácteos fortificados."
-    }
+  "Nitritos": {
+    "fecha": "03/04/2024",
+    "descripcion": "Detecta bacterias productoras de nitritos.",
+    "recomendacion": "Normal si es negativo.",
+    "related_parameters": ["Leucocitos", "Proteína"],
+    "related_parameters_percentage": [90, 50],
+    "related_parameters_des": [
+      "Nitritos positivos sugieren ITU, acompañado de leucocitos elevados.",
+      "Infección puede causar proteinuria leve."
+    ]
+  },
+  "Proteína": {
+    "fecha": "03/04/2024",
+    "descripcion": "Presencia de proteínas en orina.",
+    "recomendacion": "Consulta si aparece positivo.",
+    "related_parameters": ["Densidad", "Creatinina"],
+    "related_parameters_percentage": [85, 60],
+    "related_parameters_des": [
+      "Proteinuria eleva la densidad urinaria.",
+      "Relación proteína/creatinina ayuda a cuantificar proteinuria."
+    ]
+  },
+  "Glucosa": {
+    "fecha": "03/04/2024",
+    "descripcion": "Azúcar en orina, indicador de glucemia.",
+    "recomendacion": "Controla dieta si se detecta.",
+    "related_parameters": ["Glucosa (sangre)", "Cuerpos cetónicos"],
+    "related_parameters_percentage": [95, 80],
+    "related_parameters_des": [
+      "Glucosuria refleja hiperglucemia en sangre.",
+      "Cetonuria se asocia a glucosuria en cetoacidosis."
+    ]
+  },
+  "Cuerpos cetónicos": {
+    "fecha": "03/04/2024",
+    "descripcion": "Productos de descomposición de grasas.",
+    "recomendacion": "Equilibra ingesta de carbohidratos y grasas.",
+    "related_parameters": ["Glucosa", "Urobilinógeno"],
+    "related_parameters_percentage": [80, 50],
+    "related_parameters_des": [
+      "Cetonuria suele aparecer con glucosuria en ayuno o cetoacidosis.",
+      "Alteraciones hepáticas pueden afectar urobilinógeno y cetonas."
+    ]
+  },
+  "Urobilinógeno": {
+    "fecha": "03/04/2024",
+    "descripcion": "Subproducto de bilirrubina.",
+    "recomendacion": "Función hepática normal.",
+    "related_parameters": ["Bilirrubina"],
+    "related_parameters_percentage": [90],
+    "related_parameters_des": [
+      "Urobilinógeno aumenta con elevación de bilirrubina indirecta."
+    ]
+  },
+  "Bilirrubina": {
+    "fecha": "03/04/2024",
+    "descripcion": "Pigmento biliar en orina.",
+    "recomendacion": "Consulta si cambia a positivo.",
+    "related_parameters": ["Urobilinógeno"],
+    "related_parameters_percentage": [80],
+    "related_parameters_des": [
+      "Bilirrubina en orina implica obstrucción hepática que también altera urobilinógeno."
+    ]
+  },
+  "Sangre (Hb)": {
+    "fecha": "03/04/2024",
+    "descripcion": "Hemoglobina en orina.",
+    "recomendacion": "Evalúa si se detecta.",
+    "related_parameters": ["Leucocitos"],
+    "related_parameters_percentage": [80],
+    "related_parameters_des": [
+      "Hematuria junto a leucocituria refuerza sospecha de daño renal o ITU."
+    ]
+  },
+  "Hematíes": {
+    "fecha": "03/04/2024",
+    "descripcion": "Glóbulos rojos en sedimento.",
+    "recomendacion": "Normal si no aparecen.",
+    "related_parameters": ["Sangre (Hb)"],
+    "related_parameters_percentage": [90],
+    "related_parameters_des": [
+      "La presencia de hematíes confirma hematuria detectada por hemoglobina."
+    ]
+  },
+  "Leucocitos (sedimento)": {
+    "fecha": "03/04/2024",
+    "descripcion": "Glóbulos blancos en sedimento.",
+    "recomendacion": "Consulta si aumenta.",
+    "related_parameters": ["Leucocitos", "Nitritos"],
+    "related_parameters_percentage": [90, 70],
+    "related_parameters_des": [
+      "Correlaciona con leucocituria en tira reactiva.",
+      "Nitritos positivos refuerzan infección cuando hay leucocitos en sedimento."
+    ]
+  },
+  "Piocitos": {
+    "fecha": "03/04/2024",
+    "descripcion": "Células de pus.",
+    "recomendacion": "Normal si no aparecen.",
+    "related_parameters": ["Leucocitos (sedimento)"],
+    "related_parameters_percentage": [80],
+    "related_parameters_des": [
+      "Piocitos son leucocitos degenerados presentes en infecciones urinarias."
+    ]
+  },
+  "Células epiteliales": {
+    "fecha": "03/04/2024",
+    "descripcion": "Células de recubrimiento urinario.",
+    "recomendacion": "Valores bajos son normales.",
+    "related_parameters": ["Piocitos"],
+    "related_parameters_percentage": [50],
+    "related_parameters_des": [
+      "Aumento sugiere contaminación, a diferencia de piocitos que indican infección."
+    ]
+  },
+  "Bacterias": {
+    "fecha": "03/04/2024",
+    "descripcion": "Bacterias en sedimento.",
+    "recomendacion": "Mantén higiene adecuada.",
+    "related_parameters": ["Leucocitos (sedimento)"],
+    "related_parameters_percentage": [90],
+    "related_parameters_des": [
+      "Bacterias y leucocitos juntos confirman infección urinaria."
+    ]
+  },
+  "Mucus": {
+    "fecha": "03/04/2024",
+    "descripcion": "Filamentos de moco.",
+    "recomendacion": "Normal si no aparecen.",
+    "related_parameters": ["Células epiteliales"],
+    "related_parameters_percentage": [50],
+    "related_parameters_des": [
+      "El moco proviene de epitelio urinario y aumenta con contaminación."
+    ]
+  },
+  "Levaduras": {
+    "fecha": "03/04/2024",
+    "descripcion": "Hongos en orina.",
+    "recomendacion": "Consulta si se detectan.",
+    "related_parameters": ["Bacterias"],
+    "related_parameters_percentage": [80],
+    "related_parameters_des": [
+      "La presencia de levaduras junto a bacterias sugiere sobreinfección fúngica-bacteriana."
+    ]
+  },
+  "Cristales oxalato cálcico": {
+    "fecha": "03/04/2024",
+    "descripcion": "Cristales asociados a cálculos renales.",
+    "recomendacion": "Hidrátate y modera oxalatos.",
+    "related_parameters": ["pH"],
+    "related_parameters_percentage": [70],
+    "related_parameters_des": [
+      "pH ácido favorece la formación de cristales de oxalato cálcico."
+    ]
+  },
+  "Cristales amorfos": {
+    "fecha": "03/04/2024",
+    "descripcion": "Cristales sin forma definida.",
+    "recomendacion": "Neutraliza pH con dieta.",
+    "related_parameters": ["pH"],
+    "related_parameters_percentage": [60],
+    "related_parameters_des": [
+      "pH extremo altera la solubilidad generando cristales amorfos."
+    ]
+  },
+  "Hialinos": {
+    "fecha": "03/04/2024",
+    "descripcion": "Cilindros proteicos renales.",
+    "recomendacion": "Hidrátate y controla función renal.",
+    "related_parameters": ["Proteína"],
+    "related_parameters_percentage": [80],
+    "related_parameters_des": [
+      "Proteínas filtradas forman cilindros hialinos en túbulos renales."
+    ]
+  },
+  "Granulosos gruesos": {
+    "fecha": "03/04/2024",
+    "descripcion": "Cilindros con detritos.",
+    "recomendacion": "Consulta si aparecen.",
+    "related_parameters": ["Hialinos"],
+    "related_parameters_percentage": [70],
+    "related_parameters_des": [
+      "Se desarrollan a partir de cilindros hialinos con agregado de células o detritos."
+    ]
   }
+},
+"ESTUDIO DE LIPIDOS": {
+  "Colesterol Total": {
+    "fecha": "03/04/2024",
+    "descripcion": "Colesterol total en sangre.",
+    "recomendacion": "Dieta baja en grasas saturadas.",
+    "related_parameters": ["Colesterol HDL", "Colesterol LDL", "Triglicéridos"],
+    "related_parameters_percentage": [90, 90, 70],
+    "related_parameters_des": [
+      "El HDL retira exceso de colesterol total de arterias.",
+      "El LDL contribuye a la fracción aterogénica del colesterol total.",
+      "Los triglicéridos comparten metabolismo lipídico con colesterol."
+    ]
+  },
+  "Colesterol HDL": {
+    "fecha": "03/04/2024",
+    "descripcion": "Colesterol “bueno”.",
+    "recomendacion": "Ejercicio aeróbico y grasas saludables.",
+    "related_parameters": ["Colesterol Total", "Colesterol LDL"],
+    "related_parameters_percentage": [75, 60],
+    "related_parameters_des": [
+      "El HDL reduce el colesterol total al transportar colesterol al hígado.",
+      "Contrarresta el efecto aterogénico del LDL."
+    ]
+  },
+  "Colesterol No HDL": {
+    "fecha": "03/04/2024",
+    "descripcion": "Riesgo cardiovascular combinado.",
+    "recomendacion": "Controla LDL y triglicéridos.",
+    "related_parameters": ["Colesterol LDL", "Triglicéridos"],
+    "related_parameters_percentage": [85, 70],
+    "related_parameters_des": [
+      "Incluye todas las fracciones aterogénicas (principalmente LDL).",
+      "Triglicéridos altos suelen acompañar No HDL elevado."
+    ]
+  },
+  "Colesterol LDL": {
+    "fecha": "03/04/2024",
+    "descripcion": "Colesterol “malo”.",
+    "recomendacion": "Reduce grasas saturadas.",
+    "related_parameters": ["Colesterol Total", "Triglicéridos"],
+    "related_parameters_percentage": [90, 70],
+    "related_parameters_des": [
+      "El LDL representa la principal fracción del colesterol total aterogénico.",
+      "Metabolismo de triglicéridos y LDL está interconectado en hígado."
+    ]
+  },
+  "Colesterol VLDL": {
+    "fecha": "03/04/2024",
+    "descripcion": "Transporta triglicéridos.",
+    "recomendacion": "Modera azúcares simples.",
+    "related_parameters": ["Triglicéridos"],
+    "related_parameters_percentage": [80],
+    "related_parameters_des": [
+      "VLDL es precursor de LDL y principal transportador de triglicéridos."
+    ]
+  },
+  "Triglicéridos": {
+    "fecha": "03/04/2024",
+    "descripcion": "Grasas derivadas de la dieta.",
+    "recomendacion": "Evita excesos de carbohidratos.",
+    "related_parameters": ["Colesterol Total", "Colesterol LDL", "Colesterol HDL"],
+    "related_parameters_percentage": [70, 70, 80],
+    "related_parameters_des": [
+      "Elevados en síndrome metabólico que también aumenta colesterol total y LDL.",
+      "Exceso de triglicéridos puede disminuir el HDL."
+    ]
+  },
+  "Colesterol total / HDL": {
+    "fecha": "03/04/2024",
+    "descripcion": "Índice de riesgo aterosclerótico.",
+    "recomendacion": "Mejora HDL y controla colesterol total.",
+    "related_parameters": ["Colesterol Total", "Colesterol HDL"],
+    "related_parameters_percentage": [90, 75],
+    "related_parameters_des": [
+      "Es la relación entre aterogénico (total) y protector (HDL)."
+    ]
+  }
+},
+"PERFIL HEPATICO": {
+  "Bilirrubina total": {
+    "fecha": "03/04/2024",
+    "descripcion": "Producto de degradación de hemoglobina.",
+    "recomendacion": "Evita alcohol y tóxicos hepáticos.",
+    "related_parameters": ["Bilirrubina directa", "A.L.A.T. (GPT)", "A.S.A.T. (GOT)"],
+    "related_parameters_percentage": [90, 70, 70],
+    "related_parameters_des": [
+      "La bilirrubina directa es la fracción conjugada que suma para formar la total.",
+      "La ALT aumenta en daño hepatocelular, elevando la bilirrubina total.",
+      "La AST refleja daño hepático/muscular que puede acompañar ictericia."
+    ]
+  },
+  "Bilirrubina directa": {
+    "fecha": "03/04/2024",
+    "descripcion": "Fracción conjugada de bilirrubina procesada por el hígado.",
+    "recomendacion": "Evita alcohol y tóxicos hepáticos.",
+    "related_parameters": ["Bilirrubina total", "Fosfatasa alcalina"],
+    "related_parameters_percentage": [90, 80],
+    "related_parameters_des": [
+      "Es parte de la bilirrubina total y se eleva en colestasis.",
+      "La ALP alta junto con bilirrubina directa indica obstrucción biliar."
+    ]
+  },
+  "A.S.A.T. (GOT)": {
+    "fecha": "03/04/2024",
+    "descripcion": "Enzima hepática y muscular.",
+    "recomendacion": "Evita ejercicio extremo antes del examen.",
+    "related_parameters": ["A.L.A.T. (GPT)", "Bilirrubina total"],
+    "related_parameters_percentage": [95, 70],
+    "related_parameters_des": [
+      "La ALT y AST juntas definen el patrón de lesión hepática.",
+      "El daño hepático que eleva AST también puede aumentar bilirrubina total."
+    ]
+  },
+  "A.L.A.T. (GPT)": {
+    "fecha": "03/04/2024",
+    "descripcion": "Enzima más específica de hígado.",
+    "recomendacion": "Mantén función hepática con dieta sana.",
+    "related_parameters": ["A.S.A.T. (GOT)", "Fosfatasa alcalina"],
+    "related_parameters_percentage": [95, 60],
+    "related_parameters_des": [
+      "La ALT alta, junto con AST, confirma hepatocelular.",
+      "La relación con ALP ayuda a distinguir colestasis vs. lesión hepática."
+    ]
+  },
+  "Fosfatasa alcalina": {
+    "fecha": "03/04/2024",
+    "descripcion": "Enzima hepática y ósea, elevada en colestasis.",
+    "recomendacion": "Consume vitamina D y calcio.",
+    "related_parameters": ["A.L.A.T. (GPT)", "Bilirrubina directa"],
+    "related_parameters_percentage": [90, 80],
+    "related_parameters_des": [
+      "ALP alta con ALT sugiere componente colestático y hepatocelular.",
+      "La bilirrubina directa elevada junto a ALP confirma obstrucción biliar."
+    ]
+  },
+  "Gama-Glutamiltransp": {
+    "fecha": "03/04/2024",
+    "descripcion": "Enzima sensible a colestasis y alcohol.",
+    "recomendacion": "Modera el consumo de alcohol.",
+    "related_parameters": ["Fosfatasa alcalina"],
+    "related_parameters_percentage": [80],
+    "related_parameters_des": [
+      "GGT elevada junto a ALP confirma origen hepático de la colestasis."
+    ]
+  },
+  "Tpo de protrombina (seg)": {
+    "fecha": "03/04/2024",
+    "descripcion": "Tiempo de coagulación dependiente del hígado.",
+    "recomendacion": "Mantén vitamina K con dieta.",
+    "related_parameters": ["Tpo de protrombina (%)", "I.N.R."],
+    "related_parameters_percentage": [90, 90],
+    "related_parameters_des": [
+      "La medición en segundos se invierte en porcentaje de actividad.",
+      "El INR normaliza el tiempo de protrombina para comparaciones."
+    ]
+  },
+  "Tpo de protrombina (%)": {
+    "fecha": "03/04/2024",
+    "descripcion": "Porcentaje de actividad de protrombina.",
+    "recomendacion": "Ver tiempo en segundos.",
+    "related_parameters": ["Tpo de protrombina (seg)", "I.N.R."],
+    "related_parameters_percentage": [90, 90],
+    "related_parameters_des": [
+      "Funciona inversamente al tiempo en segundos.",
+      "El INR traduce el porcentaje a una escala estandarizada."
+    ]
+  },
+  "I.N.R.": {
+    "fecha": "03/04/2024",
+    "descripcion": "Normaliza el tiempo de protrombina.",
+    "recomendacion": "Sólo relevante si anticoagulado.",
+    "related_parameters": ["Tpo de protrombina (%)", "Tpo de protrombina (seg)"],
+    "related_parameters_percentage": [90, 90],
+    "related_parameters_des": [
+      "INR unifica resultados de protrombina (%) y segundos en una escala global."
+    ]
+  },
+  "FIB-4": {
+    "fecha": "03/04/2024",
+    "descripcion": "Índice de fibrosis hepática.",
+    "recomendacion": "Vigila función hepática con controles periódicos.",
+    "related_parameters": ["A.S.A.T. (GOT)", "A.L.A.T. (GPT)"],
+    "related_parameters_percentage": [70, 70],
+    "related_parameters_des": [
+      "El FIB‑4 utiliza AST y ALT para estimar fibrosis hepática."
+    ]
+  }
+},
+"PERFIL BIOQUIMICO": {
+  "Bilirrubina total": {
+    "fecha": "03/04/2024",
+    "descripcion": "Producto de degradación de hemoglobina.",
+    "recomendacion": "Evita alcohol y tóxicos hepáticos.",
+    "related_parameters": ["Bilirrubina directa"],
+    "related_parameters_percentage": [90],
+    "related_parameters_des": [
+      "La fracción directa compone parte de la bilirrubina total."
+    ]
+  },
+  "Bilirrubina directa": {
+    "fecha": "03/04/2024",
+    "descripcion": "Bilirrubina conjugada excretada por el hígado.",
+    "recomendacion": "Evita alcohol y tóxicos hepáticos.",
+    "related_parameters": ["Bilirrubina total"],
+    "related_parameters_percentage": [90],
+    "related_parameters_des": [
+      "Es la porción conjugada que suma con la indirecta para total."
+    ]
+  },
+  "Creatinina": {
+    "fecha": "03/04/2024",
+    "descripcion": "Indicador de función renal.",
+    "recomendacion": "Hidrata bien y controla proteínas.",
+    "related_parameters": ["Urea", "Acido úrico"],
+    "related_parameters_percentage": [90, 50],
+    "related_parameters_des": [
+      "La urea y creatinina juntas reflejan depuración glomerular.",
+      "El ácido úrico comparte vía de excreción renal con creatinina."
+    ]
+  },
+  "Glucosa": {
+    "fecha": "03/04/2024",
+    "descripcion": "Azúcar en sangre en ayunas.",
+    "recomendacion": "Dieta baja en azúcares simples.",
+    "related_parameters": ["Triglicéridos"],
+    "related_parameters_percentage": [50],
+    "related_parameters_des": [
+      "La hiperglucemia suele acompañar elevación de triglicéridos."
+    ]
+  },
+  "Acido úrico": {
+    "fecha": "03/04/2024",
+    "descripcion": "Asociado a metabolismo de purinas.",
+    "recomendacion": "Modera carnes rojas y mariscos.",
+    "related_parameters": ["Urea", "Creatinina"],
+    "related_parameters_percentage": [50, 50],
+    "related_parameters_des": [
+      "Todos se excretan por riñón y reflejan función renal.",
+      "Predice riesgo de gota cuando falla la excreción renal."
+    ]
+  },
+  "Urea": {
+    "fecha": "03/04/2024",
+    "descripcion": "Refleja función renal y balance proteico.",
+    "recomendacion": "Controla ingesta de proteínas y bebe agua.",
+    "related_parameters": ["Creatinina", "Acido úrico"],
+    "related_parameters_percentage": [90, 40],
+    "related_parameters_des": [
+      "La relación urea/creatinina evalúa causas de elevación.",
+      "El ácido úrico aporta contexto de excreción y metabolismo renal."
+    ]
+  },
+  "Calcio": {
+    "fecha": "03/04/2024",
+    "descripcion": "Nivel de calcio sérico.",
+    "recomendacion": "Consume lácteos y vitamina D.",
+    "related_parameters": ["Fósforo"],
+    "related_parameters_percentage": [80],
+    "related_parameters_des": [
+      "Calcio y fósforo se regulan juntos en metabolismo óseo."
+    ]
+  },
+  "Fósforo": {
+    "fecha": "03/04/2024",
+    "descripcion": "Mineral relacionado con energía celular.",
+    "recomendacion": "Equilibra con calcio.",
+    "related_parameters": ["Calcio"],
+    "related_parameters_percentage": [80],
+    "related_parameters_des": [
+      "Ambos se intercambian en hueso y regulan homeostasis mineral."
+    ]
+  },
+  "Colesterol": {
+    "fecha": "03/04/2024",
+    "descripcion": "Colesterol total en sangre.",
+    "recomendacion": "Dieta baja en grasas saturadas.",
+    "related_parameters": ["Triglicéridos"],
+    "related_parameters_percentage": [70],
+    "related_parameters_des": [
+      "Metabolismo hepático conjunto de colesterol y triglicéridos."
+    ]
+  },
+  "Triglicéridos": {
+    "fecha": "03/04/2024",
+    "descripcion": "Grasas derivadas de la dieta.",
+    "recomendacion": "Evita excesos de carbohidratos.",
+    "related_parameters": ["Colesterol"],
+    "related_parameters_percentage": [70],
+    "related_parameters_des": [
+      "Elevados en dislipidemias asociadas a colesterol alto."
+    ]
+  },
+  "Proteínas totales": {
+    "fecha": "03/04/2024",
+    "descripcion": "Balance de albúmina y globulinas.",
+    "recomendacion": "Proteínas magras y buena hidratación.",
+    "related_parameters": ["Albúmina", "Globulinas"],
+    "related_parameters_percentage": [90, 90],
+    "related_parameters_des": [
+      "La suma de albúmina y globulinas forma el total proteico."
+    ]
+  },
+  "Albúmina": {
+    "fecha": "03/04/2024",
+    "descripcion": "Proteína plasmática principal.",
+    "recomendacion": "Aporta proteínas de calidad.",
+    "related_parameters": ["Proteínas totales"],
+    "related_parameters_percentage": [90],
+    "related_parameters_des": [
+      "Constituye la mayor parte de las proteínas totales séricas."
+    ]
+  },
+  "Globulinas": {
+    "fecha": "03/04/2024",
+    "descripcion": "Proteínas del sistema inmune.",
+    "recomendacion": "Mantén sistema inmunitario activo.",
+    "related_parameters": ["Proteínas totales"],
+    "related_parameters_percentage": [90],
+    "related_parameters_des": [
+      "Representan junto a albúmina el total de proteínas séricas."
+    ]
+  },
+  "Índice Alb/Glob": {
+    "fecha": "03/04/2024",
+    "descripcion": "Relación albúmina/globulinas.",
+    "recomendacion": "Balancea ambas fracciones.",
+    "related_parameters": ["Albúmina", "Globulinas"],
+    "related_parameters_percentage": [90, 90],
+    "related_parameters_des": [
+      "Es la proporción entre proteínas principales e inmunitarias."
+    ]
+  },
+  "Lactato Deshidrogenasa": {
+    "fecha": "03/04/2024",
+    "descripcion": "Enzima de daño celular genérico.",
+    "recomendacion": "Evita esfuerzos intensos antes del examen.",
+    "related_parameters": ["A.S.A.T. (GOT)"],
+    "related_parameters_percentage": [50],
+    "related_parameters_des": [
+      "LDH y AST aumentan en daño tisular general y hepático."
+    ]
+  }
+},
+"HORMONAS": {
+  "Tirotropina (TSH ultrasensible)": {
+    "fecha": "03/04/2024",
+    "descripcion": "Regula función tiroidea.",
+    "recomendacion": "Incluye yodo en la dieta.",
+    "related_parameters": [],
+    "related_parameters_percentage": [],
+    "related_parameters_des": []
+  }
+},
+"VITAMINAS": {
+  "Vitamina B12": {
+    "fecha": "03/04/2024",
+    "descripcion": "Esencial para glóbulos rojos y nervios.",
+    "recomendacion": "Carnes, pescados y huevos.",
+    "related_parameters": ["25-hidroxi-vitamina D"],
+    "related_parameters_percentage": [50],
+    "related_parameters_des": [
+      "Ambas vitaminas participan en el metabolismo óseo y hematopoyético."
+    ]
+  },
+  "25-hidroxi-vitamina D": {
+    "fecha": "03/04/2024",
+    "descripcion": "Forma circulante de vitamina D.",
+    "recomendacion": "Exposición solar y lácteos fortificados.",
+    "related_parameters": ["Vitamina B12"],
+    "related_parameters_percentage": [50],
+    "related_parameters_des": [
+      "Colaboran en la absorción de calcio y la formación de glóbulos rojos."
+    ]
+  }
+}
 }
