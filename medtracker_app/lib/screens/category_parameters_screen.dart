@@ -464,6 +464,31 @@ class _CategoryParametersScreenState extends State<CategoryParametersScreen> {
                                   param.resultString != null && 
                                   param.resultString!.isNotEmpty; 
 
+      // --- Define text colors based on theme and background --- 
+      final Brightness currentBrightness = Theme.of(context).brightness;
+      final bool isAttention = param.status == ParameterStatus.attention;
+      final Color defaultTextColor = Theme.of(context).textTheme.bodyMedium?.color ?? (currentBrightness == Brightness.dark ? Colors.white : Colors.black);
+      
+      Color titleColor;
+      Color subtitleColor;
+      
+      if (isAttention && currentBrightness == Brightness.light) {
+        // Attention + Light Mode: Dark text on light yellow
+        titleColor = Colors.black87;
+        subtitleColor = Colors.black54;
+      } else if (isAttention && currentBrightness == Brightness.dark) {
+        // Attention + Dark Mode: Dark text on light yellow (same as light mode)
+        titleColor = Colors.black87; // Or Colors.grey[850]?
+        subtitleColor = Colors.black54;
+      } else {
+         // Default: Use theme colors
+         titleColor = Theme.of(context).textTheme.titleMedium?.color ?? defaultTextColor;
+         subtitleColor = Colors.grey[600]!; // Adjust default if needed
+      }
+
+      final Color valueColor = numericValue != null ? statusColor : defaultTextColor; 
+      // -------------------------------------------------------
+      
       return Card(
          margin: const EdgeInsets.symmetric(vertical: 5.0),
          color: cardBackgroundColor, 
@@ -497,7 +522,7 @@ class _CategoryParametersScreenState extends State<CategoryParametersScreen> {
                                 Flexible( // Allow name to wrap/flex
                                   child: Text(
                                       param.parameterName, 
-                                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
+                                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500, color: titleColor),
                                       maxLines: 2, // Allow wrapping
                                       overflow: TextOverflow.ellipsis,
                                   ),
@@ -509,11 +534,14 @@ class _CategoryParametersScreenState extends State<CategoryParametersScreen> {
                               const SizedBox(height: 2),
                               Text(
                                  '(${param.resultString}%)', 
-                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[700])
+                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(color: subtitleColor)
                               ),
                            ],
                           const SizedBox(height: 4),
-                          Text(rangeString, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
+                          Text(
+                             'Ref: $rangeString', 
+                             style: Theme.of(context).textTheme.bodySmall?.copyWith(color: subtitleColor, fontSize: 11)
+                          ),
                         ],
                       ),
                     ),
@@ -528,7 +556,7 @@ class _CategoryParametersScreenState extends State<CategoryParametersScreen> {
                             primaryDisplay, 
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold, 
-                              color: numericValue != null ? statusColor : null, // Use numericValue here
+                              color: valueColor,
                             )
                         ),
                         // --- Show unit only if value is numeric and unit exists ---
@@ -536,7 +564,7 @@ class _CategoryParametersScreenState extends State<CategoryParametersScreen> {
                           const SizedBox(width: 4), // Space between value and unit
                           Text(
                             displayUnit,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[700]),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: subtitleColor),
                           ),
                         ],
                         // ---------------------------------------------------------

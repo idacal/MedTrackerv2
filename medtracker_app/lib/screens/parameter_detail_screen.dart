@@ -733,37 +733,50 @@ class _ParameterDetailScreenState extends State<ParameterDetailScreen> {
 
   // --- Widget for Time Range Buttons ---
   Widget _buildTimeRangeButtons(BuildContext context) {
-      final isSelected = <bool>[
-        _selectedTimeRange == TimeRange.threeMonths,
-        _selectedTimeRange == TimeRange.sixMonths,
-        _selectedTimeRange == TimeRange.oneYear,
-        _selectedTimeRange == TimeRange.allTime,
-      ];
+     // Define colors based on theme brightness
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final selectedColor = isDark ? Colors.blue[300] : Theme.of(context).primaryColor;
+    final unselectedColor = isDark ? Colors.grey[400] : Colors.grey[600];
+    final selectedFillColor = selectedColor?.withOpacity(0.15);
+    final borderColor = isDark ? Colors.grey[700] : Colors.grey[400];
 
-      return ToggleButtons(
-        isSelected: isSelected,
-        onPressed: (int index) {
-          setState(() {
-            if (index == 0) _selectedTimeRange = TimeRange.threeMonths;
-            else if (index == 1) _selectedTimeRange = TimeRange.sixMonths;
-            else if (index == 2) _selectedTimeRange = TimeRange.oneYear;
-            else _selectedTimeRange = TimeRange.allTime;
-            // No need to call _loadHistory, just rebuild with filtered data
-          });
-        },
-        borderRadius: BorderRadius.circular(8.0),
-        selectedBorderColor: Theme.of(context).primaryColor,
-        selectedColor: Colors.white,
-        fillColor: Theme.of(context).primaryColor,
-        color: Theme.of(context).primaryColor,
-        constraints: const BoxConstraints(minHeight: 32.0, minWidth: 40.0), // Adjust size
-        children: const <Widget>[
-          Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('3M')), 
-          Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('6M')), 
-          Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('1A')), 
-          Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('Todo')), 
-        ],
-      );
+    // --- Define _isSelected list based on _selectedTimeRange --- 
+    final List<bool> _isSelected = <bool>[
+      _selectedTimeRange == TimeRange.threeMonths,
+      _selectedTimeRange == TimeRange.sixMonths,
+      _selectedTimeRange == TimeRange.oneYear,
+      _selectedTimeRange == TimeRange.allTime,
+    ];
+    // --------------------------------------------------------
+
+    return ToggleButtons(
+      isSelected: _isSelected, // Use the defined list
+      onPressed: (int index) {
+        setState(() {
+          if (index == 0) _selectedTimeRange = TimeRange.threeMonths;
+          else if (index == 1) _selectedTimeRange = TimeRange.sixMonths;
+          else if (index == 2) _selectedTimeRange = TimeRange.oneYear;
+          else _selectedTimeRange = TimeRange.allTime;
+          // No need to call _loadHistory, just rebuild with filtered data
+        });
+      },
+      borderRadius: BorderRadius.circular(8.0),
+      // --- Use theme-aware colors --- 
+      selectedColor: selectedColor, // Text color when selected
+      color: unselectedColor,       // Text color when not selected
+      fillColor: selectedFillColor, // Background color when selected
+      selectedBorderColor: selectedColor, // Border color when selected
+      borderColor: borderColor,      // Border color when not selected
+      // -----------------------------
+      constraints: const BoxConstraints(minHeight: 32.0, minWidth: 40.0), // Reduced minWidth
+      children: const <Widget>[
+        // Reduce horizontal padding for compactness
+        Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Text('3M')), 
+        Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Text('6M')), 
+        Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Text('1A')), 
+        Padding(padding: EdgeInsets.symmetric(horizontal: 6), child: Text('Todo')), 
+      ],
+    );
   }
 }
 

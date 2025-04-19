@@ -240,18 +240,19 @@ class _ExamCategoriesScreenState extends State<ExamCategoriesScreen> {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // --- Display Attention Count Badge --- 
+            // --- Display Attention Count Badge (using CircleAvatar) --- 
             if (attentionCount > 0) ...[
-               Chip(
-                 label: Text(
+               CircleAvatar(
+                 radius: 12, // Small radius
+                 backgroundColor: _getStatusColor(context, ParameterStatus.attention).withOpacity(0.9), // Use status color
+                 child: Text(
                    attentionCount.toString(),
-                   style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                  ),
-                 backgroundColor: _getStatusColor(context, ParameterStatus.attention),
-                 padding: const EdgeInsets.all(0), // Minimize padding
-                 labelPadding: const EdgeInsets.symmetric(horizontal: 6.0), // Adjust horizontal padding
-                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap, // Reduce tap area
-                 visualDensity: VisualDensity.compact, // Make it visually smaller
+                   style: const TextStyle(
+                     color: Colors.white, // White text for contrast
+                     fontSize: 11, 
+                     fontWeight: FontWeight.bold,
+                   ),
+                 ),
                ),
             ] else ...[
               // --- Display Overall Status Icon ONLY if no attention count --- 
@@ -266,6 +267,37 @@ class _ExamCategoriesScreenState extends State<ExamCategoriesScreen> {
       ),
     );
   }
+
+  // --- DELETE THIS UNUSED HELPER --- 
+  /*
+  Widget _buildTrailingIndicator(BuildContext context, CategoryStatus status, int attentionCount) {
+    final statusColors = StatusColors.of(context);
+    switch (status) {
+      case CategoryStatus.allNormal:
+        return Icon(Icons.check_circle, color: statusColors.normal);
+      case CategoryStatus.hasAttention:
+        // --- NEW: Use CircleAvatar for attention count ---
+        return CircleAvatar(
+          radius: 12, // Small radius
+          backgroundColor: statusColors.attention.withOpacity(0.8), // Yellow/Amber color
+          child: Text(
+            attentionCount.toString(),
+            style: const TextStyle(
+              color: Colors.white, // White text for contrast
+              fontSize: 11, 
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        );
+        // --- END NEW ---
+      case CategoryStatus.hasInfo: // For unknown/watch status
+        return Icon(Icons.info_outline, color: statusColors.watch); // Or another appropriate icon/color
+      default:
+        return const SizedBox.shrink(); // Should not happen
+    }
+  }
+  */
+  // -------------------------------------------
 }
 
 // Utility function (keep as is)

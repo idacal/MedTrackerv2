@@ -27,10 +27,11 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final dbService = DatabaseService();
-  Future<Map<String, dynamic>>? _summaryDataFuture;
+  Future<Map<String, dynamic>>? _headerDataFuture;
   Future<List<Map<String, dynamic>>>? _recentExamsFuture;
   Future<List<Map<String, dynamic>>>? _trackedParametersFuture;
   final NumberFormat _percentFormatter = NumberFormat("+0.0%;-0.0%;0.0%");
+  DateTime? _latestExamDate;
 
   // --- State for Bottom Navigation Bar --- 
   int _selectedIndex = 0; 
@@ -45,15 +46,23 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _loadData() {
+    // --- Fetch latest date separately --- 
+    dbService.getLatestExamImportDate().then((date) {
+       if (mounted) {
+         setState(() { _latestExamDate = date; });
+       }
+    });
+    // ----------------------------------
     setState(() {
-      _summaryDataFuture = _calculateSummaryAndTotal();
+      _headerDataFuture = _loadHeaderAndSummaryData();
       _recentExamsFuture = dbService.getRecentExamsWithAttentionCount(limit: 3);
       _trackedParametersFuture = _loadTrackedParametersData(); 
     });
   }
 
-  Future<Map<String, dynamic>> _calculateSummaryAndTotal() async {
+  Future<Map<String, dynamic>> _loadHeaderAndSummaryData() async {
     final latestParameters = await dbService.getLatestParameterValues();
+    final latestImportDate = await dbService.getLatestExamImportDate();
     final summaryCounts = {
       ParameterStatus.normal: 0,
       ParameterStatus.watch: 0,
@@ -69,8 +78,9 @@ class _HomeScreenState extends State<HomeScreen> {
     
     return {
       'counts': summaryCounts, 
-      'total': totalCount
-      };
+      'total': totalCount,
+      'lastUpdate': latestImportDate,
+    };
   }
 
   Future<List<Map<String, dynamic>>> _loadTrackedParametersData() async {
@@ -102,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _navigateToParameterList(ParameterStatus status) {
-    _summaryDataFuture?.then((summary) {
+    _headerDataFuture?.then((summary) {
       if (summary.isNotEmpty) {
         int totalCount = summary['total'];
         Navigator.push(
@@ -268,9 +278,22 @@ class _HomeScreenState extends State<HomeScreen> {
      ).then((_) => _loadData()); 
   }
 
+  // --- Add back navigation method for Tracked Parameters --- 
+  void _navigateToTrackedParameters() {
+     Navigator.push(
+       context,
+       MaterialPageRoute(builder: (context) => const TrackedParametersScreen()),
+     ).then((_) => _loadData()); // Refresh data when returning
+  }
+  // ----------------------------------------------------------
+
   @override
   Widget build(BuildContext context) {
-    final statusColors = StatusColors.of(context);
+    // Remove explicit color definitions - rely on theme
+    // final theme = Theme.of(context);
+    // final isDarkMode = theme.brightness == Brightness.dark;
+    // final Color activeColor = isDarkMode ? Colors.white : theme.primaryColor;
+    // final Color inactiveColor = isDarkMode ? Colors.grey[500]! : Colors.grey[600]!;
 
     // --- Define Widgets for each Tab --- 
     final List<Widget> _widgetOptions = <Widget>[
@@ -294,41 +317,42 @@ class _HomeScreenState extends State<HomeScreen> {
 
       // --- Update Bottom Navigation Bar Icons --- 
       bottomNavigationBar: BottomNavigationBar(
-        // Item count back to 5
-        items: const <BottomNavigationBarItem>[
+        items: const <BottomNavigationBarItem>[ // Use const if items are static
           BottomNavigationBarItem(
-            // Use icons from reference image
-            icon: Icon(Icons.home), // Assuming filled Home
-            activeIcon: Icon(Icons.home), // Keep same for simplicity or use filled if available
+            // Remove explicit colors from icons
+            icon: Icon(Icons.home_outlined), 
+            activeIcon: Icon(Icons.home), 
             label: 'Inicio',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart), // Changed Analysis icon
-            activeIcon: Icon(Icons.bar_chart), // Changed Analysis active icon
+            icon: Icon(Icons.bar_chart_outlined), 
+            activeIcon: Icon(Icons.bar_chart), 
             label: 'Análisis',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today_outlined), // History icon
-            activeIcon: Icon(Icons.calendar_today),
+            icon: Icon(Icons.calendar_today_outlined), 
+            activeIcon: Icon(Icons.calendar_today), 
             label: 'Historial',
           ),
-          // Add Compartir Item back
           BottomNavigationBarItem(
-            icon: Icon(Icons.share_outlined),
-            activeIcon: Icon(Icons.share),
+            icon: Icon(Icons.share_outlined), 
+            activeIcon: Icon(Icons.share), 
             label: 'Compartir',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings_outlined), // Settings icon
-            activeIcon: Icon(Icons.settings),
+            icon: Icon(Icons.settings_outlined), 
+            activeIcon: Icon(Icons.settings), 
             label: 'Ajustes',
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Theme.of(context).primaryColor, 
-        unselectedItemColor: Colors.grey[600], 
+        // Remove explicitly set item colors - let theme handle it
+        // selectedItemColor: activeColor, 
+        // unselectedItemColor: inactiveColor, 
         showUnselectedLabels: true,
         type: BottomNavigationBarType.fixed, 
+        // Remove explicit background color if theme handles it
+        // backgroundColor: theme.bottomNavigationBarTheme.backgroundColor,
         onTap: (int index) {
           setState(() {
              // Ensure index stays within bounds (0-4)
@@ -353,9 +377,9 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16.0),
             children: [
               const SizedBox(height: 16),
-              _buildCustomHeader(context),
+              _buildCustomHeader(context, _latestExamDate),
               FutureBuilder<Map<String, dynamic>>(
-                future: _summaryDataFuture, 
+                future: _headerDataFuture, 
                 builder: (context, snapshot) {
                   Map<String, dynamic>? summaryDataForCard; 
                   if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
@@ -380,8 +404,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
   // -----------------------------------------
 
-  Widget _buildCustomHeader(BuildContext context) {
+  Widget _buildCustomHeader(BuildContext context, DateTime? latestUpdateDate) {
     String userName = "Ignacio";
+    String lastUpdateString = 'No hay exámenes cargados';
+    if (latestUpdateDate != null) {
+       // Format the date nicely
+       lastUpdateString = 'Últ. act: ${DateFormat('dd MMM yyyy, HH:mm').format(latestUpdateDate)}';
+    }
 
     return Card(
        color: Theme.of(context).primaryColor,
@@ -405,6 +434,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   'Hola, $userName',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white70),
                 ),
+                if (latestUpdateDate != null) ...[
+                   const SizedBox(height: 6),
+                   Text(
+                     lastUpdateString,
+                     style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white.withOpacity(0.6), fontSize: 11),
+                   ),
+                ]
               ],
             ),
             IconButton(
@@ -482,9 +518,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         padding: EdgeInsets.zero, // Remove default padding
                         minimumSize: Size.zero, // Allow small size
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap, // Reduce tap area
-                        alignment: Alignment.topRight
+                        alignment: Alignment.topRight,
+                        foregroundColor: Theme.of(context).brightness == Brightness.dark 
+                             ? Colors.blue[200] // Brighter blue for dark mode contrast
+                             : Theme.of(context).primaryColor, // Standard primary for light
                      ),
-                     child: Text('Ver detalle', style: TextStyle(color: Theme.of(context).primaryColor, fontSize: 13)),
+                     child: const Text(
+                        'Ver detalle',
+                        style: TextStyle(fontSize: 13)
+                      ),
                    ),
                  ),
                ],
@@ -619,14 +661,18 @@ class _HomeScreenState extends State<HomeScreen> {
                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                ),
                 TextButton(
-                 onPressed: () { 
-                    // Navigate to TrackedParametersScreen
-                     Navigator.push(
-                       context,
-                       MaterialPageRoute(builder: (context) => const TrackedParametersScreen()),
-                     ).then((_) => _loadData()); 
-                  },
-                 child: Text('Ver todos', style: TextStyle(color: Theme.of(context).primaryColor)),
+                 onPressed: _navigateToTrackedParameters, // Keep existing navigation call
+                 // --- ADD style for dark mode visibility --- 
+                 style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).brightness == Brightness.dark 
+                         ? Colors.blue[200] // Brighter blue for dark mode contrast
+                         : Theme.of(context).primaryColor, // Standard primary for light
+                    padding: EdgeInsets.zero, // Keep compact
+                    minimumSize: Size.zero, 
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                 ),
+                 // -----------------------------------------
+                 child: const Text('Ver todos'), // Use const
                ),
              ],
            ),
@@ -712,10 +758,18 @@ class _HomeScreenState extends State<HomeScreen> {
     required bool isTracking,
   }) {
     final bool isAttention = status == ParameterStatus.attention;
-    final Color statusIconColor = statusColors.attention;
+    // --- Use theme colors for dark mode compatibility --- 
+    final Color cardBgColor = Theme.of(context).cardTheme.color ?? Theme.of(context).cardColor;
+    final Color titleColor = Theme.of(context).textTheme.titleMedium?.color ?? Colors.white;
+    final Color valueColor = Theme.of(context).textTheme.headlineSmall?.color ?? Colors.white;
+    final Color unitColor = Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey[400]!;
+    final Color changeValueColor = _getChangeColor(change, context, isDarkMode: Theme.of(context).brightness == Brightness.dark); // Pass brightness
+    final IconData changeIconData = _getChangeIconData(change); // Get icon data
+    final Color statusIconColor = statusColors.getColor(status); // Get specific status color
+    // -----------------------------------------------------
 
     return Card(
-       color: bgColor, 
+       color: cardBgColor, // Use theme card color
        elevation: 1.0,
        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
        child: Padding(
@@ -740,15 +794,15 @@ class _HomeScreenState extends State<HomeScreen> {
                  crossAxisAlignment: CrossAxisAlignment.start,
                  mainAxisSize: MainAxisSize.min,
                  children: [
-                    Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500, color: titleColor), maxLines: 1, overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 4),
                     Row(
                        crossAxisAlignment: CrossAxisAlignment.baseline,
                        textBaseline: TextBaseline.alphabetic,
                        children: [
-                         Text(value, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 20)), 
+                         Text(value, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, fontSize: 20, color: valueColor)), 
                          const SizedBox(width: 3),
-                         Flexible(child: Text(unit, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[700], fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis)), 
+                         Flexible(child: Text(unit, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: unitColor, fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis)), 
                        ],
                     ),
                  ],
@@ -761,13 +815,13 @@ class _HomeScreenState extends State<HomeScreen> {
                  Row(
                    mainAxisSize: MainAxisSize.min,
                    children: [
-                     _getChangeIcon(change),
+                     Icon(changeIconData, size: 12, color: changeValueColor), // Use IconData and color
                      const SizedBox(width: 3),
                      Text(
                         change, 
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           fontSize: 11, 
-                          color: _getChangeColor(change, context)
+                          color: changeValueColor // Use calculated change color
                         )
                       ),
                    ],
@@ -783,23 +837,28 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _getChangeIcon(String change) {
+  IconData _getChangeIconData(String change) { // Renamed and return IconData
     if (change.startsWith('+')) {
-      return Icon(Icons.arrow_upward, size: 12, color: Colors.green[700]);
+      return Icons.arrow_upward;
     } else if (change.startsWith('-')) {
-      return Icon(Icons.arrow_downward, size: 12, color: Colors.red[700]);
+      return Icons.arrow_downward;
     } else {
-      return const SizedBox(width: 12);
+      return Icons.remove; // Return a neutral icon like 'remove' (horizontal line)
     }
   }
 
-  Color _getChangeColor(String change, BuildContext context) {
+  Color _getChangeColor(String change, BuildContext context, {bool isDarkMode = false}) { // Added isDarkMode
+    // Use theme colors for better dark mode contrast
+    final Color increaseColor = isDarkMode ? Colors.greenAccent[400]! : Colors.green[700]!;
+    final Color decreaseColor = isDarkMode ? Colors.redAccent[100]! : Colors.red[700]!;
+    final Color neutralColor = isDarkMode ? Colors.grey[500]! : Colors.grey[600]!;
+
     if (change.startsWith('+')) {
-      return Colors.green[700]!;
+      return increaseColor;
     } else if (change.startsWith('-')) {
-      return Colors.red[700]!;
+      return decreaseColor;
     } else {
-      return Colors.grey[600]!;
+      return neutralColor;
     }
   }
 

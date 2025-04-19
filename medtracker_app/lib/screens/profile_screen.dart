@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart'; // Import file_picker
 import 'dart:io'; // For File
 import 'package:flutter/foundation.dart'; // For kDebugMode
+import 'package:provider/provider.dart'; // Import Provider
 
 import '../services/database_service.dart'; // Import DatabaseService
+import '../providers/theme_provider.dart'; // Import ThemeProvider
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -101,10 +103,73 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
   // ----------------------------------------------------
 
+  // --- Logic for Deleting All Data ---
+  Future<void> _confirmAndDeleteAllData() async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Confirmar Borrado Total'),
+          content: const Text(
+              '¿Estás SEGURO de que quieres borrar TODOS los exámenes, parámetros, glosario y seguimiento? \n\nESTA ACCIÓN ES IRREVERSIBLE.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+            ),
+            TextButton(
+              style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
+              child: const Text('BORRAR TODO'),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      try {
+         // Show loading indicator / message
+         ScaffoldMessenger.of(context).showSnackBar(
+           const SnackBar(content: Text('Borrando todos los datos...'), duration: Duration(seconds: 3)),
+         );
+         
+        await dbService.deleteAllUserData(); // Call the DB service method
+        
+         // Show success message
+         if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Todos los datos han sido borrados.', style: TextStyle(color: Colors.white)),
+                backgroundColor: Colors.green[700],
+              ),
+            );
+            // Optionally navigate back or refresh home screen if needed
+            // Navigator.of(context).pop(); // Example: Close profile screen
+         }
+
+      } catch (e) {
+         print("Error deleting all user data: $e");
+         if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(
+               content: Text('Error al borrar los datos: $e', style: const TextStyle(color: Colors.white)),
+               backgroundColor: Theme.of(context).colorScheme.error,
+             ),
+           );
+         }
+      }
+    }
+  }
+  // -----------------------------------
+
   @override
   Widget build(BuildContext context) {
-    // Placeholder - Implement screen UI based on description later
-    // This could include user details, settings, app info, etc.
+    // --- Get ThemeProvider --- 
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode(context); // Use helper
+    // -----------------------
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Perfil y Configuración'),
@@ -118,11 +183,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
              subtitle: Text('user@example.com'), // Example User ID
           ),
           Divider(),
-          ListTile(
-             leading: Icon(Icons.color_lens_outlined),
-             title: Text('Tema'),
-             subtitle: Text('Claro / Oscuro (Próximamente)'),
-             // onTap: () { /* Change theme */ },
+          SwitchListTile(
+             title: const Text('Tema'),
+             subtitle: Text(isDarkMode ? 'Oscuro' : 'Claro'),
+             value: isDarkMode,
+             onChanged: (value) {
+               Provider.of<ThemeProvider>(context, listen: false).setThemeMode(
+                 value ? ThemeMode.dark : ThemeMode.light
+               );
+             },
+             secondary: Icon(Icons.color_lens_outlined, color: Theme.of(context).colorScheme.secondary),
           ),
            ListTile(
              leading: Icon(Icons.notifications_none),
@@ -149,6 +219,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ListTile(
              leading: Icon(Icons.delete_sweep_outlined, color: Theme.of(context).colorScheme.error),
              title: const Text('Borrar Todos los Datos'),
+             onTap: _confirmAndDeleteAllData, // Call delete confirmation
           ),
         ],
       ),

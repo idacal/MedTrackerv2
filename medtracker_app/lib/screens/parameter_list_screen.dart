@@ -272,6 +272,42 @@ class _ParameterListScreenState extends State<ParameterListScreen> {
         }
      }
 
+     // --- Define text colors based on theme and background --- 
+     final Brightness currentBrightness = Theme.of(context).brightness;
+     final bool isAttention = record.status == ParameterStatus.attention;
+     final Color defaultTextColor = Theme.of(context).textTheme.bodyMedium?.color ?? (currentBrightness == Brightness.dark ? Colors.white : Colors.black);
+     
+     Color titleColor;
+     Color categoryColor;
+     Color referenceColor;
+     Color unitDisplayColor;
+     
+     if (isAttention && currentBrightness == Brightness.light) {
+       // Attention + Light Mode: Dark text on light yellow
+       titleColor = Colors.black87;
+       categoryColor = Colors.black54;
+       referenceColor = Colors.black54;
+       unitDisplayColor = Colors.black54;
+     } else if (isAttention && currentBrightness == Brightness.dark) {
+       // Attention + Dark Mode: Dark text on light yellow (same as light mode)
+       titleColor = Colors.black87;
+       categoryColor = Colors.black54;
+       referenceColor = Colors.black54;
+       unitDisplayColor = Colors.black54;
+     } else {
+        // Default: Use theme colors
+        titleColor = Theme.of(context).textTheme.titleMedium?.color ?? defaultTextColor;
+        final Color defaultSubtitleColor = Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey[600]!;
+        categoryColor = defaultSubtitleColor;
+        referenceColor = defaultSubtitleColor;
+        unitDisplayColor = defaultSubtitleColor;
+     }
+
+     final Color valueColor = numericValue != null ? statusColor : defaultTextColor; 
+     // Keep difference text color as status color
+     final Color differenceDisplayColor = statusColor.withOpacity(0.9);
+     // -------------------------------------------------------
+
      return Card(
        color: cardBackgroundColor, // Apply conditional background
        margin: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 0), // No horizontal margin needed due to padding
@@ -312,25 +348,25 @@ class _ParameterListScreenState extends State<ParameterListScreen> {
                  child: Column(
                    crossAxisAlignment: CrossAxisAlignment.start,
                    children: [
-                     Text(record.parameterName, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500)),
+                     Text(record.parameterName, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500, color: titleColor)),
                      const SizedBox(height: 3),
                       // --- Add Category back --- 
                      Text(
                          record.category.toUpperCase(), 
-                         style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600], fontSize: 11)
+                         style: Theme.of(context).textTheme.bodySmall?.copyWith(color: categoryColor, fontSize: 11)
                      ),
                      const SizedBox(height: 5),
                      // --- Add Reference Range back --- 
                      Text(
                        'Referencia: ${record.refOriginal ?? "--"}',
-                       style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 11),
+                       style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 11, color: referenceColor),
                      ),
                      // --- Show date or difference text (adjust spacing if needed) ---
                      if (differenceText.isNotEmpty) ...[ // Only show diff if it exists
                        const SizedBox(height: 5),
                        Text(
                          differenceText, 
-                         style: Theme.of(context).textTheme.bodySmall?.copyWith(color: statusColor.withOpacity(0.8), fontSize: 11, fontWeight: FontWeight.w500)
+                         style: Theme.of(context).textTheme.bodySmall?.copyWith(color: differenceDisplayColor, fontSize: 11, fontWeight: FontWeight.w500)
                        ),
                      ] else ... [ // Otherwise, show date (consider if needed here or only on detail screen)
                         // Currently, date is not shown here if diff text is empty, keep it that way for now?
@@ -354,7 +390,7 @@ class _ParameterListScreenState extends State<ParameterListScreen> {
                          record.displayValue, 
                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
                            fontWeight: FontWeight.bold, 
-                           color: numericValue != null ? statusColor : null // Color if numeric
+                           color: valueColor
                          )
                        ),
                        // --- Show unit only if value is numeric and unit exists ---
@@ -362,7 +398,7 @@ class _ParameterListScreenState extends State<ParameterListScreen> {
                           const SizedBox(width: 4), // Space
                           Text(
                             displayUnit,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[700]),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: unitDisplayColor),
                           ),
                        ],
                        // ---------------------------------------------------------

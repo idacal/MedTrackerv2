@@ -556,6 +556,31 @@ class DatabaseService {
     return result;
   }
 
+  // --- NEW: Get Latest Exam Import Date ---
+  Future<DateTime?> getLatestExamImportDate() async {
+    final db = await database;
+    try {
+      final List<Map<String, dynamic>> maps = await db.query(
+        'exam_records',
+        columns: ['importDate'],
+        orderBy: 'importDate DESC',
+        limit: 1,
+      );
+      if (maps.isNotEmpty && maps.first['importDate'] != null) {
+         // Dates are stored as ISO8601 strings
+         return DateTime.tryParse(maps.first['importDate'] as String);
+      } else {
+        return null; // No exams found
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error fetching latest exam import date: $e");
+      }
+      return null; // Return null on error
+    }
+  }
+  // --------------------------------------
+
   // --- Utility / Parsing ---
 
   // Simple date parser, adjust format as needed
@@ -984,5 +1009,31 @@ class DatabaseService {
     }
   }
   // ----------------------
+
+  // --- Delete All User Data --- 
+  Future<void> deleteAllUserData() async {
+     final db = await database;
+     try {
+        if (kDebugMode) {
+          print("Attempting to delete all user data...");
+        }
+        // Use a batch operation for efficiency and atomicity (within limits)
+        final batch = db.batch();
+        batch.delete('parameter_records'); // Deletes all rows
+        batch.delete('exam_records');      // Deletes all rows
+        batch.delete('parameter_glossary'); // Deletes all rows (including default unless reloaded)
+        batch.delete('tracked_parameters'); // Deletes all rows
+        await batch.commit(noResult: true);
+         if (kDebugMode) {
+          print("All user data tables cleared successfully.");
+        }
+     } catch (e) {
+        if (kDebugMode) {
+          print("Error deleting all user data: $e");
+        }
+        rethrow; // Rethrow so the UI knows about the error
+     }
+  }
+  // --------------------------
 
 } 
